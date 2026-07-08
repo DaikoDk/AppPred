@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignación de Predicación</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>📋 Asignación de Predicación</h1>
+                <p>Inicia sesión con Google para gestionar conductores y turnos</p>
+            </div>
+            <button type="button" class="btn btn-google btn-block" id="btn-google-login">
+                <i class="fab fa-google"></i>
+                <span>Iniciar sesión con Google</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const errorMsg = params.get('error');
+            if (errorMsg) {
+                showToast(decodeURIComponent(errorMsg), 'error', 8000);
+                window.history.replaceState(null, '', window.location.pathname);
+            }
+
+            if (handleOAuthRedirect()) return;
+
+            if (getToken()) {
+                window.location.href = '/dashboard.html';
+                return;
+            }
+
+            document.getElementById('btn-google-login').addEventListener('click', () => {
+                window.location.href = '/api/auth/google';
+            });
+        });
+    </script>
+</body>
+</html>
