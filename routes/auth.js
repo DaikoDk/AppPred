@@ -3,12 +3,13 @@
 const jwt = require('jsonwebtoken');
 const router = require('express').Router();
 const { supabase } = require('../supabase/client');
+const { authenticateToken } = require('../middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
 const JWT_EXPIRE = process.env.JWT_EXPIRE || '24h';
 
-function genToken(userId) {
-    return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
+function genToken(userId, email) {
+    return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
 }
 
 router.get('/google', async (req, res) => {
@@ -48,12 +49,18 @@ router.post('/google/callback', async (req, res) => {
         }
 
         const email = (userData.email || '').toLowerCase();
-        const allowed = (process.env.ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-        if (!allowed.includes(email)) {
+
+        // Check allowed_emails table instead of env var
+        const { data: allowed, error: dbError } = await supabase
+            .from('allowed_emails')
+            .select('email')
+            .eq('email', email)
+            .single();
+        if (dbError || !allowed) {
             return res.status(403).json({ error: 'Email no autorizado' });
         }
 
-        const token = genToken(userData.id);
+        const token = genToken(userData.id, email);
         res.json({
             token,
             usuario: {
@@ -68,16 +75,130 @@ router.post('/google/callback', async (req, res) => {
     }
 });
 
-router.get('/validate', async (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(' ')[1];
-        if (!token) return res.status(401).json({ error: 'Token requerido' });
-        const decoded = jwt.verify(token, JWT_SECRET);
-        res.json({ valido: true, usuarioId: decoded.userId });
-    } catch (error) {
-        res.status(401).json({ error: 'Token inválido' });
+router.get('/validate', authenticateToken, async (req, res) => {
+    res.json({ valido: true, usuarioId: req.userId });
+});
+
+/* ====== ALLOWED EMAILS CRUD (super admin only) ====== */
+
+const MAX_USERS = 4;
+const MAX_SUPER_ADMINS = 2;
+
+async function checkSuperAdmin(email) {
+    const { data } = await supabase
+        .from('allowed_emails')
+        .select('is_super_admin')
+        .eq('email', email)
+        .single();
+    return data?.is_super_admin === true;
+}
+
+async function countSuperAdmins() {
+    const { count, error } = await supabase
+        .from('allowed_emails')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_super_admin', true);
+    if (error) return 0;
+    return count;
+}
+
+async function countTotal() {
+    const { count, error } = await supabase
+        .from('allowed_emails')
+        .select('*', { count: 'exact', head: true });
+    if (error) return 0;
+    return count;
+}
+
+router.get('/allowed-emails', authenticateToken, async (req, res) => {
+    if (!await checkSuperAdmin(req.userEmail)) {
+        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
     }
+    const { data, error } = await supabase.from('allowed_emails').select('*').order('email');
+    if (error) return res.status(500).json({ error: 'Error al obtener lista' });
+    res.json(data);
+});
+
+router.post('/allowed-emails', authenticateToken, async (req, res) => {
+    if (!await checkSuperAdmin(req.userEmail)) {
+        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    }
+    const { email } = req.body;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Email inválido' });
+    }
+    const total = await countTotal();
+    if (total >= MAX_USERS) {
+        return res.status(400).json({ error: `Límite de ${MAX_USERS} usuarios alcanzado` });
+    }
+    const clean = email.toLowerCase().trim();
+    const { data, error } = await supabase
+        .from('allowed_emails')
+        .insert({ email: clean, added_by: req.userEmail })
+        .select()
+        .single();
+    if (error) {
+        if (error.code === '23505') return res.status(409).json({ error: 'El email ya está registrado' });
+        return res.status(500).json({ error: 'Error al añadir email' });
+    }
+    res.json(data);
+});
+
+router.delete('/allowed-emails/:id', authenticateToken, async (req, res) => {
+    if (!await checkSuperAdmin(req.userEmail)) {
+        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    }
+    const { id } = req.params;
+    const { data: target } = await supabase.from('allowed_emails').select('email').eq('id', id).single();
+    if (!target) return res.status(404).json({ error: 'Email no encontrado' });
+    if (target.email === req.userEmail) {
+        return res.status(400).json({ error: 'No puedes eliminarte a ti mismo' });
+    }
+    const { error } = await supabase.from('allowed_emails').delete().eq('id', id);
+    if (error) return res.status(500).json({ error: 'Error al eliminar' });
+    res.json({ success: true });
+});
+
+router.put('/allowed-emails/:id/toggle-admin', authenticateToken, async (req, res) => {
+    if (!await checkSuperAdmin(req.userEmail)) {
+        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    }
+    const { id } = req.params;
+    const { data: target } = await supabase.from('allowed_emails').select('email, is_super_admin').eq('id', id).single();
+    if (!target) return res.status(404).json({ error: 'Email no encontrado' });
+    // Cannot toggle yourself
+    if (target.email === req.userEmail) {
+        return res.status(400).json({ error: 'Usa "Renunciar" para quitarte tu propio rol' });
+    }
+    // If making someone admin, check max limit
+    if (!target.is_super_admin) {
+        const count = await countSuperAdmins();
+        if (count >= MAX_SUPER_ADMINS) {
+            return res.status(400).json({ error: `Límite de ${MAX_SUPER_ADMINS} super admins alcanzado` });
+        }
+    }
+    const { error } = await supabase
+        .from('allowed_emails')
+        .update({ is_super_admin: !target.is_super_admin })
+        .eq('id', id);
+    if (error) return res.status(500).json({ error: 'Error al actualizar' });
+    res.json({ success: true });
+});
+
+router.post('/allowed-emails/renounce', authenticateToken, async (req, res) => {
+    if (!await checkSuperAdmin(req.userEmail)) {
+        return res.status(403).json({ error: 'No eres super admin' });
+    }
+    const count = await countSuperAdmins();
+    if (count <= 1) {
+        return res.status(400).json({ error: 'No puedes renunciar — eres el único super admin' });
+    }
+    const { error } = await supabase
+        .from('allowed_emails')
+        .update({ is_super_admin: false })
+        .eq('email', req.userEmail);
+    if (error) return res.status(500).json({ error: 'Error al renunciar' });
+    res.json({ success: true, message: 'Has renunciado como super admin' });
 });
 
 module.exports = router;

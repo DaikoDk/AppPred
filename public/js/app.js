@@ -110,6 +110,7 @@ async function checkAuth() {
             currentUser = u;
             document.getElementById('user-name').textContent = u.nombre || u.email;
             document.getElementById('user-avatar').textContent = (u.nombre || 'U')[0];
+            checkSuperAdmin();
         }
     } catch {
         localStorage.removeItem('token');
@@ -120,7 +121,7 @@ async function checkAuth() {
 
 /* ====== TABS ====== */
 function initTabs() {
-    const titles = { asignacion: 'Asignación', programa: 'Programa Semanal', conductores: 'Conductores', puntos: 'Puntos de Reunión', historial: 'Historial' };
+    const titles = { asignacion: 'Asignación', programa: 'Programa Semanal', conductores: 'Conductores', puntos: 'Puntos de Reunión', historial: 'Historial', admin: 'Admin' };
     document.querySelectorAll('.nav-item[data-tab]').forEach(tab => {
         tab.addEventListener('click', e => {
             e.preventDefault();
@@ -145,6 +146,7 @@ function initTabs() {
                 document.getElementById('sidebar-overlay').classList.remove('active');
             }
             if (name === 'historial') cargarHistorial();
+            if (name === 'admin') cargarAllowedEmails();
         });
     });
 }
@@ -1498,6 +1500,119 @@ async function cargarHistorial() {
             });
         }
     } catch { showToast('Error cargando historial', 'error'); }
+}
+
+/* ====== ADMIN ====== */
+
+async function cargarAllowedEmails() {
+    try {
+        const data = await apiFetch('/api/auth/allowed-emails');
+        const tbody = document.getElementById('tbody-allowed-emails');
+        if (!tbody) return;
+        const total = data.length;
+        const admins = data.filter(e => e.is_super_admin).length;
+        document.getElementById('admin-count-users').textContent = total;
+        document.getElementById('admin-count-admins').textContent = admins;
+
+        const addBtn = document.getElementById('btn-admin-add');
+        if (addBtn) addBtn.disabled = total >= 4;
+
+        tbody.innerHTML = '';
+        data.forEach(e => {
+            const isSelf = e.email === currentUser?.email;
+            const canMakeAdmin = admins < 2 && !e.is_super_admin;
+            const canRenounce = e.is_super_admin && admins > 1;
+
+            let actionsHtml = '';
+            if (isSelf && e.is_super_admin) {
+                actionsHtml = `<button class="btn btn-warning" onclick="renounceAdmin()" ${canRenounce ? '' : 'disabled'} style="font-size:0.75rem;padding:2px 8px;height:auto;line-height:1.4" title="${canRenounce ? 'Renunciar como super admin' : 'Debe haber al menos 1 super admin'}">
+                    <i class="fas fa-user-minus"></i> Renunciar
+                </button>`;
+            } else if (isSelf) {
+                actionsHtml = `<span class="text-muted" style="font-size:0.8rem">—</span>`;
+            } else {
+                actionsHtml = `<button class="btn btn-${e.is_super_admin ? 'warning' : 'info'}" onclick="toggleAdminRole('${e.id}')" style="font-size:0.75rem;padding:2px 8px;height:auto;line-height:1.4">
+                    <i class="fas ${e.is_super_admin ? 'fa-user-minus' : 'fa-user-shield'}"></i> ${e.is_super_admin ? 'Quitar Admin' : 'Hacer Admin'}
+                </button>
+                <button class="btn btn-danger" onclick="removeAllowedEmail('${e.id}')" style="font-size:0.75rem;padding:2px 8px;height:auto;line-height:1.4;margin-left:4px"><i class="fas fa-trash"></i></button>`;
+            }
+
+            tbody.innerHTML += `<tr>
+                <td>${e.email}${isSelf ? ' <span class="badge badge-info">tú</span>' : ''}</td>
+                <td style="text-align:center">${e.is_super_admin ? '<span class="badge badge-success"><i class="fas fa-check"></i></span>' : '<span class="badge badge-secondary">—</span>'}</td>
+                <td>${e.added_by || '—'}</td>
+                <td>${e.created_at ? new Date(e.created_at).toLocaleDateString('es-PE') : '—'}</td>
+                <td style="white-space:nowrap">${actionsHtml}</td>
+            </tr>`;
+        });
+    } catch (err) {
+        showToast('Error cargando lista de emails', 'error');
+    }
+}
+
+async function addAllowedEmail() {
+    const input = document.getElementById('admin-new-email');
+    const email = input?.value.trim();
+    if (!email) return showToast('Ingresa un email', 'warning');
+    try {
+        await apiFetch('/api/auth/allowed-emails', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+        showToast('Email añadido correctamente', 'success');
+        input.value = '';
+        cargarAllowedEmails();
+    } catch (err) {
+        showToast(err.message || 'Error al añadir email', 'error');
+    }
+}
+
+async function removeAllowedEmail(id) {
+    if (!confirm('¿Eliminar este email de la lista de permitidos?')) return;
+    try {
+        await apiFetch(`/api/auth/allowed-emails/${id}`, { method: 'DELETE' });
+        showToast('Email eliminado', 'success');
+        cargarAllowedEmails();
+    } catch (err) {
+        showToast(err.message || 'Error al eliminar', 'error');
+    }
+}
+
+async function toggleAdminRole(id) {
+    try {
+        await apiFetch(`/api/auth/allowed-emails/${id}/toggle-admin`, { method: 'PUT' });
+        showToast('Rol actualizado', 'success');
+        cargarAllowedEmails();
+    } catch (err) {
+        showToast(err.message || 'Error al actualizar rol', 'error');
+    }
+}
+
+async function renounceAdmin() {
+    if (!confirm('¿Renunciar como super admin? Ya no podrás gestionar la lista de emails.')) return;
+    try {
+        const res = await apiFetch('/api/auth/allowed-emails/renounce', { method: 'POST' });
+        showToast(res.message || 'Has renunciado como super admin', 'success');
+        document.getElementById('nav-admin').style.display = 'none';
+        // Switch to default tab if on admin tab
+        const adminTab = document.getElementById('tab-admin');
+        if (adminTab?.classList.contains('active')) {
+            document.querySelector('.nav-item[data-tab="programa"]')?.click();
+        }
+    } catch (err) {
+        showToast(err.message || 'Error al renunciar', 'error');
+    }
+}
+
+async function checkSuperAdmin() {
+    try {
+        const data = await apiFetch('/api/auth/allowed-emails');
+        document.getElementById('nav-admin').style.display = '';
+        return true;
+    } catch {
+        document.getElementById('nav-admin').style.display = 'none';
+        return false;
+    }
 }
 
 /* ====== INIT ====== */
