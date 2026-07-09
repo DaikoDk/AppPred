@@ -146,7 +146,7 @@ function initTabs() {
                 document.getElementById('sidebar-overlay').classList.remove('active');
             }
             if (name === 'historial') cargarHistorial();
-            if (name === 'admin') cargarAllowedEmails();
+            if (name === 'admin') { cargarAllowedEmails(); cargarConfig(); }
         });
     });
 }
@@ -1500,6 +1500,38 @@ async function cargarHistorial() {
             });
         }
     } catch { showToast('Error cargando historial', 'error'); }
+}
+
+/* ====== CONFIG ====== */
+
+async function cargarConfig() {
+    try {
+        const cfg = await apiFetch('/api/auth/config');
+        const input = document.getElementById('config-spreadsheet-id');
+        const urlDiv = document.getElementById('config-spreadsheet-url');
+        if (input) input.value = cfg.spreadsheet_id || '';
+        if (urlDiv) {
+            urlDiv.innerHTML = cfg.spreadsheet_url
+                ? `<a href="${cfg.spreadsheet_url}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> Abrir spreadsheet</a>`
+                : '<span class="text-muted">No configurado</span>';
+        }
+    } catch { /* super admin check already handles 403 */ }
+}
+
+async function saveConfigSpreadsheet() {
+    const input = document.getElementById('config-spreadsheet-id');
+    const value = input?.value.trim();
+    if (!value) return showToast('Ingresa el ID del spreadsheet', 'warning');
+    try {
+        await apiFetch('/api/auth/config', {
+            method: 'PUT',
+            body: JSON.stringify({ key: 'spreadsheet_id', value })
+        });
+        showToast('Spreadsheet ID guardado', 'success');
+        cargarConfig();
+    } catch (err) {
+        showToast(err.message || 'Error al guardar', 'error');
+    }
 }
 
 /* ====== ADMIN ====== */

@@ -3,6 +3,7 @@
 const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs');
+const { supabase } = require('../supabase/client');
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
 
@@ -68,10 +69,19 @@ async function createSheetTab(spreadsheetId, sheetTitle) {
     return finalTitle;
 }
 
+async function getSpreadsheetId() {
+    const { data } = await supabase
+        .from('config')
+        .select('value')
+        .eq('key', 'spreadsheet_id')
+        .single();
+    return data?.value || process.env.SHEETS_SPREADSHEET_ID;
+}
+
 async function exportAsignacionToSheets(asignaciones, semanaInfo) {
-    const spreadsheetId = process.env.SHEETS_SPREADSHEET_ID;
+    const spreadsheetId = await getSpreadsheetId();
     if (!spreadsheetId) {
-        throw new Error('Falta SHEETS_SPREADSHEET_ID en la configuración');
+        throw new Error('No hay spreadsheet_id configurado — ve a Admin > Configuración');
     }
 
     const semanaInicio = semanaInfo?.semana_inicio;

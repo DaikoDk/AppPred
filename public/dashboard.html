@@ -303,6 +303,21 @@
                     <div class="card">
                         <div class="card-header"><h3><i class="fas fa-shield-alt"></i> Administración</h3></div>
                         <div class="card-body">
+                            <!-- Config section -->
+                            <div class="card" style="margin-bottom:20px;border:1px solid #e0e0e0">
+                                <div class="card-header" style="padding:10px 15px"><h3 style="font-size:0.9rem"><i class="fas fa-cog"></i> Configuración</h3></div>
+                                <div class="card-body" style="padding:10px 15px">
+                                    <div class="form-group" style="margin-bottom:8px">
+                                        <label style="font-weight:600;font-size:0.85rem">ID del Spreadsheet de Google Sheets</label>
+                                        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+                                            <input type="text" id="config-spreadsheet-id" class="form-control" placeholder="ID del spreadsheet" style="flex:1">
+                                            <button class="btn btn-primary" onclick="saveConfigSpreadsheet()" style="white-space:nowrap"><i class="fas fa-save"></i> Guardar</button>
+                                        </div>
+                                        <div id="config-spreadsheet-url" style="margin-top:4px;font-size:0.8rem"></div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <p>Gestiona los emails autorizados para acceder al sistema.</p>
                             <div class="stats-row" style="margin-bottom:15px;gap:10px">
                                 <div class="stat-card" style="padding:8px 16px"><strong id="admin-count-users">0</strong><span style="font-size:0.8rem;margin-left:4px">/ 4 usuarios</span></div>

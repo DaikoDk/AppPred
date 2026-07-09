@@ -201,4 +201,35 @@ router.post('/allowed-emails/renounce', authenticateToken, async (req, res) => {
     res.json({ success: true, message: 'Has renunciado como super admin' });
 });
 
+/* ====== CONFIG ====== */
+
+router.get('/config', authenticateToken, async (req, res) => {
+    if (!await checkSuperAdmin(req.userEmail)) {
+        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    }
+    const { data, error } = await supabase.from('config').select('*');
+    if (error) return res.status(500).json({ error: 'Error al obtener configuración' });
+    const config = {};
+    (data || []).forEach(c => { config[c.key] = c.value; });
+    // Include spreadsheet_url for convenience
+    if (config.spreadsheet_id) {
+        config.spreadsheet_url = `https://docs.google.com/spreadsheets/d/${config.spreadsheet_id}`;
+    }
+    res.json(config);
+});
+
+router.put('/config', authenticateToken, async (req, res) => {
+    if (!await checkSuperAdmin(req.userEmail)) {
+        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    }
+    const { key, value } = req.body;
+    if (!key) return res.status(400).json({ error: 'key requerida' });
+    const { error } = await supabase
+        .from('config')
+        .upsert({ key, value, updated_by: req.userEmail, updated_at: new Date().toISOString() },
+            { onConflict: 'key' });
+    if (error) return res.status(500).json({ error: 'Error al guardar configuración' });
+    res.json({ success: true });
+});
+
 module.exports = router;
