@@ -1518,10 +1518,16 @@ async function cargarConfig() {
     } catch { /* super admin check already handles 403 */ }
 }
 
+function extractSpreadsheetId(input) {
+    const m = input.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    return m ? m[1] : input;
+}
+
 async function saveConfigSpreadsheet() {
     const input = document.getElementById('config-spreadsheet-id');
-    const value = input?.value.trim();
-    if (!value) return showToast('Ingresa el ID del spreadsheet', 'warning');
+    const raw = input?.value.trim();
+    if (!raw) return showToast('Ingresa el ID o URL del spreadsheet', 'warning');
+    const value = extractSpreadsheetId(raw);
     try {
         await apiFetch('/api/auth/config', {
             method: 'PUT',
