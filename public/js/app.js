@@ -883,27 +883,27 @@ async function listarProgramas() {
 }
 
 async function loadPlantilla() {
+    const tabProg = document.getElementById('tab-programa');
+    if (!tabProg?.classList.contains('active')) {
+        document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tabProg?.classList.add('active');
+    }
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.remove('active'));
     document.getElementById('nav-plantilla')?.classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById('tab-programa')?.classList.add('active');
     const pt = document.getElementById('page-title');
     if (pt) pt.textContent = 'Plantilla (Editar modelo por defecto)';
-    cancelarEdicionPrograma();
+
     editandoProgramaId = TEMPLATE_ID;
     modoPlantilla = true;
-
-    // Fetch plantilla data from server
-    try {
-        const d = await apiFetch('/api/programa-semanal/plantilla');
-        const prog = d.programa;
-        if (prog) {
-            document.getElementById('prog-semana-inicio').value = prog.semana_inicio;
-            document.getElementById('prog-semana-fin').value = prog.semana_fin;
-        }
-    } catch (err) {
-        console.error('Error cargando plantilla:', err);
-    }
+    document.getElementById('form-programa')?.reset();
+    document.getElementById('turnos-container').style.display = 'none';
+    document.getElementById('programa-actions').style.display = 'none';
+    document.getElementById('edit-banner').style.display = 'none';
+    const cancelBtn = document.getElementById('btn-cancelar-edicion');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    const rstBtn = document.getElementById('btn-restablecer-plantilla');
+    if (rstBtn) rstBtn.style.display = 'none';
 
     const banner = document.getElementById('edit-banner');
     if (banner) { banner.style.display = 'block'; document.getElementById('edit-banner-text').textContent = 'PLANTILLA — haz clic en "Editar Plantilla" para modificar los turnos'; }
@@ -917,6 +917,18 @@ async function loadPlantilla() {
     if (plantillaHeader) plantillaHeader.innerHTML = '<i class="fas fa-pencil-alt"></i> Editar Plantilla';
     const progCards = document.querySelectorAll('#tab-programa > .card');
     if (progCards.length > 1) progCards[1].style.display = 'none';
+
+    // Fetch plantilla data for date fields
+    try {
+        const d = await apiFetch('/api/programa-semanal/plantilla');
+        const prog = d.programa;
+        if (prog) {
+            document.getElementById('prog-semana-inicio').value = prog.semana_inicio;
+            document.getElementById('prog-semana-fin').value = prog.semana_fin;
+        }
+    } catch (err) {
+        console.error('Error cargando plantilla:', err);
+    }
 }
 
 async function restablecerPlantilla() {
