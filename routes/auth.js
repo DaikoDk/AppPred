@@ -111,37 +111,47 @@ async function countTotal() {
 }
 
 router.get('/allowed-emails', authenticateToken, async (req, res) => {
-    if (!await checkSuperAdmin(req.userEmail)) {
-        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    try {
+        if (!await checkSuperAdmin(req.userEmail)) {
+            return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+        }
+        const { data, error } = await supabase.from('allowed_emails').select('*').order('email');
+        if (error) return res.status(500).json({ error: `Error al obtener lista: ${error.message}`, detalle: error });
+        res.json(data);
+    } catch (err) {
+        console.error('GET /api/auth/allowed-emails error:', err);
+        res.status(500).json({ error: `Error interno: ${err.message}`, stack: err.stack });
     }
-    const { data, error } = await supabase.from('allowed_emails').select('*').order('email');
-    if (error) return res.status(500).json({ error: 'Error al obtener lista' });
-    res.json(data);
 });
 
 router.post('/allowed-emails', authenticateToken, async (req, res) => {
-    if (!await checkSuperAdmin(req.userEmail)) {
-        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    try {
+        if (!await checkSuperAdmin(req.userEmail)) {
+            return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+        }
+        const { email } = req.body;
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ error: 'Email inválido' });
+        }
+        const total = await countTotal();
+        if (total >= MAX_USERS) {
+            return res.status(400).json({ error: `Límite de ${MAX_USERS} usuarios alcanzado` });
+        }
+        const clean = email.toLowerCase().trim();
+        const { data, error } = await supabase
+            .from('allowed_emails')
+            .insert({ email: clean, added_by: req.userEmail })
+            .select()
+            .single();
+        if (error) {
+            if (error.code === '23505') return res.status(409).json({ error: 'El email ya está registrado' });
+            return res.status(500).json({ error: `Error al añadir email: ${error.message}`, detalle: error });
+        }
+        res.json(data);
+    } catch (err) {
+        console.error('POST /api/auth/allowed-emails error:', err);
+        res.status(500).json({ error: `Error interno: ${err.message}`, stack: err.stack });
     }
-    const { email } = req.body;
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        return res.status(400).json({ error: 'Email inválido' });
-    }
-    const total = await countTotal();
-    if (total >= MAX_USERS) {
-        return res.status(400).json({ error: `Límite de ${MAX_USERS} usuarios alcanzado` });
-    }
-    const clean = email.toLowerCase().trim();
-    const { data, error } = await supabase
-        .from('allowed_emails')
-        .insert({ email: clean, added_by: req.userEmail })
-        .select()
-        .single();
-    if (error) {
-        if (error.code === '23505') return res.status(409).json({ error: 'El email ya está registrado' });
-        return res.status(500).json({ error: 'Error al añadir email' });
-    }
-    res.json(data);
 });
 
 router.delete('/allowed-emails/:id', authenticateToken, async (req, res) => {
@@ -204,32 +214,40 @@ router.post('/allowed-emails/renounce', authenticateToken, async (req, res) => {
 /* ====== CONFIG ====== */
 
 router.get('/config', authenticateToken, async (req, res) => {
-    if (!await checkSuperAdmin(req.userEmail)) {
-        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    try {
+        if (!await checkSuperAdmin(req.userEmail)) {
+            return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+        }
+        const { data, error } = await supabase.from('config').select('*');
+        if (error) return res.status(500).json({ error: `Error al obtener configuración: ${error.message}`, detalle: error });
+        const config = {};
+        (data || []).forEach(c => { config[c.key] = c.value; });
+        if (config.spreadsheet_id) {
+            config.spreadsheet_url = `https://docs.google.com/spreadsheets/d/${config.spreadsheet_id}`;
+        }
+        res.json(config);
+    } catch (err) {
+        console.error('GET /api/auth/config error:', err);
+        res.status(500).json({ error: `Error interno: ${err.message}`, stack: err.stack });
     }
-    const { data, error } = await supabase.from('config').select('*');
-    if (error) return res.status(500).json({ error: 'Error al obtener configuración' });
-    const config = {};
-    (data || []).forEach(c => { config[c.key] = c.value; });
-    // Include spreadsheet_url for convenience
-    if (config.spreadsheet_id) {
-        config.spreadsheet_url = `https://docs.google.com/spreadsheets/d/${config.spreadsheet_id}`;
-    }
-    res.json(config);
 });
 
 router.put('/config', authenticateToken, async (req, res) => {
-    if (!await checkSuperAdmin(req.userEmail)) {
-        return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+    try {
+        if (!await checkSuperAdmin(req.userEmail)) {
+            return res.status(403).json({ error: 'Acceso denegado — se requiere super admin' });
+        }
+        const { key, value } = req.body;
+        if (!key) return res.status(400).json({ error: 'key requerida' });
+        const { error } = await supabase
+            .from('config')
+            .upsert({ key, value }, { onConflict: 'key' });
+        if (error) return res.status(500).json({ error: `Error al guardar configuración: ${error.message}`, detalle: error });
+        res.json({ success: true });
+    } catch (err) {
+        console.error('PUT /api/auth/config error:', err);
+        res.status(500).json({ error: `Error interno: ${err.message}`, stack: err.stack });
     }
-    const { key, value } = req.body;
-    if (!key) return res.status(400).json({ error: 'key requerida' });
-    const { error } = await supabase
-        .from('config')
-        .upsert({ key, value, updated_by: req.userEmail, updated_at: new Date().toISOString() },
-            { onConflict: 'key' });
-    if (error) return res.status(500).json({ error: 'Error al guardar configuración' });
-    res.json({ success: true });
 });
 
 module.exports = router;
