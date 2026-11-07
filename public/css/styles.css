@@ -525,6 +525,59 @@ body {
     color: var(--dark);
 }
 
+.card-title-rich {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.title-icon {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #dbe7fb;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.title-icon.plain {
+    background: none;
+    width: 36px;
+    font-size: 24px;
+}
+
+.card-subtitle {
+    margin-top: 2px;
+    font-size: 13px;
+    color: #6b7c93;
+}
+
+.table .fila-estado td {
+    text-align: center;
+    color: #6b7c93;
+    padding: 24px 12px;
+}
+
+.table .fila-estado i {
+    margin-right: 6px;
+    color: var(--primary);
+}
+
+.btn-label {
+    display: none;
+}
+
+/* Fila de programa guardado: icono/subtítulo solo visibles en móvil */
+.fecha-icon,
+.fecha-sub {
+    display: none;
+}
+
 .card-body {
     padding: 24px;
 }
@@ -948,7 +1001,220 @@ body {
         padding: 12px 16px;
         gap: 8px;
     }
-    
+
+    .top-bar-left {
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .top-bar h2 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .user-details {
+        display: none;
+    }
+
+    .user-menu {
+        gap: 8px;
+    }
+
+    .page-content {
+        padding: 12px;
+    }
+
+    .card-body img,
+    .card-body .table-container {
+        max-width: 100%;
+    }
+
+    .card-header {
+        padding: 14px 16px;
+    }
+
+    .card-header h3 {
+        font-size: 16px;
+    }
+
+    /* Tabs: scroll horizontal en vez de desbordar */
+    .tab-nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        margin-bottom: 16px;
+    }
+
+    .tab-nav::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab-btn {
+        padding: 10px 14px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .title-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .card-subtitle {
+        font-size: 12px;
+    }
+
+    /* Nuevo programa: fechas lado a lado, botón a todo el ancho */
+    #form-programa .form-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0 12px;
+    }
+
+    #form-programa .form-group {
+        margin-bottom: 14px;
+        min-width: 0;
+    }
+
+    #form-programa .form-group label {
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    #form-programa .form-control {
+        padding: 10px 10px;
+        font-size: 14px;
+        min-width: 0;
+    }
+
+    #form-programa .form-group-action {
+        grid-column: 1 / -1;
+        margin-bottom: 0;
+    }
+
+    #form-programa .form-group-action .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Programas guardados: lista tipo tarjeta, sin scroll horizontal */
+    .table-programas,
+    .table-programas tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .table-programas thead {
+        display: none;
+    }
+
+    .table-programas tr {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .table-programas tr:last-child {
+        border-bottom: none;
+    }
+
+    .table-programas td {
+        padding: 0;
+        border: none;
+    }
+
+    .table-programas .fila-estado {
+        justify-content: center;
+    }
+
+    .table-programas .fila-estado td {
+        padding: 20px 0;
+    }
+
+    .table-programas .col-semana {
+        display: none;
+    }
+
+    .table-programas .col-fechas {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .table-programas .fecha-icon {
+        flex-shrink: 0;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: #e6eefb;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+    }
+
+    .table-programas .fecha-texto {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .table-programas .fecha-rango {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--dark);
+        white-space: nowrap;
+    }
+
+    .table-programas .fecha-sub {
+        display: block;
+        font-size: 11px;
+        color: #6b7c93;
+    }
+
+    .table-programas .badge {
+        white-space: nowrap;
+        padding: 3px 8px;
+        font-size: 10px;
+    }
+
+    .table-programas .col-turnos {
+        flex-shrink: 0;
+    }
+
+    .table-programas .col-acciones {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .table-programas .col-acciones .btn {
+        width: 84px;
+        height: 26px;
+        padding: 0 8px;
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        font-size: 12px;
+    }
+
+    .table-programas .col-acciones .btn i {
+        font-size: 10px;
+    }
+
+    .table-programas .col-acciones .btn-label {
+        display: inline;
+    }
+
     .top-bar h2 {
         font-size: 18px;
     }
@@ -961,6 +1227,16 @@ body {
     .table td {
         padding: 8px 12px;
         font-size: 13px;
+    }
+}
+
+@media (max-width: 380px) {
+    .table-programas .fecha-icon {
+        display: none;
+    }
+
+    .table-programas .fecha-rango {
+        white-space: normal;
     }
 }
 

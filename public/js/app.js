@@ -866,18 +866,25 @@ async function guardarPrograma(e) {
 async function listarProgramas() {
     const tbody = document.getElementById('tbody-programas');
     if (!tbody) return;
+    tbody.innerHTML = '<tr class="fila-estado"><td colspan="4"><i class="fas fa-circle-notch fa-spin"></i> Cargando programas…</td></tr>';
     try {
         const d = await apiFetch('/api/programa-semanal');
         tbody.innerHTML = '';
+        if (!(d.programas || []).length) {
+            tbody.innerHTML = '<tr class="fila-estado"><td colspan="4">No hay programas guardados</td></tr>';
+        }
         (d.programas || []).forEach(p => {
             const turnos = p.programa_semanal_turnos || [];
             tbody.innerHTML += `<tr>
-                <td><strong>Semana</strong></td>
-                <td>${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}</td>
-                <td><span class="badge badge-info">${turnos.length} turnos</span></td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editarPrograma('${p.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarPrograma('${p.id}')"><i class="fas fa-trash"></i></button>
+                <td class="col-semana"><strong>Semana</strong></td>
+                <td class="col-fechas">
+                    <span class="fecha-icon"><i class="far fa-calendar"></i></span>
+                    <span class="fecha-texto"><span class="fecha-rango">${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}</span><small class="fecha-sub">Programa semanal</small></span>
+                </td>
+                <td class="col-turnos"><span class="badge badge-info">${turnos.length} turnos</span></td>
+                <td class="col-acciones">
+                    <button class="btn btn-sm btn-primary" onclick="editarPrograma('${p.id}')" title="Editar"><i class="fas fa-edit"></i><span class="btn-label">Editar</span></button>
+                    <button class="btn btn-sm btn-danger" onclick="eliminarPrograma('${p.id}', '${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}')"><i class="fas fa-trash"></i><span class="btn-label">Eliminar</span></button>
                 </td>
             </tr>`;
         });
