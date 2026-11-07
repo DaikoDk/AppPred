@@ -17,6 +17,7 @@ function getToken() { return localStorage.getItem('token'); }
 function getUser() { try { return JSON.parse(localStorage.getItem('usuario')); } catch { return null; } }
 
 function capitalize(s) { return s ? s.charAt(0) + s.slice(1).toLowerCase() : ''; }
+function nombreDia(d) { return ({ MIERCOLES: 'Miércoles', SABADO: 'Sábado' })[d] || capitalize(d); }
 
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -498,6 +499,7 @@ function opcionesPuntos() {
 
 
 const GRUPO_OPTIONS = ['TODA LA CONGREGACION', 'GRUPO A', 'GRUPO B'];
+const GRUPO_LABEL = { 'TODA LA CONGREGACION': 'Toda la Congre.', 'GRUPO A': 'Grupo A', 'GRUPO B': 'Grupo B' };
 const MODALIDAD_OPTIONS = ['FISICO', 'ZOOM', 'CARTAS'];
 
 const DEFAULT_TURNOS = [
@@ -551,10 +553,66 @@ async function toggleTurnosGrid() {
     }
 }
 
+const TABLA_HEAD_HTML = '<thead><tr>' +
+    '<th><i class="fa-regular fa-calendar"></i> Día</th>' +
+    '<th><i class="fa-regular fa-clock"></i> Hora</th>' +
+    '<th><i class="fa-solid fa-users"></i> Grupo</th>' +
+    '<th><i class="fa-solid fa-map-location-dot"></i> Territorio</th>' +
+    '<th><i class="fa-solid fa-location-dot"></i> P. Reunión</th>' +
+    '<th><i class="fa-solid fa-signal"></i> Modalidad</th>' +
+    '<th></th></tr></thead>';
+
 const DAY_COLORS = {
     LUNES: '#fbe4d5', MARTES: '#e2efd9', MIERCOLES: '#deeaf6',
     JUEVES: '#fff2cc', VIERNES: '#ead1dc', SABADO: '#ffdfc0', DOMINGO: '#ffe599'
 };
+const MOVER_DIA_SELECT = `<select class="mover-dia" onchange="moverFilaDia(this)" title="Mover a otro día">${DIAS_ORDEN.map(d => `<option value="${d}">Día: ${nombreDia(d)}</option>`).join('')}</select>`;
+const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>' + MOVER_DIA_SELECT;
+
+// El turno "Domingo (10:20 AM)" solo existe en domingo, aunque se haya guardado en otro día
+// La fila extra "REUNION DE / FIN DE SEMANA" (8:30AM) abre el domingo, antes del turno de las 10:20
+function diaDeExtra(e) {
+    return /fin de semana/i.test(e.punto_reunion || '') ? 'DOMINGO' : e.dia;
+}
+
+function normalizarExtras(extras) {
+    return (extras || []).map(e => {
+        const dia = diaDeExtra(e);
+        return dia === e.dia ? e : { ...e, dia, orden: -1 };
+    });
+}
+
+function diaDeTurno(t) {
+    return /^Domingo/i.test(t.hora || '') ? 'DOMINGO' : t.dia;
+}
+
+function moverFilaDia(sel) {
+    const tr = sel.closest('tr');
+    const nuevo = sel.value;
+    if (!tr || nuevo === tr.dataset.dia) return;
+    tr.remove();
+    tr.dataset.dia = nuevo;
+    tr.style.background = DAY_COLORS[nuevo] || '#fff';
+    if (tr.dataset.antes === 'true') insertBeforeDay(nuevo, tr); else insertAfterDay(nuevo, tr);
+    tr.querySelector('td.abierto')?.classList.remove('abierto');
+    actualizarDias();
+    irDiaVista(DIAS_ORDEN.indexOf(nuevo));
+    showToast(`Fila movida a ${nombreDia(nuevo)}`, 'success');
+}
+
+function toggleMasAcciones(btn) {
+    const td = btn.closest('td');
+    const abrir = !td.classList.contains('abierto');
+    document.querySelectorAll('#programa-table td.abierto').forEach(t => t.classList.remove('abierto'));
+    if (abrir) td.classList.add('abierto');
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('.mas-btn') && !e.target.closest('td.abierto')) {
+        document.querySelectorAll('#programa-table td.abierto').forEach(t => t.classList.remove('abierto'));
+    }
+});
+
 const COMPACT_STYLE = 'font-size:0.75rem;padding:0 2px;height:auto;line-height:1.1;border-width:1px;box-sizing:border-box';
 
 function insertAfterDay(dia, tr) {
@@ -603,10 +661,11 @@ function renderEmptyTurnosGrid(preload) {
     }
 
     let html = '<div class="table-container"><table class="table" id="programa-table" style="font-size:0.75rem">';
-    html += '<thead><tr><th style="width:7%;padding:3px 6px;font-size:0.65rem">Día</th><th style="width:18%;padding:3px 6px;font-size:0.65rem">Hora</th><th style="width:6%;padding:3px 6px;font-size:0.65rem">Grupo</th><th style="width:27%;padding:3px 6px;font-size:0.65rem">Territorio</th><th style="width:30%;padding:3px 6px;font-size:0.65rem">P. Reunión</th><th style="width:8%;padding:3px 6px;font-size:0.65rem">Modalidad</th><th style="width:4%;padding:3px 6px;font-size:0.65rem"></th></tr></thead>';
+    html += TABLA_HEAD_HTML;
     html += '<tbody>';
     html += '</tbody></table></div>';
-    container.innerHTML = html;
+    container.innerHTML = vistaTurnosToolbarHTML() + html + vistaTurnosFooterHTML();
+    initVistaTurnos();
     if (preload) {
         DEFAULT_TURNOS.forEach(t => agregarFilaTurno(t.dia, t));
         agregarFilaExtra('MARTES');
@@ -629,6 +688,7 @@ function agregarFilaExtraDesde(btn, before) {
 function renderTurnosDesdeDatos(turnos, extras) {
     const container = document.getElementById('turnos-container');
     if (!container) return;
+    extras = normalizarExtras(extras);
     const inicio = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);
     const diasOff = { LUNES: 0, MARTES: 1, MIERCOLES: 2, JUEVES: 3, VIERNES: 4, SABADO: 5, DOMINGO: 6 };
     function dateStr(dia) {
@@ -638,11 +698,11 @@ function renderTurnosDesdeDatos(turnos, extras) {
         return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
     }
     let html = '<div class="table-container"><table class="table" id="programa-table" style="font-size:0.75rem">';
-    html += '<thead><tr><th style="width:7%;padding:3px 6px;font-size:0.65rem">Día</th><th style="width:18%;padding:3px 6px;font-size:0.65rem">Hora</th><th style="width:6%;padding:3px 6px;font-size:0.65rem">Grupo</th><th style="width:27%;padding:3px 6px;font-size:0.65rem">Territorio</th><th style="width:30%;padding:3px 6px;font-size:0.65rem">P. Reunión</th><th style="width:8%;padding:3px 6px;font-size:0.65rem">Modalidad</th><th style="width:4%;padding:3px 6px;font-size:0.65rem"></th></tr></thead>';
+    html += TABLA_HEAD_HTML;
     html += '<tbody>';
     DIAS_ORDEN.forEach(dia => {
         const color = DAY_COLORS[dia] || '#fff';
-        const turnosDia = turnos.filter(t => t.dia === dia);
+        const turnosDia = turnos.filter(t => diaDeTurno(t) === dia);
         const extrasDia = extras.filter(e => e.dia === dia).sort((a, b) => (a.orden || 0) - (b.orden || 0));
         const allItems = [];
         extrasDia.filter(e => (e.orden || 0) < 0).forEach(e => allItems.push({ tipo: 'extra', datos: e }));
@@ -650,12 +710,12 @@ function renderTurnosDesdeDatos(turnos, extras) {
         extrasDia.filter(e => (e.orden || 0) >= 0).forEach(e => allItems.push({ tipo: 'extra', datos: e }));
         allItems.forEach((item, idx) => {
             const isFirst = idx === 0;
-            const diaCell = isFirst ? capitalize(dia) + (turnosDia.length <= 1 && extrasDia.length === 0 ? `<br><small style="font-weight:400">${dateStr(dia)}</small>` : '') : (isFirst && turnosDia.length > 1 ? capitalize(dia) : '');
+            const diaCell = isFirst ? nombreDia(dia) + (turnosDia.length <= 1 && extrasDia.length === 0 ? `<br><small style="font-weight:400">${dateStr(dia)}</small>` : '') : (isFirst && turnosDia.length > 1 ? nombreDia(dia) : '');
             const dateCell = (idx === 1 && turnosDia.length > 0) ? `<small style="font-weight:400">${dateStr(dia)}</small>` : '';
             if (item.tipo === 'turno') {
                 const t = item.datos;
                 const optsH = FRANJAS.map(h => `<option value="${h}" ${t.hora === h ? 'selected' : ''}>${h}</option>`).join('');
-                const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}" ${t.grupo === g ? 'selected' : ''}>${g.replace('TODA LA CONGREGACION', 'TODA').replace('GRUPO ', 'G')}</option>`).join('');
+                const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}" ${t.grupo === g ? 'selected' : ''}>${GRUPO_LABEL[g] || g}</option>`).join('');
                 const optsP = opcionesPuntos().replace(`value="${t.punto_reunion || ''}"`, `value="${t.punto_reunion || ''}" selected`);
                 const optsM = MODALIDAD_OPTIONS.map(m => `<option value="${m}" ${t.modalidad === m ? 'selected' : ''}>${m}</option>`).join('');
                 const CELL = 'padding:1px 2px;border-bottom:1px solid #ddd';
@@ -667,10 +727,10 @@ function renderTurnosDesdeDatos(turnos, extras) {
                     <td style="${CELL}"><select class="form-control turno-punto" style="${COMPACT_STYLE}">${optsP}</select></td>
                     <td style="${CELL}"><select class="form-control turno-modalidad" style="${COMPACT_STYLE}">${optsM}</select></td>
                     <td style="${CELL};white-space:nowrap;text-align:right">
-                        <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus-circle"></i></button>
-                        <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar extra arriba"><i class="fas fa-pen"></i> <small>↑</small></button>
-                        <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar extra abajo"><i class="fas fa-pen"></i> <small>↓</small></button>
-                        <button type="button" onclick="this.closest('tr').remove(); actualizarDias()" class="del-btn"><i class="fas fa-trash"></i></button>
+                        <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus"></i></button>
+                        <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar fila vacía arriba"><i class="fas fa-arrow-up"></i></button>
+                        <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar fila vacía abajo"><i class="fas fa-arrow-down"></i></button>
+                        <button type="button" onclick="this.closest('tr').remove(); actualizarDias()" class="del-btn"><i class="fa-regular fa-trash-can"></i></button>${MAS_BTN}
                     </td>
                 </tr>`;
             } else {
@@ -684,23 +744,24 @@ function renderTurnosDesdeDatos(turnos, extras) {
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(e.punto_reunion, 'extra-fila-punto', 'P. Reunión', '100%')}</td>
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(e.conductor, 'extra-fila-conductor', 'Conductor', '100%')}</td>
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc;white-space:nowrap;text-align:right">
-                        <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus-circle"></i></button>
-                        <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar extra arriba"><i class="fas fa-pen"></i> <small>↑</small></button>
-                        <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar extra abajo"><i class="fas fa-pen"></i> <small>↓</small></button>
-                        <button type="button" onclick="this.closest('tr').remove(); actualizarDias()" class="btn-extra-del"><i class="fas fa-trash"></i></button>
+                        <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus"></i></button>
+                        <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar fila vacía arriba"><i class="fas fa-arrow-up"></i></button>
+                        <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar fila vacía abajo"><i class="fas fa-arrow-down"></i></button>
+                        <button type="button" onclick="this.closest('tr').remove(); actualizarDias()" class="btn-extra-del"><i class="fa-regular fa-trash-can"></i></button>${MAS_BTN}
                     </td>
                 </tr>`;
             }
         });
     });
     html += '</tbody></table></div>';
-    container.innerHTML = html;
+    container.innerHTML = vistaTurnosToolbarHTML() + html + vistaTurnosFooterHTML();
+    initVistaTurnos();
     actualizarDias();
 }
 
 function agregarFilaTurno(dia, datos, refRow) {
     const optsH = FRANJAS.map(h => `<option value="${h}">${h}</option>`).join('');
-    const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}">${g.replace('TODA LA CONGREGACION', 'TODA').replace('GRUPO ', 'G')}</option>`).join('');
+    const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}">${GRUPO_LABEL[g] || g}</option>`).join('');
     const optsP = opcionesPuntos();
     const optsM = MODALIDAD_OPTIONS.map(m => `<option value="${m}">${m}</option>`).join('');
     const CELL = 'padding:1px 2px;border-bottom:1px solid #ddd';
@@ -708,7 +769,7 @@ function agregarFilaTurno(dia, datos, refRow) {
     const color = DAY_COLORS[dia] || '#fff';
 
     // Build dia cell content based on preceding sibling rows
-    const diaCell = capitalize(dia);
+    const diaCell = nombreDia(dia);
 
     const tr = document.createElement('tr');
     tr.className = 'programa-row';
@@ -722,10 +783,10 @@ function agregarFilaTurno(dia, datos, refRow) {
         <td style="${CELL}"><select class="form-control turno-punto" style="${COMPACT_STYLE}">${optsP}</select></td>
         <td style="${CELL}"><select class="form-control turno-modalidad" style="${COMPACT_STYLE}">${optsM}</select></td>
         <td style="${CELL};white-space:nowrap;text-align:right">
-            <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus-circle"></i></button>
-            <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar extra arriba"><i class="fas fa-pen"></i> <small>↑</small></button>
-            <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar extra abajo"><i class="fas fa-pen"></i> <small>↓</small></button>
-            <button type="button" onclick="this.closest('tr').remove(); actualizarDias()" class="del-btn"><i class="fas fa-trash"></i></button>
+            <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus"></i></button>
+            <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar fila vacía arriba"><i class="fas fa-arrow-up"></i></button>
+            <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar fila vacía abajo"><i class="fas fa-arrow-down"></i></button>
+            <button type="button" onclick="this.closest('tr').remove(); actualizarDias()" class="del-btn"><i class="fa-regular fa-trash-can"></i></button>${MAS_BTN}
         </td>
     `;
     if (d.hora) tr.querySelector('.turno-hora').value = d.hora;
@@ -755,10 +816,10 @@ function agregarFilaExtra(dia, datos, alInicio, refRow) {
         <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(d.punto_reunion, 'extra-fila-punto', 'P. Reunión', '100%')}</td>
         <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(d.conductor, 'extra-fila-conductor', 'Conductor', '100%')}</td>
         <td style="padding:2px 6px;border-bottom:1px dashed #ccc;white-space:nowrap;text-align:right">
-            <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus-circle"></i></button>
-            <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar extra arriba"><i class="fas fa-pen"></i> <small>↑</small></button>
-            <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar extra abajo"><i class="fas fa-pen"></i> <small>↓</small></button>
-            <button type="button" onclick="this.closest('tr').remove()" class="btn-extra-del"><i class="fas fa-trash"></i></button>
+            <button type="button" onclick="agregarFilaTurnoDesde(this)" class="add-btn add-btn-turno" title="Agregar turno"><i class="fas fa-plus"></i></button>
+            <button type="button" onclick="agregarFilaExtraDesde(this, true)" class="add-btn add-btn-extra" title="Agregar fila vacía arriba"><i class="fas fa-arrow-up"></i></button>
+            <button type="button" onclick="agregarFilaExtraDesde(this, false)" class="add-btn add-btn-extra" title="Agregar fila vacía abajo"><i class="fas fa-arrow-down"></i></button>
+            <button type="button" onclick="this.closest('tr').remove()" class="btn-extra-del"><i class="fa-regular fa-trash-can"></i></button>${MAS_BTN}
         </td>
     `;
     if (refRow) {
@@ -768,6 +829,10 @@ function agregarFilaExtra(dia, datos, alInicio, refRow) {
     } else {
         insertAfterDay(dia, tr);
     }
+}
+
+function diaBadgeHTML(dia, fecha) {
+    return `<div class="dia-badge"><strong>${nombreDia(dia)}</strong><span class="dia-fecha">${fecha || ''}</span></div>`;
 }
 
 function actualizarDias() {
@@ -780,22 +845,126 @@ function actualizarDias() {
         return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
     }
     DIAS_ORDEN.forEach(dia => {
-        const rows = document.querySelectorAll(`#programa-table tbody tr.programa-row[data-dia="${dia}"]`);
+        const rows = document.querySelectorAll(`#programa-table tbody tr[data-dia="${dia}"]`);
         rows.forEach((row, i) => {
-            const cell = row.querySelector('.dia-cell');
+            const cell = row.querySelector('.dia-cell') || row.firstElementChild;
             if (!cell) return;
-            if (i === 0) {
-                cell.innerHTML = rows.length === 1
-                    ? `${capitalize(dia)}<br><small style="font-weight:400">${dateStr(dia)}</small>`
-                    : capitalize(dia);
-            } else if (i === 1) {
-                cell.innerHTML = `<small style="font-weight:400">${dateStr(dia)}</small>`;
-            } else {
-                cell.innerHTML = '';
-            }
+            cell.innerHTML = i === 0 ? diaBadgeHTML(dia, dateStr(dia)) : '';
         });
     });
+    refrescarVistaTurnos();
 }
+
+// ===== Vista móvil de turnos: por día / por semana =====
+const DIAS_CORTO = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+let vistaTurnos = (() => { try { return localStorage.getItem('vistaTurnos') === 'semana' ? 'semana' : 'dia'; } catch { return 'dia'; } })();
+let diaVistaIdx = 0;
+
+function vistaTurnosToolbarHTML() {
+    return `<div class="vista-toolbar">
+        <div class="vista-switch">
+            <button type="button" class="vista-opt" data-vista="dia" onclick="cambiarVistaTurnos('dia')"><i class="far fa-calendar"></i> Ver por día</button>
+            <button type="button" class="vista-opt" data-vista="semana" onclick="cambiarVistaTurnos('semana')"><i class="fas fa-calendar-week"></i> Ver por semana</button>
+        </div>
+        ${diaNavHTML()}
+        <div class="dia-titulo"><strong id="dia-titulo-nombre"></strong><span id="dia-titulo-fecha"></span></div>
+    </div>`;
+}
+
+function diaNavHTML() {
+    return `<div class="dia-nav">
+        <button type="button" class="dia-nav-btn" onclick="moverDiaVista(-1)"><i class="fas fa-chevron-left"></i> <span class="dia-nav-prev"></span></button>
+        <span class="dia-nav-act"></span>
+        <button type="button" class="dia-nav-btn" onclick="moverDiaVista(1)"><span class="dia-nav-next"></span> <i class="fas fa-chevron-right"></i></button>
+    </div>`;
+}
+
+function vistaTurnosFooterHTML() {
+    return `<div class="dia-vacio" hidden>
+        <p>Sin filas este día.</p>
+        <button type="button" class="btn btn-primary" onclick="agregarTurnoDiaVista()"><i class="fas fa-plus"></i> Agregar Fila</button>
+    </div>
+    <div class="dia-footer">${diaNavHTML()}</div>`;
+}
+
+let vistaObserver = null;
+
+function initVistaTurnos() {
+    const tbody = document.querySelector('#programa-table tbody');
+    if (!tbody) return;
+    vistaObserver?.disconnect();
+    vistaObserver = new MutationObserver(actualizarDias);
+    vistaObserver.observe(tbody, { childList: true });
+    refrescarVistaTurnos();
+}
+
+function refrescarVistaTurnos() {
+    const container = document.getElementById('turnos-container');
+    const tbody = document.querySelector('#programa-table tbody');
+    if (!container || !tbody) return;
+    container.dataset.vista = vistaTurnos;
+
+    const inicio = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);
+    const fechaDe = idx => {
+        if (!inicio) return '';
+        const d = new Date(inicio);
+        d.setDate(d.getDate() + idx);
+        return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+    };
+
+    const ultimaDelDia = {};
+    tbody.querySelectorAll('tr[data-dia]').forEach(tr => { ultimaDelDia[tr.dataset.dia] = tr; });
+
+    const vistos = new Set();
+    let hayFilasDia = false;
+    tbody.querySelectorAll('tr[data-dia]').forEach(tr => {
+        const idx = DIAS_ORDEN.indexOf(tr.dataset.dia);
+        if (ultimaDelDia[tr.dataset.dia] === tr) tr.dataset.diaFin = 'true'; else delete tr.dataset.diaFin;
+        if (!vistos.has(tr.dataset.dia)) {
+            vistos.add(tr.dataset.dia);
+            tr.dataset.diaLabel = `${nombreDia(tr.dataset.dia)}${fechaDe(idx) ? ' · ' + fechaDe(idx) : ''}`;
+        } else {
+            delete tr.dataset.diaLabel;
+        }
+        const oculta = vistaTurnos === 'dia' && idx !== diaVistaIdx;
+        tr.classList.toggle('fila-oculta', oculta);
+        const mover = tr.querySelector('.mover-dia');
+        if (mover) mover.value = tr.dataset.dia;
+        if (idx === diaVistaIdx) hayFilasDia = true;
+    });
+
+    container.querySelectorAll('.vista-opt').forEach(b => b.classList.toggle('active', b.dataset.vista === vistaTurnos));
+    const nDias = DIAS_ORDEN.length;
+    const ant = (diaVistaIdx + nDias - 1) % nDias;
+    const sig = (diaVistaIdx + 1) % nDias;
+    const setAll = (sel, txt) => container.querySelectorAll(sel).forEach(el => { el.textContent = txt; });
+    setAll('.dia-nav-prev', nombreDia(DIAS_ORDEN[ant]));
+    setAll('.dia-nav-act', nombreDia(DIAS_ORDEN[diaVistaIdx]));
+    setAll('.dia-nav-next', nombreDia(DIAS_ORDEN[sig]));
+    const nombre = document.getElementById('dia-titulo-nombre');
+    if (nombre) nombre.textContent = nombreDia(DIAS_ORDEN[diaVistaIdx]);
+    const fecha = document.getElementById('dia-titulo-fecha');
+    if (fecha) fecha.textContent = fechaDe(diaVistaIdx);
+
+    const vacio = container.querySelector('.dia-vacio');
+    if (vacio) vacio.hidden = hayFilasDia;
+}
+
+function cambiarVistaTurnos(v) {
+    vistaTurnos = v;
+    try { localStorage.setItem('vistaTurnos', v); } catch { /* sin storage */ }
+    refrescarVistaTurnos();
+}
+
+function irDiaVista(i) {
+    diaVistaIdx = ((i % DIAS_ORDEN.length) + DIAS_ORDEN.length) % DIAS_ORDEN.length;
+    refrescarVistaTurnos();
+    document.getElementById('turnos-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function moverDiaVista(delta) { irDiaVista(diaVistaIdx + delta); }
+
+function agregarTurnoDiaVista() { agregarFilaTurno(DIAS_ORDEN[diaVistaIdx]); }
 
 async function guardarPrograma(e) {
     e.preventDefault();
@@ -866,18 +1035,25 @@ async function guardarPrograma(e) {
 async function listarProgramas() {
     const tbody = document.getElementById('tbody-programas');
     if (!tbody) return;
+    tbody.innerHTML = '<tr class="fila-estado"><td colspan="4"><i class="fas fa-circle-notch fa-spin"></i> Cargando programas…</td></tr>';
     try {
         const d = await apiFetch('/api/programa-semanal');
         tbody.innerHTML = '';
+        if (!(d.programas || []).length) {
+            tbody.innerHTML = '<tr class="fila-estado"><td colspan="4">No hay programas guardados</td></tr>';
+        }
         (d.programas || []).forEach(p => {
             const turnos = p.programa_semanal_turnos || [];
             tbody.innerHTML += `<tr>
-                <td><strong>Semana</strong></td>
-                <td>${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}</td>
-                <td><span class="badge badge-info">${turnos.length} turnos</span></td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editarPrograma('${p.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarPrograma('${p.id}')"><i class="fas fa-trash"></i></button>
+                <td class="col-semana"><strong>Semana</strong></td>
+                <td class="col-fechas">
+                    <span class="fecha-icon"><i class="far fa-calendar"></i></span>
+                    <span class="fecha-texto"><span class="fecha-rango">${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}</span><small class="fecha-sub">Programa semanal</small></span>
+                </td>
+                <td class="col-turnos"><span class="badge badge-info">${turnos.length} turnos</span></td>
+                <td class="col-acciones">
+                    <button class="btn btn-sm btn-primary" onclick="editarPrograma('${p.id}')" title="Editar"><i class="fas fa-edit"></i><span class="btn-label">Editar</span></button>
+                    <button class="btn btn-sm btn-danger" onclick="eliminarPrograma('${p.id}', '${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}')"><i class="fas fa-trash"></i><span class="btn-label">Eliminar</span></button>
                 </td>
             </tr>`;
         });
@@ -942,9 +1118,84 @@ async function restablecerPlantilla() {
     } catch (err) { showToast(err.message || 'Error', 'error'); }
 }
 
-async function eliminarPrograma(id) {
+function confirmarModal({ titulo, mensaje, textoConfirmar = 'Confirmar', peligro = false, icono = 'fa-question-circle', espera = 0, alternativa = null }) {
+    // Resuelve true (confirmar), 'alternativa' o false (cancelar)
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = `
+            <div class="modal-content modal-confirm" role="dialog" aria-modal="true">
+                <div class="modal-confirm-body">
+                    <div class="modal-confirm-icon ${peligro ? 'peligro' : ''}"><i class="fas ${icono}"></i></div>
+                    <h3></h3>
+                    <p></p>
+                </div>
+                <div class="modal-confirm-actions">
+                    <button type="button" class="btn ${peligro ? 'btn-danger' : 'btn-primary'}" data-accion="confirmar"></button>
+                    <button type="button" class="btn ${alternativa ? 'btn-primary' : 'btn-secondary'}" data-accion="${alternativa ? 'alternativa' : 'cancelar'}"></button>
+                </div>
+            </div>`;
+        overlay.querySelector('h3').textContent = titulo;
+        overlay.querySelector('p').textContent = mensaje;
+        const btnConfirmar = overlay.querySelector('[data-accion="confirmar"]');
+        const btnOtro = overlay.querySelector('.modal-confirm-actions .btn:last-child');
+        btnOtro.innerHTML = alternativa ? `<i class="fas ${alternativa.icono || 'fa-edit'}"></i> ` : '';
+        btnOtro.appendChild(document.createTextNode(alternativa ? alternativa.texto : 'Cancelar'));
+
+        let temporizador = null;
+        const cerrar = resultado => {
+            clearInterval(temporizador);
+            document.removeEventListener('keydown', onKey);
+            overlay.remove();
+            resolve(resultado);
+        };
+        const onKey = e => { if (e.key === 'Escape') cerrar(false); };
+
+        if (espera > 0) {
+            let restante = espera;
+            btnConfirmar.disabled = true;
+            const pintar = () => { btnConfirmar.textContent = `${textoConfirmar} (${restante}s)`; };
+            pintar();
+            temporizador = setInterval(() => {
+                restante--;
+                if (restante <= 0) {
+                    clearInterval(temporizador);
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.textContent = textoConfirmar;
+                } else {
+                    pintar();
+                }
+            }, 1000);
+        } else {
+            btnConfirmar.textContent = textoConfirmar;
+        }
+
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) return cerrar(false);
+            const accion = e.target.closest('[data-accion]')?.dataset.accion;
+            if (accion === 'confirmar' && !btnConfirmar.disabled) cerrar(true);
+            else if (accion === 'alternativa') cerrar('alternativa');
+            else if (accion === 'cancelar') cerrar(false);
+        });
+        document.addEventListener('keydown', onKey);
+        document.body.appendChild(overlay);
+        btnOtro.focus();
+    });
+}
+
+async function eliminarPrograma(id, rango) {
     if (id === TEMPLATE_ID) { showToast('No se puede eliminar la plantilla', 'warning'); return; }
-    if (!confirm('¿Eliminar este programa?')) return;
+    const respuesta = await confirmarModal({
+        titulo: '¿Eliminar o editar?',
+        mensaje: `${rango ? 'Programa del ' + rango + '. ' : ''}¿Realmente quieres eliminarlo? Esta acción no se puede deshacer. Si solo necesitas hacer cambios, mejor edítalo.`,
+        textoConfirmar: 'ELIMINAR',
+        peligro: true,
+        icono: 'fa-exclamation-triangle',
+        espera: 10,
+        alternativa: { texto: 'EDITAR', icono: 'fa-edit' }
+    });
+    if (respuesta === 'alternativa') { editarPrograma(id); return; }
+    if (respuesta !== true) return;
     try {
         await apiFetch(`/api/programa-semanal/${id}`, { method: 'DELETE' });
         showToast('Programa eliminado', 'success');
@@ -976,7 +1227,7 @@ async function editarPrograma(id) {
         if (btn) btn.innerHTML = '<i class="fas fa-times"></i> Cerrar';
         renderEmptyTurnosGrid();
 
-        const turnos = (prog.programa_semanal_turnos || []).sort((a, b) => {
+        const turnos = (prog.programa_semanal_turnos || []).map(t => ({ ...t, dia: diaDeTurno(t) })).sort((a, b) => {
             const da = DIAS_ORDEN.indexOf(a.dia);
             const db = DIAS_ORDEN.indexOf(b.dia);
             if (da !== db) return da - db;
@@ -995,7 +1246,7 @@ async function editarPrograma(id) {
             });
         });
 
-        const extras = prog.filas_extra || [];
+        const extras = normalizarExtras(prog.filas_extra);
         extras.filter(f => (f.orden ?? 0) < 0).forEach(f => {
             agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor }, true);
         });
