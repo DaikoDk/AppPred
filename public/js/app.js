@@ -553,6 +553,15 @@ async function toggleTurnosGrid() {
     }
 }
 
+const TABLA_HEAD_HTML = '<thead><tr>' +
+    '<th><i class="fa-regular fa-calendar"></i> Día</th>' +
+    '<th><i class="fa-regular fa-clock"></i> Hora</th>' +
+    '<th><i class="fa-solid fa-users"></i> Grupo</th>' +
+    '<th><i class="fa-solid fa-map-location-dot"></i> Territorio</th>' +
+    '<th><i class="fa-solid fa-location-dot"></i> P. Reunión</th>' +
+    '<th><i class="fa-solid fa-signal"></i> Modalidad</th>' +
+    '<th></th></tr></thead>';
+
 const DAY_COLORS = {
     LUNES: '#fbe4d5', MARTES: '#e2efd9', MIERCOLES: '#deeaf6',
     JUEVES: '#fff2cc', VIERNES: '#ead1dc', SABADO: '#ffdfc0', DOMINGO: '#ffe599'
@@ -652,7 +661,7 @@ function renderEmptyTurnosGrid(preload) {
     }
 
     let html = '<div class="table-container"><table class="table" id="programa-table" style="font-size:0.75rem">';
-    html += '<thead><tr><th style="width:7%;padding:3px 6px;font-size:0.65rem">Día</th><th style="width:18%;padding:3px 6px;font-size:0.65rem">Hora</th><th style="width:6%;padding:3px 6px;font-size:0.65rem">Grupo</th><th style="width:27%;padding:3px 6px;font-size:0.65rem">Territorio</th><th style="width:30%;padding:3px 6px;font-size:0.65rem">P. Reunión</th><th style="width:8%;padding:3px 6px;font-size:0.65rem">Modalidad</th><th style="width:4%;padding:3px 6px;font-size:0.65rem"></th></tr></thead>';
+    html += TABLA_HEAD_HTML;
     html += '<tbody>';
     html += '</tbody></table></div>';
     container.innerHTML = vistaTurnosToolbarHTML() + html + vistaTurnosFooterHTML();
@@ -689,7 +698,7 @@ function renderTurnosDesdeDatos(turnos, extras) {
         return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
     }
     let html = '<div class="table-container"><table class="table" id="programa-table" style="font-size:0.75rem">';
-    html += '<thead><tr><th style="width:7%;padding:3px 6px;font-size:0.65rem">Día</th><th style="width:18%;padding:3px 6px;font-size:0.65rem">Hora</th><th style="width:6%;padding:3px 6px;font-size:0.65rem">Grupo</th><th style="width:27%;padding:3px 6px;font-size:0.65rem">Territorio</th><th style="width:30%;padding:3px 6px;font-size:0.65rem">P. Reunión</th><th style="width:8%;padding:3px 6px;font-size:0.65rem">Modalidad</th><th style="width:4%;padding:3px 6px;font-size:0.65rem"></th></tr></thead>';
+    html += TABLA_HEAD_HTML;
     html += '<tbody>';
     DIAS_ORDEN.forEach(dia => {
         const color = DAY_COLORS[dia] || '#fff';
@@ -822,6 +831,10 @@ function agregarFilaExtra(dia, datos, alInicio, refRow) {
     }
 }
 
+function diaBadgeHTML(dia, fecha) {
+    return `<div class="dia-badge"><strong>${nombreDia(dia)}</strong><span class="dia-fecha">${fecha || ''}</span></div>`;
+}
+
 function actualizarDias() {
     const semanaStart = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);
     const diasOff = { LUNES: 0, MARTES: 1, MIERCOLES: 2, JUEVES: 3, VIERNES: 4, SABADO: 5, DOMINGO: 6 };
@@ -832,19 +845,11 @@ function actualizarDias() {
         return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
     }
     DIAS_ORDEN.forEach(dia => {
-        const rows = document.querySelectorAll(`#programa-table tbody tr.programa-row[data-dia="${dia}"]`);
+        const rows = document.querySelectorAll(`#programa-table tbody tr[data-dia="${dia}"]`);
         rows.forEach((row, i) => {
-            const cell = row.querySelector('.dia-cell');
+            const cell = row.querySelector('.dia-cell') || row.firstElementChild;
             if (!cell) return;
-            if (i === 0) {
-                cell.innerHTML = rows.length === 1
-                    ? `${capitalize(dia)}<br><small style="font-weight:400">${dateStr(dia)}</small>`
-                    : capitalize(dia);
-            } else if (i === 1) {
-                cell.innerHTML = `<small style="font-weight:400">${dateStr(dia)}</small>`;
-            } else {
-                cell.innerHTML = '';
-            }
+            cell.innerHTML = i === 0 ? diaBadgeHTML(dia, dateStr(dia)) : '';
         });
     });
     refrescarVistaTurnos();

@@ -1749,6 +1749,800 @@ body {
     }
 }
 
+/* Colores originales por día del editor de turnos */
+#programa-table tr[data-dia="LUNES"] { --dia-acento: #e59866; --dia-fondo: #fbe4d5; --dia-tarjeta: #fbe4d5; --dia-borde: rgba(229,152,102,.45); }
+#programa-table tr[data-dia="MARTES"] { --dia-acento: #6fae5c; --dia-fondo: #e2efd9; --dia-tarjeta: #e2efd9; --dia-borde: rgba(111,174,92,.45); }
+#programa-table tr[data-dia="MIERCOLES"] { --dia-acento: #5b9bd5; --dia-fondo: #deeaf6; --dia-tarjeta: #deeaf6; --dia-borde: rgba(91,155,213,.45); }
+#programa-table tr[data-dia="JUEVES"] { --dia-acento: #e0b400; --dia-fondo: #fff2cc; --dia-tarjeta: #fff2cc; --dia-borde: rgba(224,180,0,.45); }
+#programa-table tr[data-dia="VIERNES"] { --dia-acento: #c2739a; --dia-fondo: #ead1dc; --dia-tarjeta: #ead1dc; --dia-borde: rgba(194,115,154,.45); }
+#programa-table tr[data-dia="SABADO"] { --dia-acento: #f0953a; --dia-fondo: #ffdfc0; --dia-tarjeta: #ffdfc0; --dia-borde: rgba(240,149,58,.45); }
+#programa-table tr[data-dia="DOMINGO"] { --dia-acento: #d4a017; --dia-fondo: #ffe599; --dia-tarjeta: #ffe599; --dia-borde: rgba(212,160,23,.5); }
+
+/* Editor de turnos en escritorio: tabla integrada tipo hoja de cálculo */
+@media (min-width: 769px) {
+    #tab-programa {
+        max-width: 1560px;
+        margin: 0 auto;
+    }
+
+    #tab-programa .card-body {
+        padding: 16px;
+    }
+
+    #tab-programa #turnos-container {
+        max-width: 100%;
+    }
+
+    #turnos-container .table-container {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    #programa-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    #programa-table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.6875rem !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.55rem 0.6rem !important;
+        border-bottom: 1px solid #e2e8f0;
+        border-right: 1px solid rgba(226, 232, 240, 0.8);
+        white-space: nowrap;
+    }
+
+    #programa-table thead th i {
+        color: #94a3b8;
+        margin-right: 6px;
+        font-size: 0.75rem;
+    }
+
+    #programa-table thead th i {
+        color: #94a3b8;
+        margin-right: 6px;
+        font-size: 0.75rem;
+    }
+
+    #programa-table thead th:last-child {
+        border-right: none;
+    }
+
+    #programa-table thead th:nth-child(1) { width: 104px; border-left: 5px solid transparent; }
+    #programa-table thead th:nth-child(2) { width: 160px; }
+    #programa-table thead th:nth-child(3) { width: 138px; }
+    #programa-table thead th:nth-child(5) { width: 250px; }
+    #programa-table thead th:nth-child(6) { width: 130px; }
+    #programa-table thead th:nth-child(7) { width: 100px; }
+
+    #programa-table thead th {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #programa-table tbody tr[data-dia] td:not(:first-child) select,
+    #programa-table tbody tr[data-dia] td:not(:first-child) input {
+        text-overflow: ellipsis;
+    }
+
+    /* Filas: color original del día, celdas como hoja de cálculo */
+    #programa-table tbody tr[data-dia] {
+        background: var(--dia-fondo, #fff) !important;
+        filter: none !important;
+    }
+
+    #programa-table tbody tr[data-dia] td {
+        padding: 0 !important;
+        background-color: var(--dia-fondo, #fff) !important;
+        background-image: none !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child {
+        border-right: none !important;
+    }
+
+    #programa-table tbody tr[data-dia-label]:not(:first-child) td {
+        border-top: 2px solid var(--dia-borde, #ddd) !important;
+    }
+
+    #programa-table tbody tr[data-dia-fin] td {
+        border-bottom: none !important;
+    }
+
+    #programa-table tbody tr[data-dia]:hover {
+        background: var(--dia-fondo, #fff) !important;
+    }
+
+    #programa-table tbody tr[data-dia]:hover td:not(:first-child) {
+        box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.025);
+    }
+
+    /* Celda del día fusionada */
+    #programa-table tbody tr[data-dia] td:first-child {
+        position: relative;
+        min-width: 104px;
+        vertical-align: top;
+        border-left: 5px solid var(--dia-acento, transparent) !important;
+        border-bottom-color: transparent !important;
+    }
+
+    #programa-table .dia-badge {
+        position: absolute;
+        top: 6px;
+        left: 10px;
+        right: 6px;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        pointer-events: none;
+    }
+
+    #programa-table .dia-badge strong {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    #programa-table .dia-fecha {
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--dia-acento);
+        filter: brightness(0.8);
+    }
+
+    #programa-table tbody tr[data-dia-label][data-dia-fin] .dia-badge {
+        top: 1px;
+    }
+
+    #programa-table tbody tr[data-dia-label][data-dia-fin] .dia-badge strong {
+        line-height: 1.1;
+    }
+
+    /* Inputs y listas integrados en la celda */
+    #programa-table tbody tr[data-dia] td:not(:first-child) select,
+    #programa-table tbody tr[data-dia] td:not(:first-child) input {
+        width: 100% !important;
+        height: 26px !important;
+        padding: 0 0.5rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 500;
+        color: #1f2937;
+        line-height: 1.2 !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    #programa-table tbody tr[data-dia] td:not(:first-child) select {
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.35rem center;
+        background-size: 1.1em 1.1em;
+        padding-right: 1.6rem !important;
+    }
+
+    #programa-table tbody tr[data-dia] td:not(:first-child) input {
+        font-size: 0.8125rem !important;
+    }
+
+    #programa-table tbody tr[data-dia] td:nth-child(3) select {
+        font-weight: 600;
+    }
+
+    #programa-table tbody tr[data-dia] td input::placeholder {
+        color: rgba(100, 116, 139, 0.65);
+        font-style: italic;
+        font-weight: 400;
+    }
+
+    #programa-table tbody tr[data-dia] td:not(:first-child):focus-within {
+        position: relative;
+        z-index: 2;
+        box-shadow: inset 0 0 0 1.5px #2563eb !important;
+    }
+
+    #programa-table tbody tr.extra-fila-row td:not(:first-child) {
+        box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.04);
+    }
+
+    #programa-table tbody tr.extra-fila-row td:not(:first-child) input {
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+    }
+
+    #programa-table tbody tr.extra-fila-row td input::placeholder {
+        font-style: italic;
+        font-weight: 400;
+        color: rgba(71, 85, 105, 0.75);
+    }
+
+    /* Acciones discretas */
+    #programa-table tbody tr[data-dia] td:last-child {
+        text-align: center;
+        white-space: nowrap;
+        padding: 0 4px !important;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child button {
+        width: 24px;
+        height: 24px;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 6px;
+        background: transparent !important;
+        color: #64748b !important;
+        opacity: 1 !important;
+        font-size: 0.625rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child .mas-btn {
+        display: none;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child .add-btn-turno:hover {
+        background: #d1fae5 !important;
+        color: #047857 !important;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child .add-btn-extra:hover {
+        background: #ede9fe !important;
+        color: #7c3aed !important;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child .del-btn:hover,
+    #programa-table tbody tr[data-dia] td:last-child .btn-extra-del:hover {
+        background: #fee2e2 !important;
+        color: #b91c1c !important;
+    }
+
+    @supports (appearance: base-select) {
+        #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia),
+        #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia)::picker(select) {
+            appearance: base-select;
+        }
+
+        #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia) {
+            display: flex !important;
+            align-items: center;
+            background-image: none;
+            padding-right: 0.5rem !important;
+        }
+
+        #programa-table select::picker-icon {
+            content: "";
+            flex-shrink: 0;
+            width: 1.1em;
+            height: 1.1em;
+            margin-left: auto;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") no-repeat center / contain;
+            transition: transform 0.2s;
+        }
+
+        #programa-table select:open::picker-icon {
+            transform: rotate(180deg);
+        }
+
+        #programa-table select::picker(select) {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 4px;
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+            margin-top: 4px;
+        }
+
+        #programa-table select option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            color: #1e293b;
+            cursor: pointer;
+        }
+
+        #programa-table select option:hover {
+            background: #f1f5f9;
+        }
+
+        #programa-table select option:checked {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        #programa-table select option::checkmark {
+            order: 1;
+            margin-left: auto;
+            color: #2563eb;
+        }
+    }
+
+    #turnos-container .table-container {
+        overflow: visible;
+        max-width: 1212px;
+        margin: 0 auto;
+    }
+
+    #programa-table thead th:first-child { border-top-left-radius: 11px; }
+    #programa-table thead th:last-child { border-top-right-radius: 11px; }
+    #programa-table tbody tr:last-child td:first-child { border-bottom-left-radius: 11px; }
+    #programa-table tbody tr:last-child td:last-child { border-bottom-right-radius: 11px; }
+
+    /* Acciones: + | tachito | puntitos (el menú trae las filas vacías arriba/abajo) */
+    #programa-table tbody tr[data-dia] td:last-child {
+        position: relative;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child .mas-btn {
+        display: inline-flex;
+    }
+
+    #programa-table tbody tr[data-dia] td:last-child .add-btn-extra {
+        display: none !important;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .mas-btn {
+        background: #e2e8f0 !important;
+        color: #334155 !important;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra {
+        display: flex !important;
+        align-items: center;
+        position: absolute;
+        right: 6px;
+        z-index: 40;
+        width: 224px;
+        height: 34px;
+        padding: 0 12px !important;
+        justify-content: flex-start;
+        gap: 10px;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        background: #fff !important;
+        color: #334155 !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra[title*="arriba"] {
+        top: calc(100% - 4px);
+        border-radius: 8px 8px 0 0;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra[title*="abajo"] {
+        top: calc(100% + 30px);
+        border-radius: 0 0 8px 8px;
+        border-top: none !important;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra[title*="arriba"]::after {
+        content: "Agregar fila vacía arriba";
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra[title*="abajo"]::after {
+        content: "Agregar fila vacía abajo";
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra:hover {
+        background: #f1f5f9 !important;
+    }
+}
+
+/* Editor de turnos en móvil, vista por semana: misma tabla que en escritorio */
+@media (max-width: 768px) {
+    #turnos-container[data-vista="semana"] .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table {
+        min-width: 900px;
+    }
+
+    #turnos-container[data-vista="semana"] .table-container {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table thead th {
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.6875rem !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.55rem 0.6rem !important;
+        border-bottom: 1px solid #e2e8f0;
+        border-right: 1px solid rgba(226, 232, 240, 0.8);
+        white-space: nowrap;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table thead th i {
+        color: #94a3b8;
+        margin-right: 6px;
+        font-size: 0.75rem;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table thead th i {
+        color: #94a3b8;
+        margin-right: 6px;
+        font-size: 0.75rem;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table thead th:last-child {
+        border-right: none;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table thead th:nth-child(1) { width: 104px; border-left: 5px solid transparent; }
+    #turnos-container[data-vista="semana"] #programa-table thead th:nth-child(2) { width: 160px; }
+    #turnos-container[data-vista="semana"] #programa-table thead th:nth-child(3) { width: 138px; }
+    #turnos-container[data-vista="semana"] #programa-table thead th:nth-child(5) { width: 250px; }
+    #turnos-container[data-vista="semana"] #programa-table thead th:nth-child(6) { width: 130px; }
+    #turnos-container[data-vista="semana"] #programa-table thead th:nth-child(7) { width: 100px; }
+
+    #turnos-container[data-vista="semana"] #programa-table thead th {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select,
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) input {
+        text-overflow: ellipsis;
+    }
+
+    /* Filas: color original del día, celdas como hoja de cálculo */
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] {
+        background: var(--dia-fondo, #fff) !important;
+        filter: none !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td {
+        padding: 0 !important;
+        background-color: var(--dia-fondo, #fff) !important;
+        background-image: none !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child {
+        border-right: none !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia-label]:not(:first-child) td {
+        border-top: 2px solid var(--dia-borde, #ddd) !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia-fin] td {
+        border-bottom: none !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia]:hover {
+        background: var(--dia-fondo, #fff) !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia]:hover td:not(:first-child) {
+        box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.025);
+    }
+
+    /* Celda del día fusionada */
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:first-child {
+        position: relative;
+        min-width: 104px;
+        vertical-align: top;
+        border-left: 5px solid var(--dia-acento, transparent) !important;
+        border-bottom-color: transparent !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table .dia-badge {
+        position: absolute;
+        top: 6px;
+        left: 10px;
+        right: 6px;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        pointer-events: none;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table .dia-badge strong {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1.2;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table .dia-fecha {
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--dia-acento);
+        filter: brightness(0.8);
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia-label][data-dia-fin] .dia-badge {
+        top: 1px;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia-label][data-dia-fin] .dia-badge strong {
+        line-height: 1.1;
+    }
+
+    /* Inputs y listas integrados en la celda */
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select,
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) input {
+        width: 100% !important;
+        height: 26px !important;
+        padding: 0 0.5rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 500;
+        color: #1f2937;
+        line-height: 1.2 !important;
+        background-color: transparent !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select {
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.35rem center;
+        background-size: 1.1em 1.1em;
+        padding-right: 1.6rem !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) input {
+        font-size: 0.8125rem !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:nth-child(3) select {
+        font-weight: 600;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td input::placeholder {
+        color: rgba(100, 116, 139, 0.65);
+        font-style: italic;
+        font-weight: 400;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child):focus-within {
+        position: relative;
+        z-index: 2;
+        box-shadow: inset 0 0 0 1.5px #2563eb !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr.extra-fila-row td:not(:first-child) {
+        box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.04);
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr.extra-fila-row td:not(:first-child) input {
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr.extra-fila-row td input::placeholder {
+        font-style: italic;
+        font-weight: 400;
+        color: rgba(71, 85, 105, 0.75);
+    }
+
+    /* Acciones discretas */
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child {
+        text-align: center;
+        white-space: nowrap;
+        padding: 0 4px !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child button {
+        width: 24px;
+        height: 24px;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 6px;
+        background: transparent !important;
+        color: #64748b !important;
+        opacity: 1 !important;
+        font-size: 0.625rem;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child .mas-btn {
+        display: none;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child .add-btn-turno:hover {
+        background: #d1fae5 !important;
+        color: #047857 !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child .add-btn-extra:hover {
+        background: #ede9fe !important;
+        color: #7c3aed !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child .del-btn:hover,
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child .btn-extra-del:hover {
+        background: #fee2e2 !important;
+        color: #b91c1c !important;
+    }
+
+    @supports (appearance: base-select) {
+        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia),
+        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia)::picker(select) {
+            appearance: base-select;
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia) {
+            display: flex !important;
+            align-items: center;
+            background-image: none;
+            padding-right: 0.5rem !important;
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table select::picker-icon {
+            content: "";
+            flex-shrink: 0;
+            width: 1.1em;
+            height: 1.1em;
+            margin-left: auto;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") no-repeat center / contain;
+            transition: transform 0.2s;
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table select:open::picker-icon {
+            transform: rotate(180deg);
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table select::picker(select) {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 4px;
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+            margin-top: 4px;
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table select option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            color: #1e293b;
+            cursor: pointer;
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table select option:hover {
+            background: #f1f5f9;
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table select option:checked {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        #turnos-container[data-vista="semana"] #programa-table select option::checkmark {
+            order: 1;
+            margin-left: auto;
+            color: #2563eb;
+        }
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table thead th:nth-child(7) {
+        width: 132px;
+    }
+}
+
+/* Pantallas medianas: P. Reunión más compacta para que Territorio no se aplaste */
+@media (min-width: 769px) and (max-width: 1320px) {
+    #programa-table thead th:nth-child(5) { width: 190px; }
+    #programa-table thead th:nth-child(2) { width: 150px; }
+}
+
+/* Tarjetas de la vista por día en móvil: mismos estilos, mismas posiciones */
+@media (max-width: 768px) {
+    #turnos-container[data-vista="dia"] #programa-table tbody tr[data-dia] {
+        background: var(--dia-fondo, #fff) !important;
+        border-left: 5px solid var(--dia-acento, transparent);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td::before {
+        color: #64748b;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td select,
+    #turnos-container[data-vista="dia"] #programa-table td input {
+        background-color: rgba(255, 255, 255, 0.55) !important;
+        border: 1px solid rgba(0, 0, 0, 0.07) !important;
+        border-radius: 8px !important;
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td select:focus,
+    #turnos-container[data-vista="dia"] #programa-table td input:focus {
+        outline: none;
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        border-color: #2563eb !important;
+        box-shadow: inset 0 0 0 1px #2563eb;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td input::placeholder {
+        color: rgba(100, 116, 139, 0.65);
+        font-style: italic;
+        font-weight: 400;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) button {
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        color: #475569;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .add-btn-turno {
+        color: #047857;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .del-btn,
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .btn-extra-del {
+        background: rgba(255, 255, 255, 0.55);
+        border-color: rgba(185, 28, 28, 0.3);
+        color: #b91c1c;
+    }
+}
+
 /* Print styles */
 @media print {
     .sidebar, .top-bar, .btn, .btn-group, .modal-overlay, .toast {
