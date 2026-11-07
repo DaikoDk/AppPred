@@ -841,6 +841,64 @@ body {
     gap: 12px;
 }
 
+.modal-confirm {
+    width: 360px;
+    max-width: calc(100% - 32px);
+    text-align: center;
+}
+
+.modal-confirm-body {
+    padding: 28px 24px 8px;
+}
+
+.modal-confirm-icon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 14px;
+    border-radius: 50%;
+    background: #dbe7fb;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.modal-confirm-icon.peligro {
+    background: #fde8e6;
+    color: var(--danger);
+}
+
+.modal-confirm h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    color: var(--dark);
+}
+
+.modal-confirm p {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7c93;
+    line-height: 1.5;
+}
+
+.modal-confirm-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 20px 24px 24px;
+}
+
+.modal-confirm-actions .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.modal-confirm-actions .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Loading Spinner */
 .spinner {
     width: 40px;

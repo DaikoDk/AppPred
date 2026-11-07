@@ -949,9 +949,84 @@ async function restablecerPlantilla() {
     } catch (err) { showToast(err.message || 'Error', 'error'); }
 }
 
-async function eliminarPrograma(id) {
+function confirmarModal({ titulo, mensaje, textoConfirmar = 'Confirmar', peligro = false, icono = 'fa-question-circle', espera = 0, alternativa = null }) {
+    // Resuelve true (confirmar), 'alternativa' o false (cancelar)
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = `
+            <div class="modal-content modal-confirm" role="dialog" aria-modal="true">
+                <div class="modal-confirm-body">
+                    <div class="modal-confirm-icon ${peligro ? 'peligro' : ''}"><i class="fas ${icono}"></i></div>
+                    <h3></h3>
+                    <p></p>
+                </div>
+                <div class="modal-confirm-actions">
+                    <button type="button" class="btn ${peligro ? 'btn-danger' : 'btn-primary'}" data-accion="confirmar"></button>
+                    <button type="button" class="btn ${alternativa ? 'btn-primary' : 'btn-secondary'}" data-accion="${alternativa ? 'alternativa' : 'cancelar'}"></button>
+                </div>
+            </div>`;
+        overlay.querySelector('h3').textContent = titulo;
+        overlay.querySelector('p').textContent = mensaje;
+        const btnConfirmar = overlay.querySelector('[data-accion="confirmar"]');
+        const btnOtro = overlay.querySelector('.modal-confirm-actions .btn:last-child');
+        btnOtro.innerHTML = alternativa ? `<i class="fas ${alternativa.icono || 'fa-edit'}"></i> ` : '';
+        btnOtro.appendChild(document.createTextNode(alternativa ? alternativa.texto : 'Cancelar'));
+
+        let temporizador = null;
+        const cerrar = resultado => {
+            clearInterval(temporizador);
+            document.removeEventListener('keydown', onKey);
+            overlay.remove();
+            resolve(resultado);
+        };
+        const onKey = e => { if (e.key === 'Escape') cerrar(false); };
+
+        if (espera > 0) {
+            let restante = espera;
+            btnConfirmar.disabled = true;
+            const pintar = () => { btnConfirmar.textContent = `${textoConfirmar} (${restante}s)`; };
+            pintar();
+            temporizador = setInterval(() => {
+                restante--;
+                if (restante <= 0) {
+                    clearInterval(temporizador);
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.textContent = textoConfirmar;
+                } else {
+                    pintar();
+                }
+            }, 1000);
+        } else {
+            btnConfirmar.textContent = textoConfirmar;
+        }
+
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) return cerrar(false);
+            const accion = e.target.closest('[data-accion]')?.dataset.accion;
+            if (accion === 'confirmar' && !btnConfirmar.disabled) cerrar(true);
+            else if (accion === 'alternativa') cerrar('alternativa');
+            else if (accion === 'cancelar') cerrar(false);
+        });
+        document.addEventListener('keydown', onKey);
+        document.body.appendChild(overlay);
+        btnOtro.focus();
+    });
+}
+
+async function eliminarPrograma(id, rango) {
     if (id === TEMPLATE_ID) { showToast('No se puede eliminar la plantilla', 'warning'); return; }
-    if (!confirm('¿Eliminar este programa?')) return;
+    const respuesta = await confirmarModal({
+        titulo: '¿Eliminar o editar?',
+        mensaje: `${rango ? 'Programa del ' + rango + '. ' : ''}¿Realmente quieres eliminarlo? Esta acción no se puede deshacer. Si solo necesitas hacer cambios, mejor edítalo.`,
+        textoConfirmar: 'ELIMINAR',
+        peligro: true,
+        icono: 'fa-exclamation-triangle',
+        espera: 10,
+        alternativa: { texto: 'EDITAR', icono: 'fa-edit' }
+    });
+    if (respuesta === 'alternativa') { editarPrograma(id); return; }
+    if (respuesta !== true) return;
     try {
         await apiFetch(`/api/programa-semanal/${id}`, { method: 'DELETE' });
         showToast('Programa eliminado', 'success');
