@@ -608,7 +608,8 @@ function renderEmptyTurnosGrid(preload) {
     html += '<thead><tr><th style="width:7%;padding:3px 6px;font-size:0.65rem">Día</th><th style="width:18%;padding:3px 6px;font-size:0.65rem">Hora</th><th style="width:6%;padding:3px 6px;font-size:0.65rem">Grupo</th><th style="width:27%;padding:3px 6px;font-size:0.65rem">Territorio</th><th style="width:30%;padding:3px 6px;font-size:0.65rem">P. Reunión</th><th style="width:8%;padding:3px 6px;font-size:0.65rem">Modalidad</th><th style="width:4%;padding:3px 6px;font-size:0.65rem"></th></tr></thead>';
     html += '<tbody>';
     html += '</tbody></table></div>';
-    container.innerHTML = html;
+    container.innerHTML = vistaTurnosToolbarHTML() + html + vistaTurnosFooterHTML();
+    initVistaTurnos();
     if (preload) {
         DEFAULT_TURNOS.forEach(t => agregarFilaTurno(t.dia, t));
         agregarFilaExtra('MARTES');
@@ -696,7 +697,8 @@ function renderTurnosDesdeDatos(turnos, extras) {
         });
     });
     html += '</tbody></table></div>';
-    container.innerHTML = html;
+    container.innerHTML = vistaTurnosToolbarHTML() + html + vistaTurnosFooterHTML();
+    initVistaTurnos();
     actualizarDias();
 }
 
@@ -797,7 +799,119 @@ function actualizarDias() {
             }
         });
     });
+    refrescarVistaTurnos();
 }
+
+// ===== Vista móvil de turnos: por día / por semana =====
+const DIAS_CORTO = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+let vistaTurnos = (() => { try { return localStorage.getItem('vistaTurnos') === 'semana' ? 'semana' : 'dia'; } catch { return 'dia'; } })();
+let diaVistaIdx = 0;
+
+function vistaTurnosToolbarHTML() {
+    return `<div class="vista-toolbar">
+        <div class="vista-switch">
+            <button type="button" class="vista-opt" data-vista="dia" onclick="cambiarVistaTurnos('dia')"><i class="far fa-calendar"></i> Ver por día</button>
+            <button type="button" class="vista-opt" data-vista="semana" onclick="cambiarVistaTurnos('semana')"><i class="fas fa-calendar-week"></i> Ver por semana</button>
+        </div>
+        ${diaNavHTML()}
+        <div class="dia-titulo"><strong id="dia-titulo-nombre"></strong><span id="dia-titulo-fecha"></span></div>
+    </div>`;
+}
+
+function diaNavHTML() {
+    return `<div class="dia-nav">
+        <button type="button" class="dia-nav-btn" onclick="moverDiaVista(-1)"><i class="fas fa-chevron-left"></i> <span class="dia-nav-prev"></span></button>
+        <span class="dia-nav-act"></span>
+        <button type="button" class="dia-nav-btn" onclick="moverDiaVista(1)"><span class="dia-nav-next"></span> <i class="fas fa-chevron-right"></i></button>
+    </div>`;
+}
+
+function vistaTurnosFooterHTML() {
+    return `<div class="dia-vacio" hidden>
+        <p>Sin filas este día.</p>
+        <button type="button" class="btn btn-primary" onclick="agregarTurnoDiaVista()"><i class="fas fa-plus"></i> Agregar Fila</button>
+    </div>
+    <div class="dia-footer">${diaNavHTML()}</div>`;
+}
+
+let vistaObserver = null;
+
+function initVistaTurnos() {
+    const tbody = document.querySelector('#programa-table tbody');
+    if (!tbody) return;
+    vistaObserver?.disconnect();
+    vistaObserver = new MutationObserver(actualizarDias);
+    vistaObserver.observe(tbody, { childList: true });
+    refrescarVistaTurnos();
+}
+
+function refrescarVistaTurnos() {
+    const container = document.getElementById('turnos-container');
+    const tbody = document.querySelector('#programa-table tbody');
+    if (!container || !tbody) return;
+    container.dataset.vista = vistaTurnos;
+
+    const inicio = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);
+    const fechaDe = idx => {
+        if (!inicio) return '';
+        const d = new Date(inicio);
+        d.setDate(d.getDate() + idx);
+        return d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+    };
+
+    const ultimaDelDia = {};
+    tbody.querySelectorAll('tr[data-dia]').forEach(tr => { ultimaDelDia[tr.dataset.dia] = tr; });
+
+    const vistos = new Set();
+    let hayFilasDia = false;
+    tbody.querySelectorAll('tr[data-dia]').forEach(tr => {
+        const idx = DIAS_ORDEN.indexOf(tr.dataset.dia);
+        if (ultimaDelDia[tr.dataset.dia] === tr) tr.dataset.diaFin = 'true'; else delete tr.dataset.diaFin;
+        if (!vistos.has(tr.dataset.dia)) {
+            vistos.add(tr.dataset.dia);
+            tr.dataset.diaLabel = `${nombreDia(tr.dataset.dia)}${fechaDe(idx) ? ' · ' + fechaDe(idx) : ''}`;
+        } else {
+            delete tr.dataset.diaLabel;
+        }
+        const oculta = vistaTurnos === 'dia' && idx !== diaVistaIdx;
+        tr.classList.toggle('fila-oculta', oculta);
+        const mover = tr.querySelector('.mover-dia');
+        if (mover) mover.value = tr.dataset.dia;
+        if (idx === diaVistaIdx) hayFilasDia = true;
+    });
+
+    container.querySelectorAll('.vista-opt').forEach(b => b.classList.toggle('active', b.dataset.vista === vistaTurnos));
+    const nDias = DIAS_ORDEN.length;
+    const ant = (diaVistaIdx + nDias - 1) % nDias;
+    const sig = (diaVistaIdx + 1) % nDias;
+    const setAll = (sel, txt) => container.querySelectorAll(sel).forEach(el => { el.textContent = txt; });
+    setAll('.dia-nav-prev', nombreDia(DIAS_ORDEN[ant]));
+    setAll('.dia-nav-act', nombreDia(DIAS_ORDEN[diaVistaIdx]));
+    setAll('.dia-nav-next', nombreDia(DIAS_ORDEN[sig]));
+    const nombre = document.getElementById('dia-titulo-nombre');
+    if (nombre) nombre.textContent = nombreDia(DIAS_ORDEN[diaVistaIdx]);
+    const fecha = document.getElementById('dia-titulo-fecha');
+    if (fecha) fecha.textContent = fechaDe(diaVistaIdx);
+
+    const vacio = container.querySelector('.dia-vacio');
+    if (vacio) vacio.hidden = hayFilasDia;
+}
+
+function cambiarVistaTurnos(v) {
+    vistaTurnos = v;
+    try { localStorage.setItem('vistaTurnos', v); } catch { /* sin storage */ }
+    refrescarVistaTurnos();
+}
+
+function irDiaVista(i) {
+    diaVistaIdx = ((i % DIAS_ORDEN.length) + DIAS_ORDEN.length) % DIAS_ORDEN.length;
+    refrescarVistaTurnos();
+    document.getElementById('turnos-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function moverDiaVista(delta) { irDiaVista(diaVistaIdx + delta); }
+
+function agregarTurnoDiaVista() { agregarFilaTurno(DIAS_ORDEN[diaVistaIdx]); }
 
 async function guardarPrograma(e) {
     e.preventDefault();
