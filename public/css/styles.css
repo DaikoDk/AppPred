@@ -340,6 +340,7 @@ body {
 /* Main Content */
 .main-content {
     flex: 1;
+    min-width: 0;
     margin-left: 260px;
     min-height: 100vh;
     display: flex;
@@ -919,14 +920,16 @@ body {
         transform: translateX(0);
     }
     
-    .main-content {
+    .main-content,
+    .sidebar.collapsed ~ .main-content {
         margin-left: 0;
+        width: 100%;
     }
-    
+
     .page-content {
         padding: 16px;
     }
-    
+
     .form-row {
         grid-template-columns: 1fr;
     }
@@ -943,6 +946,7 @@ body {
 @media (max-width: 768px) {
     .top-bar {
         padding: 12px 16px;
+        gap: 8px;
     }
     
     .top-bar h2 {
