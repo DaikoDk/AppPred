@@ -17,6 +17,7 @@ function getToken() { return localStorage.getItem('token'); }
 function getUser() { try { return JSON.parse(localStorage.getItem('usuario')); } catch { return null; } }
 
 function capitalize(s) { return s ? s.charAt(0) + s.slice(1).toLowerCase() : ''; }
+function nombreDia(d) { return ({ MIERCOLES: 'Miércoles', SABADO: 'Sábado' })[d] || capitalize(d); }
 
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -498,6 +499,7 @@ function opcionesPuntos() {
 
 
 const GRUPO_OPTIONS = ['TODA LA CONGREGACION', 'GRUPO A', 'GRUPO B'];
+const GRUPO_LABEL = { 'TODA LA CONGREGACION': 'Toda la Congre.', 'GRUPO A': 'Grupo A', 'GRUPO B': 'Grupo B' };
 const MODALIDAD_OPTIONS = ['FISICO', 'ZOOM', 'CARTAS'];
 
 const DEFAULT_TURNOS = [
@@ -650,12 +652,12 @@ function renderTurnosDesdeDatos(turnos, extras) {
         extrasDia.filter(e => (e.orden || 0) >= 0).forEach(e => allItems.push({ tipo: 'extra', datos: e }));
         allItems.forEach((item, idx) => {
             const isFirst = idx === 0;
-            const diaCell = isFirst ? capitalize(dia) + (turnosDia.length <= 1 && extrasDia.length === 0 ? `<br><small style="font-weight:400">${dateStr(dia)}</small>` : '') : (isFirst && turnosDia.length > 1 ? capitalize(dia) : '');
+            const diaCell = isFirst ? nombreDia(dia) + (turnosDia.length <= 1 && extrasDia.length === 0 ? `<br><small style="font-weight:400">${dateStr(dia)}</small>` : '') : (isFirst && turnosDia.length > 1 ? nombreDia(dia) : '');
             const dateCell = (idx === 1 && turnosDia.length > 0) ? `<small style="font-weight:400">${dateStr(dia)}</small>` : '';
             if (item.tipo === 'turno') {
                 const t = item.datos;
                 const optsH = FRANJAS.map(h => `<option value="${h}" ${t.hora === h ? 'selected' : ''}>${h}</option>`).join('');
-                const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}" ${t.grupo === g ? 'selected' : ''}>${g.replace('TODA LA CONGREGACION', 'TODA').replace('GRUPO ', 'G')}</option>`).join('');
+                const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}" ${t.grupo === g ? 'selected' : ''}>${GRUPO_LABEL[g] || g}</option>`).join('');
                 const optsP = opcionesPuntos().replace(`value="${t.punto_reunion || ''}"`, `value="${t.punto_reunion || ''}" selected`);
                 const optsM = MODALIDAD_OPTIONS.map(m => `<option value="${m}" ${t.modalidad === m ? 'selected' : ''}>${m}</option>`).join('');
                 const CELL = 'padding:1px 2px;border-bottom:1px solid #ddd';
@@ -700,7 +702,7 @@ function renderTurnosDesdeDatos(turnos, extras) {
 
 function agregarFilaTurno(dia, datos, refRow) {
     const optsH = FRANJAS.map(h => `<option value="${h}">${h}</option>`).join('');
-    const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}">${g.replace('TODA LA CONGREGACION', 'TODA').replace('GRUPO ', 'G')}</option>`).join('');
+    const optsG = GRUPO_OPTIONS.map(g => `<option value="${g}">${GRUPO_LABEL[g] || g}</option>`).join('');
     const optsP = opcionesPuntos();
     const optsM = MODALIDAD_OPTIONS.map(m => `<option value="${m}">${m}</option>`).join('');
     const CELL = 'padding:1px 2px;border-bottom:1px solid #ddd';
@@ -708,7 +710,7 @@ function agregarFilaTurno(dia, datos, refRow) {
     const color = DAY_COLORS[dia] || '#fff';
 
     // Build dia cell content based on preceding sibling rows
-    const diaCell = capitalize(dia);
+    const diaCell = nombreDia(dia);
 
     const tr = document.createElement('tr');
     tr.className = 'programa-row';
