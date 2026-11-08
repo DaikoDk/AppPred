@@ -14,3 +14,14 @@ RENDER
 *.log
 .DS_Store
 Thumbs.db
+
+# Páginas generadas por Archify
+.archify/
+
+# Cliente React (migración)
+!client/package.json
+!client/pnpm-lock.yaml
+!client/tsconfig.json
+!client/.prettierrc.json
+!client/.prettierignore
+client/dist/
