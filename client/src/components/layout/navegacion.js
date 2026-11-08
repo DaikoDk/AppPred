@@ -1,5 +1,5 @@
 // @ts-check
-// Pestañas de la app. El orden y los iconos son los del sidebar actual (public/dashboard.html).
+// Pestañas de la app. El orden y los iconos son los del sidebar de la app anterior (public/dashboard.html).
 
 /** @typedef {{ ruta: string, titulo: string, tooltip: string, icono: string, soloSuperAdmin?: boolean }} ItemNav */
 

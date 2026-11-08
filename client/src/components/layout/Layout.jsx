@@ -4,7 +4,7 @@ import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import { tituloDeRuta } from './navegacion.js';
 
-const ANCHO_MOVIL = 1024; // mismo corte que toggleSidebar() del front actual
+const ANCHO_MOVIL = 1024; // mismo corte que toggleSidebar() de la app anterior
 
 export default function Layout() {
     const { pathname } = useLocation();

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 /**
- * Opciones del modal; mismas que confirmarModal() del front actual (ADR-016).
+ * Opciones del modal; mismas que confirmarModal() de la app anterior (ADR-016).
  * @typedef {{
  *   titulo: string,
  *   mensaje: string,

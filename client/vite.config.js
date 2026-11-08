@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// La app nueva convive con la actual: se sirve en /nuevo hasta el corte (ver docs/ADR.md, ADR-013).
+// Express sirve el build (client/dist) en la raíz; en desarrollo Vite redirige /api a Express (ADR-019).
 export default defineConfig({
-    base: '/nuevo/',
+    base: '/',
     plugins: [react()],
     server: {
         port: 5173,

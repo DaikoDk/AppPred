@@ -18,7 +18,7 @@ describe('fechas (RN-DATA-04, RN-PLAN-07)', () => {
         expect(aISO(new Date(2026, 0, 5))).toBe('2026-01-05');
     });
 
-    it('formatea como la app actual', () => {
+    it('formatea como la app anterior', () => {
         expect(formatDate('2026-11-09')).toBe('9 nov.');
         expect(fechaDelDia('2026-11-09', 'DOMINGO')).toBe('15 nov.');
         expect(fechaDelDia('', 'LUNES')).toBe('');

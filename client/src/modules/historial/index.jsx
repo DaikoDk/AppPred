@@ -35,7 +35,7 @@ function calcular(programas, conductores) {
     return { total, conductoresConTurnos: filas.length, hayProgramas: programas.length > 0, filas };
 }
 
-// Pestaña Historial: mismas cifras que la app actual
+// Pestaña Historial: mismas cifras que la app anterior
 export default function Historial() {
     const toast = useToast();
     const [datos, setDatos] = useState(
@@ -74,7 +74,7 @@ export default function Historial() {
                         <span className="stat-value">{datos.total}</span>
                         <span className="stat-label">Total Asignaciones</span>
                     </div>
-                    {/* La app actual muestra 100% si hay programas; se mantiene igual hasta definir la fórmula */}
+                    {/* La app anterior muestra 100% si hay programas; se mantiene igual hasta definir la fórmula */}
                     <div className="stat-card success">
                         <span className="stat-value">{datos.hayProgramas ? '100%' : '0%'}</span>
                         <span className="stat-label">Tasa Asignación</span>

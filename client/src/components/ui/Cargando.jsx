@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 const CargandoContext = createContext(/** @type {ControlCargando | null} */ (null));
 
 // Pantalla que cubre todo y no deja tocar nada hasta que termina (RN-UI-06).
-// Mismo marcado que mostrarCargando() del front actual.
+// Mismo marcado que mostrarCargando() de la app anterior.
 export function CargandoProvider({ children }) {
     const [texto, setTexto] = useState(/** @type {string | null} */ (null));
 

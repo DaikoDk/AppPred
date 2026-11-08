@@ -21,7 +21,7 @@ import {
  * @typedef {'dia' | 'semana'} Vista
  */
 
-// Colores de fondo por día (DAY_COLORS de la app actual)
+// Colores de fondo por día (DAY_COLORS de la app anterior)
 const COLOR_DIA = {
     LUNES: '#fbe4d5',
     MARTES: '#e2efd9',
@@ -31,7 +31,7 @@ const COLOR_DIA = {
     SABADO: '#ffdfc0',
     DOMINGO: '#ffe599'
 };
-// Estilos en línea copiados de la app actual para que la tabla se vea igual
+// Estilos en línea copiados de la app anterior para que la tabla se vea igual
 const CELDA = { padding: '1px 2px', borderBottom: '1px solid #ddd' };
 const CELDA_LIBRE = { padding: '2px 6px', borderBottom: '1px dashed #ccc' };
 const COMPACTO = {
@@ -148,7 +148,7 @@ export default function EditorTurnos({ filas, onCambiar, puntos, semanaInicio })
     const [abierto, setAbierto] = useState(/** @type {string | null} */ (null));
     const [formateando, setFormateando] = useState(/** @type {Fila | null} */ (null));
 
-    // El menú ⋯ de la fila se cierra al tocar fuera (como el listener global de la app actual)
+    // El menú ⋯ de la fila se cierra al tocar fuera (como el listener global de la app anterior)
     useEffect(() => {
         if (!abierto) return undefined;
         const cerrar = (/** @type {MouseEvent} */ e) => {

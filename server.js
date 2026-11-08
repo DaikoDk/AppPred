@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -15,8 +16,7 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-            scriptSrcAttr: ["'unsafe-inline'"],
+            scriptSrc: ["'self'"],
             connectSrc: ["'self'", "https://xyhdjexiqxromvewpsfc.supabase.co"],
             imgSrc: ["'self'", "data:", "https:"],
             fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"]
@@ -30,13 +30,9 @@ app.use(express.json({ limit: '10mb' }));
 const limiter = rateLimit({ windowMs: 60000, max: 200, message: { error: 'Demasiadas solicitudes' } });
 app.use('/api/', limiter);
 
-app.use(express.static('public'));
-
-// App React en migración (ADR-013): solo existe si se ejecutó `npm run build`
-app.use('/nuevo', express.static('client/dist'));
-app.get(/^\/nuevo(\/.*)?$/, (req, res) => res.sendFile('index.html', { root: 'client/dist' }, err => { if (err) res.status(404).end(); }));
-
-app.get('/', (req, res) => res.sendFile('index.html', { root: 'public' }));
+// Front compilado por Vite (client/). Se genera con `pnpm build` (ADR-019).
+const CLIENTE = path.join(__dirname, 'client', 'dist');
+app.use(express.static(CLIENTE));
 
 app.use('/api/auth', require('./routes/auth'));
 
@@ -45,6 +41,14 @@ app.use('/api/conductores', authenticateToken, require('./routes/conductores'));
 app.use('/api/programa-semanal', authenticateToken, require('./routes/programa'));
 app.use('/api/asignacion', authenticateToken, require('./routes/asignacion'));
 app.use('/api/puntos-reunion', authenticateToken, require('./routes/puntos-reunion'));
+
+// Cualquier otra ruta que no sea de la API es del front: la resuelve React Router
+// (incluye las direcciones viejas como /dashboard.html, que redirigen a /programa).
+app.get(/^(?!\/api\/).*/, (req, res) => {
+    res.sendFile('index.html', { root: CLIENTE }, err => {
+        if (err) res.status(503).type('text').send('Falta compilar el front: ejecuta `pnpm build`.');
+    });
+});
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

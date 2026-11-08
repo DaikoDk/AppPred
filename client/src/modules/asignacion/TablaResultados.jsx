@@ -10,7 +10,7 @@ import { etiquetaGrupo, opcionConductor } from './logica.js';
 
 /**
  * Tabla de Resultados con la lista de conductores en cada turno (renderResultadosTable).
- * Mismo marcado y clases que la app actual.
+ * Mismo marcado y clases que la app anterior.
  * @param {{
  *   filas: FilaResultado[],
  *   semanaInicio: string | undefined,

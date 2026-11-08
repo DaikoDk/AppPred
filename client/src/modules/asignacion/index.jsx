@@ -197,7 +197,7 @@ export default function Asignacion() {
             }
             if (editando) await verAsignacion(semanaId);
             await recargarProgramas();
-            setSemana(''); // la app actual vuelve a "Seleccionar semana..." al recargar la lista
+            setSemana(''); // la app anterior vuelve a "Seleccionar semana..." al recargar la lista
         } catch (err) {
             cargando.ocultar();
             toast(mensajeError(err, 'Error al guardar'), 'error');
@@ -248,7 +248,7 @@ export default function Asignacion() {
         }
     };
 
-    // Como en la app actual: el resumen del servidor hasta que se elige un conductor a mano
+    // Como en la app anterior: el resumen del servidor hasta que se elige un conductor a mano
     const stats = res
         ? res.filas && res.tocado
             ? (() => {

@@ -6,7 +6,7 @@ const ToastContext = createContext(
     /** @type {((mensaje: string, tipo?: TipoToast, duracion?: number) => void) | null} */ (null)
 );
 
-// Mismo marcado y clases que showToast del front actual (#toast-container, .toast, .toast-<tipo>)
+// Mismo marcado y clases que showToast de la app anterior (#toast-container, .toast, .toast-<tipo>)
 export function ToastProvider({ children }) {
     const [toasts, setToasts] = useState(/** @type {{ id: number, mensaje: string, tipo: TipoToast }[]} */ ([]));
     const siguienteId = useRef(0);

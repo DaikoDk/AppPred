@@ -9,7 +9,7 @@ if (!raiz) throw new Error('Falta #root en index.html');
 
 createRoot(raiz).render(
     <StrictMode>
-        <BrowserRouter basename="/nuevo">
+        <BrowserRouter>
             <App />
         </BrowserRouter>
     </StrictMode>

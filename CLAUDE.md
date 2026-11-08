@@ -1,6 +1,7 @@
 # AppPred: Sistema de Asignación de Predicación
 
-App interna (Express + Supabase + front vanilla HTML/JS/CSS) que arma el programa semanal de predicación, asigna conductores y exporta a Google Sheets.
+App interna que arma el programa semanal de predicación, asigna conductores y exporta a Google Sheets.
+Backend Express + Supabase (`server.js`, `routes/`, `utils/`); front React + Vite en `client/` (ADR-019).
 
 ## Regla principal: leer los ADR y las reglas de negocio antes de tocar código
 
@@ -14,43 +15,43 @@ Ambos documentos están deducidos del código. Por eso:
 - Si el cambio toca un área descrita en ellos, cita el ADR o la RN afectada (por ejemplo `RN-ASIG-03`) y confirma que sigue cumpliéndose.
 - Si el cambio **modifica** una regla o decisión, avisa al usuario **antes** de implementarlo y actualiza el documento en el mismo commit. Las decisiones no se borran: se agrega un ADR nuevo y se marca el anterior como Reemplazado.
 - Si encuentras una regla en el código que no está documentada, o el documento no coincide con el código, díselo al usuario y propón la corrección; no la asumas.
-- Si el cambio añade comportamiento nuevo con reglas propias, agrégalas a `docs/REGLAS-NEGOCIO.md` con un identificador nuevo.
+- Si el cambio añade comportamiento nuevo con reglas propias, agrégalas a `docs/REGLAS-NEGOCIO.md` con un identificador nuevo y una prueba en `client/src/**/*.test.js` cuando sea lógica pura.
 
 ## Zonas de mayor riesgo
 
 - Algoritmo de asignación (`routes/asignacion.js`): RN-ASIG-\*. Cambiar candidatos, orden o pesos cambia quién queda asignado.
 - Guardar un programa borra sus asignaciones (ADR-008, RN-PROG-04).
 - La plantilla es un programa con id fijo y debe excluirse de los listados (ADR-006).
-- Reglas solo-front (`diaDeTurno`, `diaDeExtra`, `combinarConPlantilla`, advertencias de Territorio vacío): el backend no las valida.
+- Reglas que solo aplica el front (`client/src/utils/reglasDia.js`, `client/src/modules/programa/filas.js`, `client/src/modules/asignacion/logica.js`): el backend no las valida. Tienen pruebas unitarias; si cambian, actualiza las pruebas.
 - Exportación a Sheets (`utils/googleSheets.js`): nunca sobrescribir pestañas; colores y formato son parte del contrato (RN-SHEET-\*).
 - Esquema de base de datos: no está versionado y no se puede cambiar desde el código (ADR-003). Si hace falta una columna nueva, pide al usuario el SQL a ejecutar y avísale **antes** de usar la columna.
+- La base de desarrollo es la misma que la de producción: al probar, no crees, edites ni borres datos reales sin permiso. Para verificar guardados, intercepta las llamadas en el navegador.
 
 ## Comandos
 
-- Gestor de paquetes: **pnpm** (no usar npm ni crear `package-lock.json`).
-- `pnpm dev`: servidor con recarga (puerto 3005 por defecto).
-- `pnpm dev:client`: cliente React con Vite (puerto 5173, proxy a `/api`).
-- `pnpm start`: producción (Render ejecuta `node server.js`).
-- No hay pruebas automáticas. Verifica en navegador; nunca escribas en el Google Sheet de producción para probar.
+Gestor de paquetes: **pnpm** (no usar npm ni crear `package-lock.json`). Desde la raíz:
+
+- `pnpm install` y `pnpm --dir client install`: dependencias del servidor y del front.
+- `pnpm build`: compila el front en `client/dist` (Express lo sirve; sin build responde 503).
+- `pnpm dev`: servidor con recarga en http://localhost:3005 (sirve el último build).
+- `pnpm dev:client`: front con recarga en caliente en http://localhost:5173 (redirige `/api` a :3005; necesita `pnpm dev` corriendo).
+- `pnpm test`: pruebas unitarias del front (Vitest).
+- `pnpm start`: producción. **Render** debe usar como build command `pnpm install && pnpm build`.
+- Antes de cada commit del front, desde `client/`: `pnpm lint`, `pnpm typecheck` y `pnpm test`.
 
 ## Convenciones
 
 - Idioma: interfaz, mensajes, comentarios y commits en español.
 - Commits: tipo convencional (`feat:`, `fix:`, `docs:`...), una idea por commit, **sin línea `Co-Authored-By`**.
-- Ramas: una por tema, partiendo de `main`.
-- Front: mantener el estilo existente (funciones globales, template strings, clases de `styles.css`). Reutilizar `confirmarModal`, `mostrarCargando`, `showToast`; no usar `alert`/`confirm` (ADR-016).
-- No renombrar funciones globales de `app.js` sin revisar los `onclick` del HTML (RN-UI-05).
+- Front:
+  - Un módulo por pestaña en `client/src/modules/<modulo>/` (página, componentes, `api.js` y lógica pura); los módulos no se importan entre sí. Lo compartido va a `components/ui`, `utils` o `hooks`.
+  - Estilos: solo las clases de `client/src/styles/styles.css` (copiado sin cambios del front anterior). No CSS Modules ni Tailwind sin decidirlo antes (ADR-019). Prettier no debe tocar ese archivo: córrelo siempre desde `client/` (`pnpm format`).
+  - Escribir JSX listo para TypeScript siguiendo `client/MIGRACION-TS.md`: tipos del dominio desde `client/src/types/models.d.ts`, JSDoc en props y funciones, `// @ts-check` en `.js`.
+  - Confirmaciones con `useConfirmar`, carga con `useCargando`, avisos con `useToast`; nunca `alert`/`confirm` (ADR-016).
 - Si se añade un servicio externo o CDN, actualizar la CSP de `server.js` (ADR-002).
+- Con más usuarios y módulos previstos, no asumir límites ni roles actuales (RN-AUTH-02/03): consultar antes de cambiarlos.
 - Secretos: `.env` y `secrets/` están ignorados; nunca los subas ni los imprimas.
 
-## Migración a React (en curso, rama `feat/migracion-react`)
+## Front anterior
 
-Ver ADR-013 y ADR-019. El cliente nuevo está en `client/` y se sirve en `/nuevo`; la app actual (`public/`) sigue siendo la principal hasta el corte.
-
-- No cambiar los estilos: `client/src/styles/styles.css` es copia de `public/css/styles.css`. Un cambio de estilos se hace en ambas copias hasta el corte.
-- Usar `docs/REGLAS-NEGOCIO.md` como lista de paridad: al migrar un módulo, verificar cada RN que lo toca.
-- Escribir JSX listo para TypeScript siguiendo `client/MIGRACION-TS.md`: tipos del dominio desde `client/src/types/models.d.ts`, JSDoc en props y funciones, `// @ts-check` en `.js`.
-- Estructura por módulos en `client/src/modules/<modulo>/`; los módulos no se importan entre sí.
-- Antes de cada commit del cliente: `pnpm --dir client lint` y `pnpm --dir client typecheck`.
-- Con más usuarios y módulos previstos, no asumir límites ni roles actuales (RN-AUTH-02/03): consultar antes de cambiarlos.
-- Login en `/nuevo`: el botón usa el mismo `/api/auth/google`, pero Supabase vuelve a `SUPABASE_AUTH_REDIRECT_URL` (hoy `/`, la app actual). Como el `localStorage` es del mismo origen, el token sirve en ambas apps. Para que el login termine dentro de `/nuevo/` hay que cambiar esa URL y permitirla en Supabase (decisión del corte; no cambiarla antes).
+El front vanilla (`public/`) se eliminó al terminar la migración. Los comentarios que mencionan `public/js/app.js`, `public/dashboard.html` o "la app anterior" se refieren a esa versión, disponible en el commit `ab14d53`.

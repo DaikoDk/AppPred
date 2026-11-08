@@ -1,5 +1,5 @@
 // @ts-check
-// Modelo del editor de turnos. En la app actual el estado vive en la tabla del DOM (ADR-014);
+// Modelo del editor de turnos. En la app anterior el estado vive en la tabla del DOM (ADR-014);
 // aquí es una lista ordenada de filas en memoria y la tabla solo la dibuja.
 // Cada función replica a su equivalente de public/js/app.js (se indica entre paréntesis).
 import { DIAS } from '../../utils/dias.js';

@@ -1,9 +1,9 @@
 # Reglas de negocio (RN)
 
-> Deducidas del código (`routes/`, `utils/`, `public/js/app.js`) y del historial de git. Cada regla indica **dónde vive** para poder verificarla. Si el código y este documento difieren, el código es la verdad vigente: actualizar el documento en el mismo cambio.
+> Deducidas del código (`routes/`, `utils/`, `client/src/`) y del historial de git. Se dedujeron del front anterior (`public/js/app.js`, commit `ab14d53`) y el front React las conserva. Cada regla indica **dónde vive** para poder verificarla. Si el código y este documento difieren, el código es la verdad vigente: actualizar el documento en el mismo cambio.
 > Antes de modificar cualquier comportamiento descrito aquí, confirmar con la persona responsable.
 
-Convenciones: **Back** = se aplica en el servidor. **Front** = solo en `public/js/app.js` (el servidor confía en lo que recibe).
+Convenciones: **Back** = se aplica en el servidor. **Front** = solo en `client/src/` (el servidor confía en lo que recibe). Las del editor y la asignación están en funciones puras con pruebas (`filas.js`, `logica.js`, `reglasDia.js`).
 
 ---
 
@@ -151,5 +151,7 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-UI-02 (Front):** Cada día se pinta con su color (`tr[data-dia]` con variables `--dia-*`); la fila seleccionada se enmarca con el color de su día.
 - **RN-UI-03 (Front):** El menú ⋯ de cada fila y el de acciones del programa son **flotantes** (no empujan el contenido).
 - **RN-UI-04 (Front):** Las listas de conductores respetan el texto sin negrita; la negrita roja solo aplica al texto seleccionado de SIN ASIGNAR.
-- **RN-UI-05 (Front):** Las funciones globales de `app.js` referenciadas desde `onclick` del HTML no deben renombrarse sin actualizar el HTML.
+- **RN-UI-05:** Retirada. Aplicaba a los `onclick` del front anterior; React no los usa.
 - **RN-UI-06 (Front):** Mientras se guarda o exporta, una pantalla de carga bloquea toda la interfaz.
+- **RN-UI-07 (Front):** Tras guardar o limpiar una asignación, la lista "Semana" vuelve a "Seleccionar semana..." (como en el front anterior).
+- **RN-UI-08 (Front):** Las rutas son `/programa`, `/asignacion`, `/plantilla`, `/conductores`, `/puntos`, `/historial` y `/admin`; `/` y `/dashboard.html` llevan a `/programa` (o al login si no hay sesión). `/` también completa el regreso del login con Google.

@@ -27,7 +27,7 @@ export function aISO(fecha) {
 }
 
 /**
- * "9 nov." como en formatDate() del front actual.
+ * "9 nov." como en formatDate() de la app anterior.
  * @param {string | null | undefined} texto
  */
 export function formatDate(texto) {

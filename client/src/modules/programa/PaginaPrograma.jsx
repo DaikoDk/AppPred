@@ -37,7 +37,7 @@ async function filasDeLaPlantilla() {
     return filasPorDefecto();
 }
 
-/** Abre el calendario al tocar el campo de fecha, como en la app actual. @param {import('react').MouseEvent<HTMLInputElement>} e */
+/** Abre el calendario al tocar el campo de fecha, como en la app anterior. @param {import('react').MouseEvent<HTMLInputElement>} e */
 const abrirCalendario = (e) => {
     try {
         e.currentTarget.showPicker();
@@ -47,7 +47,7 @@ const abrirCalendario = (e) => {
 };
 
 /**
- * Pestañas Programa y Plantilla: comparten formulario y editor, como en la app actual.
+ * Pestañas Programa y Plantilla: comparten formulario y editor, como en la app anterior.
  * Reglas: RN-PLAN-*, RN-PROG-*, RN-ACT-*, RN-FMT-* en docs/REGLAS-NEGOCIO.md
  * @param {{ modo: Modo }} props
  */
@@ -252,7 +252,7 @@ export default function PaginaPrograma({ modo }) {
         }
     };
 
-    // ---- textos que cambian según el modo (los mismos que la app actual)
+    // ---- textos que cambian según el modo (los mismos que la app anterior)
     let titulo = <>Nuevo Programa Semanal</>;
     if (esPlantilla)
         titulo = (

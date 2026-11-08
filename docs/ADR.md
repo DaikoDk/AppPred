@@ -8,7 +8,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 ## ADR-001: Front en vanilla HTML/JS/CSS, sin framework ni build
 
-**Estado:** Vigente (ver ADR-013 para la migración propuesta)
+**Estado:** Reemplazado por ADR-013 y ADR-019 (el front vanilla se eliminó; última versión en el commit `ab14d53`)
 
 **Contexto:** App interna de uso reducido (máximo 4 usuarios, ADR-005) que se despliega como un solo servicio.
 
@@ -31,7 +31,8 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 **Consecuencias:**
 - Un solo servicio, un solo comando de arranque (`pnpm start`).
 - La CSP de `helmet` se define en `server.js` con lista explícita de orígenes (cdnjs, Google Fonts, Supabase). **Agregar un CDN o API externa nuevo exige actualizar la CSP.**
-- `scriptSrcAttr: 'unsafe-inline'` está habilitado porque el HTML usa `onclick` en línea (consecuencia de ADR-001).
+- Desde la migración (ADR-019) Express sirve `client/dist` y cualquier ruta que no sea `/api/*` devuelve `index.html` (React Router la resuelve; `/dashboard.html` redirige a `/programa`). Sin build responde 503.
+- La CSP ya no permite scripts en línea (`script-src 'self'`, `script-src-attr 'none'`): React no usa `onclick` en el HTML. Los estilos en línea siguen permitidos (`style-src 'unsafe-inline'`).
 - Rate limit de 200 solicitudes por minuto sobre `/api/`.
 
 ## ADR-003: Supabase (Postgres) como base de datos, accedida desde el backend con la clave anon
@@ -154,17 +155,17 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - El formato viaja con el turno al crear desde plantilla y al actualizar con la plantilla.
 - Requiere la columna `formato` en ambas tablas (ya creada en la base compartida).
 
-## ADR-013: Migración propuesta a React + Vite sin cambiar estilos
+## ADR-013: Migración a React + Vite sin cambiar estilos
 
-**Estado:** Propuesto (no iniciado)
+**Estado:** Vigente (completada en la rama `feat/migracion-react`)
 
-**Decisión propuesta:** Migrar por pestañas a React + Vite, reutilizando `styles.css` sin cambios, con Express sirviendo `client/dist` y un solo servicio en Render. Detalle en `.archify/explainer-migracion-react-*/plan-migracion-react.html`.
+**Decisión:** Migrar por pestañas a React + Vite, reutilizando `styles.css` sin cambios, con Express sirviendo `client/dist` y un solo servicio en Render. Detalle en `.archify/explainer-migracion-react-*/plan-migracion-react.html`.
 
-**Consecuencias si se aprueba:** este documento y `REGLAS-NEGOCIO.md` pasan a ser la **lista de paridad**: ninguna regla puede perderse en la migración. Las reglas marcadas "solo front" (RN-FRONT-\*) son las que más riesgo corren.
+**Consecuencias:** este documento y `REGLAS-NEGOCIO.md` pasan a ser la **lista de paridad**: ninguna regla puede perderse en la migración. Las reglas marcadas "solo front" (RN-FRONT-\*) son las que más riesgo corren.
 
 ## ADR-014: Lógica de negocio del editor vive en el front y el estado en el DOM
 
-**Estado:** Vigente
+**Estado:** Reemplazado: en el front React el estado del editor es una lista de filas en memoria (`client/src/modules/programa/filas.js`) y las reglas de día están en `client/src/utils/reglasDia.js`. Siguen siendo reglas que solo aplica el front.
 
 **Decisión:** El estado del editor de programa es la tabla del DOM (`.programa-row`, `.extra-fila-row` con `data-dia`, `data-antes`, `data-formato`). `leerFilasEditor()` lo serializa al guardar. Un `MutationObserver` mantiene los colores y marcas de día.
 
@@ -184,7 +185,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 **Estado:** Vigente
 
-**Decisión:** Toda confirmación pasa por `confirmarModal({...})` (con opciones `peligro`, `espera`, `alternativa`, `advertencia`, `exito`), la carga bloqueante por `mostrarCargando`/`ocultarCargando` y los avisos por `showToast`. No usar `confirm()` ni `alert()` del navegador.
+**Decisión:** Toda confirmación pasa por `useConfirmar()` (antes `confirmarModal`; opciones `peligro`, `espera`, `alternativa`, `advertencia`, `exito`, `cerrable`), la carga bloqueante por `useCargando()` y los avisos por `useToast()`. Las confirmaciones que la app anterior hacía con `confirm()` (desactivar conductor o punto, quitar horario, eliminar correo, renunciar, restablecer plantilla, limpiar asignaciones) ahora usan el modal propio. No usar `confirm()` ni `alert()` del navegador.
 
 **Consecuencias:** Acciones destructivas usan `peligro` y, cuando corresponde, `espera` (cuenta regresiva antes de poder confirmar; hoy 10 s al eliminar un programa).
 
@@ -200,13 +201,13 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 **Estado:** Vigente (deuda técnica)
 
-**Observación:** `utils/animation.js` (clase de toasts para el navegador, en carpeta de servidor) no se importa en ningún lado. Las dependencias `axios`, `bcryptjs`, `joi`, `node-cron` y `xlsx` (npm) no se usan en `routes/`, `server.js` ni `utils/`. `public/dashboard.html` carga `xlsx` desde CDN pero la exportación a Excel se quitó de la interfaz. `generarPuntuacion` en `utils/geolib.js` tampoco se usa; solo `generarDistanciaHaversine`.
+**Observación:** `utils/animation.js` (clase de toasts para el navegador, en carpeta de servidor) no se importa en ningún lado. Las dependencias `axios`, `bcryptjs`, `joi`, `node-cron` y `xlsx` (npm) no se usan en `routes/`, `server.js` ni `utils/`. El script de `xlsx` desde CDN desapareció con el front anterior. `generarPuntuacion` en `utils/geolib.js` tampoco se usa; solo `generarDistanciaHaversine`.
 
 **Acción recomendada:** no borrar sin verificar; confirmar con la persona responsable antes de limpiar.
 
 ## ADR-019: Cliente en JSX con JSDoc y tipos, preparado para TypeScript; estructura por módulos
 
-**Estado:** Propuesto (Fase 0 hecha en `feat/migracion-react`)
+**Estado:** Vigente
 
 **Contexto:** El sistema va a tener más módulos y entre 10 y 15 usuarios más (de 4 a unos 14-19). La migración a React ya exige replicar las reglas de negocio sin perder ninguna; sumar TypeScript a la vez agrega fricción.
 
@@ -219,5 +220,17 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 **Consecuencias:**
 - `client/src/types/models.d.ts` es fuente de verdad de formas de datos del cliente y debe mantenerse alineado con la API y con `REGLAS-NEGOCIO.md`.
-- Hay dos copias del CSS mientras dure la migración (`public/css/styles.css` y `client/src/styles/styles.css`); un cambio de estilos hay que hacerlo en ambas hasta el corte.
+- El CSS vive solo en `client/src/styles/styles.css` (copia exacta del front anterior).
 - Con más usuarios hay decisiones pendientes que **no se toman sin aprobación**: subir o mover a `config` los límites de usuarios y de super admins (RN-AUTH-02, RN-AUTH-03), definir permisos por módulo (hoy solo existe super admin), el límite de 200 peticiones por minuto por IP y la edición concurrente de un mismo programa (ADR-008).
+
+## ADR-020: Pruebas unitarias de la lógica pura y verificación de paridad
+
+**Estado:** Vigente
+
+**Contexto:** No había pruebas automáticas y la migración debía conservar el comportamiento exacto.
+
+**Decisión:**
+- Las reglas que aplica el front se escriben como funciones puras (`filas.js`, `logica.js`, `reglasDia.js`, `fechas.js`) y se prueban con **Vitest** (`pnpm test`).
+- La paridad con el front anterior se verificó en el navegador comparando la tabla (clases, atributos, valores y estilos calculados) y el cuerpo enviado al servidor, con las escrituras interceptadas para no tocar la base compartida.
+
+**Consecuencias:** Un cambio en esas funciones exige actualizar sus pruebas. Las pantallas (JSX) no tienen pruebas automáticas todavía; se verifican en el navegador.

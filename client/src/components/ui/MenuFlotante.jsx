@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 /**
  * Botón ⋯ con un menú que flota sobre el contenido sin empujarlo (RN-UI-03).
- * Mismo marcado que #menu-programa-wrap del front actual.
+ * Mismo marcado que #menu-programa-wrap de la app anterior.
  * @param {{ opciones: OpcionMenu[], titulo?: string, claseBoton?: string }} props
  */
 export default function MenuFlotante({ opciones, titulo = 'Más acciones', claseBoton = 'btn btn-secondary' }) {

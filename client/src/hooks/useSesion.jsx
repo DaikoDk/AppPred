@@ -38,7 +38,7 @@ export function SesionProvider({ children }) {
         setEsSuperAdmin(await consultarEsSuperAdmin());
     }, []);
 
-    // Al abrir la app: si hay token, se valida contra el servidor (como checkAuth del front actual)
+    // Al abrir la app: si hay token, se valida contra el servidor (como checkAuth de la app anterior)
     useEffect(() => {
         let activo = true;
         if (!getToken()) {

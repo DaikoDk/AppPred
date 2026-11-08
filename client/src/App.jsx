@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/layout/Layout.jsx';
 import { SesionProvider, useSesion } from './hooks/useSesion.jsx';
 import { ToastProvider } from './components/ui/Toast.jsx';
@@ -17,6 +17,14 @@ const Historial = lazy(() => import('./modules/historial/index.jsx'));
 const Admin = lazy(() => import('./modules/admin/index.jsx'));
 // Vitrina de componentes: solo en desarrollo, no entra al build
 const DevComponentes = import.meta.env.DEV ? lazy(() => import('./pages/DevComponentes.jsx')) : null;
+
+// Raíz: Supabase vuelve aquí tras el login con Google (#access_token=...) o con ?error=...;
+// en ese caso se muestra el login para completar el ingreso. Si no, se va a Programa.
+function Inicio() {
+    const { hash, search } = useLocation();
+    if (hash.includes('access_token') || new URLSearchParams(search).has('error')) return <Login />;
+    return <Navigate to="/programa" replace />;
+}
 
 // Solo con sesión válida; si no, al login (RN-AUTH-09)
 function RutaPrivada({ children }) {
@@ -36,6 +44,7 @@ function Rutas() {
     return (
         <Suspense fallback={null}>
             <Routes>
+                <Route path="/" element={<Inicio />} />
                 <Route path="/login" element={<Login />} />
                 {DevComponentes && <Route path="/dev/componentes" element={<DevComponentes />} />}
                 <Route

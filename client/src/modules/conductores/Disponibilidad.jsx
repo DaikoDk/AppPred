@@ -12,7 +12,7 @@ import { OPCIONES_GRUPO } from './grupos.js';
  * @typedef {Pick<Conductor, 'grupo' | 'tiene_pc' | 'poca_movilidad' | 'solo_parque' | 'ubicacion_casa'>} Atributos
  */
 
-/** Orden por día y franja, como sortKeyDisp() del front actual. @param {{ dia: Dia, hora: string }} s */
+/** Orden por día y franja, como sortKeyDisp() de la app anterior. @param {{ dia: Dia, hora: string }} s */
 const ordenSlot = (s) => DIAS.indexOf(s.dia) * 10 + FRANJAS.indexOf(s.hora);
 
 /**

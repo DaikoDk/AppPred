@@ -3,7 +3,7 @@ import { formatDate } from '../../utils/fechas.js';
 /** @typedef {import('../../types/models').Programa} Programa */
 
 /**
- * Lista "Programas Guardados" (listarProgramas de la app actual).
+ * Lista "Programas Guardados" (listarProgramas de la app anterior).
  * @param {{
  *   programas: Programa[] | null,
  *   error: boolean,
