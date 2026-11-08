@@ -62,7 +62,7 @@ export default function Pestanas({ items, etiqueta }) {
                         role="tab"
                         aria-selected={esActiva}
                         tabIndex={esActiva ? 0 : -1}
-                        className={`button-sm no-underline flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 outline-none transition-[background-color,color] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary ${esActiva ? 'bg-primary/15 text-primary' : 'text-muted hover:bg-surface hover:text-ink'}`}
+                        className={`button-sm no-underline flex min-w-0 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 outline-none transition-[background-color,color] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary ${esActiva ? 'bg-primary text-white' : 'text-muted hover:bg-surface hover:text-ink'}`}
                     >
                         <Icono size={16} aria-hidden="true" />
                         {item.titulo}
