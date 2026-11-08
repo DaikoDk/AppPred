@@ -141,57 +141,63 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
             ) : (
                 <>
                     <p className="body-6 mb-3 text-muted">Toca una casilla para marcarla o quitarla.</p>
-                    <GrillaDisponibilidad slots={slots} editable onAlternar={alternar} />
-
-                    <div className={`${RESUMEN} mt-4`}>
-                        <span className="title-4 text-ink">Atributos del conductor</span>
-                        <div className="mt-3 grid grid-cols-1 items-end gap-3 sm:grid-cols-2">
-                            <div className="min-w-0">
-                                <label className={ETIQUETA}>Grupo</label>
-                                <Desplegable
-                                    variante="campo"
-                                    rotulo="Grupo"
-                                    valor={atributos.grupo}
-                                    onCambiar={(v) => cambiarAtributo({ grupo: /** @type {Atributos['grupo']} */ (v) })}
-                                    opciones={OPCIONES_GRUPO.map((g) => ({ valor: g.valor, etiqueta: g.texto }))}
-                                />
-                            </div>
-                            <div className="min-w-0">
-                                <label className={ETIQUETA}>Ubicación Casa (lat,lng)</label>
-                                <input
-                                    type="text"
-                                    className={CAMPO}
-                                    placeholder="-12.0464,-77.0428"
-                                    value={atributos.ubicacion_casa || ''}
-                                    onChange={(e) => cambiarAtributo({ ubicacion_casa: e.target.value })}
-                                />
-                            </div>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                        <div className="min-w-0 flex-1">
+                            <GrillaDisponibilidad slots={slots} editable onAlternar={alternar} />
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            <label className={CASILLA}>
-                                <input
-                                    type="checkbox"
-                                    checked={atributos.tiene_pc}
-                                    onChange={(e) => cambiarAtributo({ tiene_pc: e.target.checked })}
-                                />
-                                Tiene PC (Zoom)
-                            </label>
-                            <label className={CASILLA}>
-                                <input
-                                    type="checkbox"
-                                    checked={atributos.poca_movilidad}
-                                    onChange={(e) => cambiarAtributo({ poca_movilidad: e.target.checked })}
-                                />
-                                Poca Movilidad
-                            </label>
-                            <label className={CASILLA}>
-                                <input
-                                    type="checkbox"
-                                    checked={atributos.solo_parque}
-                                    onChange={(e) => cambiarAtributo({ solo_parque: e.target.checked })}
-                                />
-                                Solo Parque
-                            </label>
+
+                        <div className={`${RESUMEN} lg:w-72 lg:shrink-0`}>
+                            <span className="title-4 text-ink">Atributos del conductor</span>
+                            <div className="mt-3 flex flex-col gap-3">
+                                <div className="min-w-0">
+                                    <label className={ETIQUETA}>Grupo</label>
+                                    <Desplegable
+                                        variante="campo"
+                                        rotulo="Grupo"
+                                        valor={atributos.grupo}
+                                        onCambiar={(v) =>
+                                            cambiarAtributo({ grupo: /** @type {Atributos['grupo']} */ (v) })
+                                        }
+                                        opciones={OPCIONES_GRUPO.map((g) => ({ valor: g.valor, etiqueta: g.texto }))}
+                                    />
+                                </div>
+                                <div className="min-w-0">
+                                    <label className={ETIQUETA}>Ubicación Casa (lat,lng)</label>
+                                    <input
+                                        type="text"
+                                        className={CAMPO}
+                                        placeholder="-12.0464,-77.0428"
+                                        value={atributos.ubicacion_casa || ''}
+                                        onChange={(e) => cambiarAtributo({ ubicacion_casa: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <label className={CASILLA}>
+                                        <input
+                                            type="checkbox"
+                                            checked={atributos.tiene_pc}
+                                            onChange={(e) => cambiarAtributo({ tiene_pc: e.target.checked })}
+                                        />
+                                        Tiene PC (Zoom)
+                                    </label>
+                                    <label className={CASILLA}>
+                                        <input
+                                            type="checkbox"
+                                            checked={atributos.poca_movilidad}
+                                            onChange={(e) => cambiarAtributo({ poca_movilidad: e.target.checked })}
+                                        />
+                                        Poca Movilidad
+                                    </label>
+                                    <label className={CASILLA}>
+                                        <input
+                                            type="checkbox"
+                                            checked={atributos.solo_parque}
+                                            onChange={(e) => cambiarAtributo({ solo_parque: e.target.checked })}
+                                        />
+                                        Solo Parque
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

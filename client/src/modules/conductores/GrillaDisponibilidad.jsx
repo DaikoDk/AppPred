@@ -54,7 +54,7 @@ export default function GrillaDisponibilidad({ slots, editable, onAlternar }) {
 
     return (
         <div className="overflow-x-auto">
-            <div className="grid min-w-[640px] grid-cols-[9rem_repeat(7,minmax(0,1fr))] gap-2">
+            <div className="grid min-w-[460px] grid-cols-[9rem_repeat(7,minmax(0,1fr))] gap-2">
                 <span aria-hidden="true" />
                 {DIAS.map((d) => (
                     <span key={d} className={`caption-1 rounded-lg py-1 text-center text-ink ${COLOR_DIA[d]}`}>
