@@ -1302,8 +1302,7 @@ body {
 .vista-toolbar,
 .dia-footer,
 .dia-vacio,
-.mas-btn,
-.mover-dia {
+.mas-btn {
     display: none;
 }
 
@@ -1571,21 +1570,19 @@ body {
     /* Acciones de la fila: Agregar | Eliminar | ⋯ */
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) {
         display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        flex-wrap: nowrap;
+        gap: 6px;
         white-space: normal !important;
         text-align: left !important;
         padding-top: 2px !important;
     }
 
-    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7):not(.abierto) .mover-dia {
-        display: none !important;
-    }
-
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) button {
         white-space: nowrap;
+        min-width: 0;
+        overflow: hidden;
         height: 36px;
-        padding: 0 6px;
+        padding: 0 4px;
         border-radius: 8px;
         border: 1px solid rgba(0, 0, 0, 0.12);
         background: #fff;
@@ -1601,7 +1598,7 @@ body {
 
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .add-btn-turno {
         order: 1;
-        flex: 1;
+        flex: 1 1 0;
     }
 
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .add-btn-turno::after {
@@ -1611,7 +1608,7 @@ body {
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .del-btn,
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .btn-extra-del {
         order: 2;
-        flex: 1;
+        flex: 1 1 0;
         background: #e74c3c;
         border-color: #e74c3c;
         color: #fff;
@@ -1626,7 +1623,9 @@ body {
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .mas-btn {
         order: 3;
         display: inline-flex;
+        flex: 0 0 40px;
         width: 40px;
+        margin-left: auto;
         padding: 0;
         color: #5b6b82;
     }
@@ -1636,12 +1635,48 @@ body {
         display: none;
     }
 
+    /* Menú ⋯ flotante: las opciones aparecen sobre la tarjeta, debajo de los botones */
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) {
+        position: relative;
+    }
+
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra {
-        display: inline-flex;
-        order: 0;
-        flex: 1;
-        color: #8e44ad;
-        border-color: #d9c6e6;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        position: absolute;
+        right: 0;
+        z-index: 30;
+        width: 236px;
+        height: 42px;
+        padding: 0 14px;
+        overflow: visible;
+        font-size: 13px;
+        font-weight: 500;
+        color: #334155;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra i {
+        color: #64748b;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra[title*="arriba"] {
+        top: calc(100% + 6px);
+        border-radius: 10px 10px 0 0;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra[title*="abajo"] {
+        top: calc(100% + 47px);
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra:active {
+        background: #f1f5f9;
     }
 
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra[title*="arriba"]::after {
@@ -1650,12 +1685,6 @@ body {
 
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra[title*="abajo"]::after {
         content: "Agregar fila vacía abajo";
-    }
-
-    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .mover-dia {
-        display: block;
-        order: 0;
-        flex: 1 1 100%;
     }
 
     #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .mas-btn {
@@ -1690,7 +1719,7 @@ body {
             appearance: base-select;
         }
 
-        #turnos-container[data-vista="dia"] #programa-table td select:not(.mover-dia) {
+        #turnos-container[data-vista="dia"] #programa-table td select {
             display: flex !important;
             align-items: center;
             background-image: none;
@@ -2020,12 +2049,12 @@ body {
     }
 
     @supports (appearance: base-select) {
-        #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia),
-        #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia)::picker(select) {
+        #programa-table tbody tr[data-dia] td:not(:first-child) select,
+        #programa-table tbody tr[data-dia] td:not(:first-child) select::picker(select) {
             appearance: base-select;
         }
 
-        #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia) {
+        #programa-table tbody tr[data-dia] td:not(:first-child) select {
             display: flex !important;
             align-items: center;
             background-image: none;
@@ -2415,12 +2444,12 @@ body {
     }
 
     @supports (appearance: base-select) {
-        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia),
-        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia)::picker(select) {
+        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select,
+        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select::picker(select) {
             appearance: base-select;
         }
 
-        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select:not(.mover-dia) {
+        #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child) select {
             display: flex !important;
             align-items: center;
             background-image: none;
@@ -2569,6 +2598,19 @@ body {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+}
+
+/* Pantallas muy angostas: botones de la tarjeta sin icono para que quepa el texto */
+@media (max-width: 380px) {
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .add-btn-turno i,
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .del-btn i,
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .btn-extra-del i {
+        display: none;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) button {
+        font-size: 11px;
     }
 }
 

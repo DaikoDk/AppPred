@@ -566,8 +566,7 @@ const DAY_COLORS = {
     LUNES: '#fbe4d5', MARTES: '#e2efd9', MIERCOLES: '#deeaf6',
     JUEVES: '#fff2cc', VIERNES: '#ead1dc', SABADO: '#ffdfc0', DOMINGO: '#ffe599'
 };
-const MOVER_DIA_SELECT = `<select class="mover-dia" onchange="moverFilaDia(this)" title="Mover a otro día">${DIAS_ORDEN.map(d => `<option value="${d}">Día: ${nombreDia(d)}</option>`).join('')}</select>`;
-const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>' + MOVER_DIA_SELECT;
+const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>';
 
 // El turno "Domingo (10:20 AM)" solo existe en domingo, aunque se haya guardado en otro día
 // La fila extra "REUNION DE / FIN DE SEMANA" (8:30AM) abre el domingo, antes del turno de las 10:20
@@ -584,20 +583,6 @@ function normalizarExtras(extras) {
 
 function diaDeTurno(t) {
     return /^Domingo/i.test(t.hora || '') ? 'DOMINGO' : t.dia;
-}
-
-function moverFilaDia(sel) {
-    const tr = sel.closest('tr');
-    const nuevo = sel.value;
-    if (!tr || nuevo === tr.dataset.dia) return;
-    tr.remove();
-    tr.dataset.dia = nuevo;
-    tr.style.background = DAY_COLORS[nuevo] || '#fff';
-    if (tr.dataset.antes === 'true') insertBeforeDay(nuevo, tr); else insertAfterDay(nuevo, tr);
-    tr.querySelector('td.abierto')?.classList.remove('abierto');
-    actualizarDias();
-    irDiaVista(DIAS_ORDEN.indexOf(nuevo));
-    showToast(`Fila movida a ${nombreDia(nuevo)}`, 'success');
 }
 
 function toggleMasAcciones(btn) {
@@ -940,8 +925,6 @@ function refrescarVistaTurnos() {
         }
         const oculta = vistaTurnos === 'dia' && idx !== diaVistaIdx;
         tr.classList.toggle('fila-oculta', oculta);
-        const mover = tr.querySelector('.mover-dia');
-        if (mover) mover.value = tr.dataset.dia;
         if (idx === diaVistaIdx) hayFilasDia = true;
     });
 
