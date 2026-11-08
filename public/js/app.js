@@ -898,10 +898,22 @@ function initVistaTurnos() {
     refrescarVistaTurnos();
 }
 
+// Listas personalizables: el botón con selectedcontent permite recortar con elipsis el texto largo
+function prepararSelects(tbody) {
+    tbody.querySelectorAll('select').forEach(sel => {
+        if (sel.firstElementChild && sel.firstElementChild.tagName === 'BUTTON') return;
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.appendChild(document.createElement('selectedcontent'));
+        sel.prepend(boton);
+    });
+}
+
 function refrescarVistaTurnos() {
     const container = document.getElementById('turnos-container');
     const tbody = document.querySelector('#programa-table tbody');
     if (!container || !tbody) return;
+    prepararSelects(tbody);
     container.dataset.vista = vistaTurnos;
 
     const inicio = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);

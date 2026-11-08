@@ -2543,6 +2543,35 @@ body {
     }
 }
 
+/* Texto largo de las listas personalizables: una sola línea con elipsis */
+@supports (appearance: base-select) {
+    #programa-table select > button {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        background: none;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: inherit;
+        appearance: none;
+    }
+
+    #programa-table select selectedcontent {
+        display: block;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
 /* Print styles */
 @media print {
     .sidebar, .top-bar, .btn, .btn-group, .modal-overlay, .toast {
