@@ -876,9 +876,23 @@ function vistaTurnosFooterHTML() {
 
 let vistaObserver = null;
 
+// Al tocar una fila (en cualquier vista) ese día pasa a ser el activo de "Ver por día"
+function recordarDiaActivo(e) {
+    const tr = e.target.closest && e.target.closest('tr[data-dia]');
+    if (!tr) return;
+    const idx = DIAS_ORDEN.indexOf(tr.dataset.dia);
+    if (idx >= 0) diaVistaIdx = idx;
+}
+
 function initVistaTurnos() {
     const tbody = document.querySelector('#programa-table tbody');
     if (!tbody) return;
+    const cont = document.getElementById('turnos-container');
+    if (cont && !cont.dataset.recuerdaDia) {
+        cont.dataset.recuerdaDia = '1';
+        cont.addEventListener('focusin', recordarDiaActivo);
+        cont.addEventListener('pointerdown', recordarDiaActivo);
+    }
     vistaObserver?.disconnect();
     vistaObserver = new MutationObserver(actualizarDias);
     vistaObserver.observe(tbody, { childList: true });
@@ -951,6 +965,7 @@ function cambiarVistaTurnos(v) {
     vistaTurnos = v;
     try { localStorage.setItem('vistaTurnos', v); } catch { /* sin storage */ }
     refrescarVistaTurnos();
+    if (v === 'dia') document.getElementById('turnos-container')?.scrollIntoView({ block: 'start' });
 }
 
 function irDiaVista(i) {
