@@ -672,11 +672,11 @@ const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAccione
 // ---- Formato por celda (alineación, negrita/cursiva/tachado, alineación vertical) ----
 // Se guarda en cada fila como { campo: { h, v, b, i, s } } y la exportación a Sheets lo respeta.
 const CAMPOS_FORMATO = [
-    { campo: 'hora', etiqueta: 'Hora' },
-    { campo: 'grupo', etiqueta: 'Grupo' },
-    { campo: 'territorio', etiqueta: 'Territorio' },
-    { campo: 'punto_reunion', etiqueta: 'P. Reunión' },
-    { campo: 'conductor', etiqueta: 'Conductor' }
+    { campo: 'hora', etiqueta: 'Hora', icono: 'fa-regular fa-clock' },
+    { campo: 'grupo', etiqueta: 'Grupo', icono: 'fa-solid fa-users' },
+    { campo: 'territorio', etiqueta: 'Territorio', icono: 'fa-solid fa-map-location-dot' },
+    { campo: 'punto_reunion', etiqueta: 'P. Reunión', icono: 'fa-solid fa-location-dot' },
+    { campo: 'conductor', etiqueta: 'Conductor', icono: 'fa-solid fa-user-check' }
 ];
 const FORMATO_DEFECTO = { h: 'center', v: 'middle' }; // igual que la exportación actual
 
@@ -744,7 +744,7 @@ function abrirFormatoFila(btn) {
                 <div class="modal-confirm-icon"><i class="fas fa-paintbrush"></i></div>
                 <h3>Formato de celdas</h3>
                 <p class="fmt-fila"></p>
-                <div class="fmt-celdas">${CAMPOS_FORMATO.map(c => `<button type="button" data-celda="${c.campo}">${c.etiqueta}</button>`).join('')}</div>
+                <div class="fmt-celdas">${CAMPOS_FORMATO.map(c => `<button type="button" data-celda="${c.campo}"><i class="${c.icono}"></i><span>${c.etiqueta}</span></button>`).join('')}</div>
                 <div class="fmt-controles">
                     <div class="fmt-grupo" title="Alineación horizontal">
                         <button type="button" data-h="left" title="Izquierda"><i class="fas fa-align-left"></i></button>
@@ -776,7 +776,7 @@ function abrirFormatoFila(btn) {
         const f = { ...FORMATO_DEFECTO, ...(borrador[celda] || {}) };
         overlay.querySelectorAll('[data-celda]').forEach(b => {
             b.classList.toggle('activo', b.dataset.celda === celda);
-            b.classList.toggle('con-formato', Object.keys(limpiarFormato({ x: borrador[b.dataset.celda] || {} })).length > 0);
+            b.classList.toggle('con-formato', Object.keys(limpiarFormato({ [b.dataset.celda]: borrador[b.dataset.celda] || {} })).length > 0);
         });
         overlay.querySelectorAll('[data-h]').forEach(b => b.classList.toggle('activo', b.dataset.h === f.h));
         overlay.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('activo', b.dataset.v === f.v));

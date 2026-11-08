@@ -3279,7 +3279,7 @@ body {
 
 /* Modal de formato */
 .modal-formato {
-    width: 420px;
+    width: 600px;
 }
 
 .modal-formato .fmt-fila {
@@ -3290,39 +3290,83 @@ body {
 
 .fmt-celdas {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
     margin: 16px 0 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.fmt-celdas::-webkit-scrollbar {
+    display: none;
 }
 
 .fmt-celdas button {
     position: relative;
-    padding: 7px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 999px;
-    background: #fff;
-    font-size: 13px;
-    font-weight: 600;
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border: none;
+    border-right: 1px solid rgba(226, 232, 240, 0.9);
+    background: transparent;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
     color: #475569;
     cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.fmt-celdas button:last-child {
+    border-right: none;
+}
+
+.fmt-celdas button i {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.fmt-celdas button:hover {
+    background: #eef2f7;
 }
 
 .fmt-celdas button.activo {
-    background: #2f5496;
-    border-color: #2f5496;
-    color: #fff;
+    background: #dbeafe;
+    color: #1d4ed8;
+    box-shadow: inset 0 -2px 0 #2563eb;
+}
+
+.fmt-celdas button.activo i {
+    color: #2563eb;
 }
 
 .fmt-celdas button.con-formato::after {
     content: "";
     position: absolute;
-    top: 2px;
-    right: 4px;
+    top: 6px;
+    right: 6px;
     width: 6px;
     height: 6px;
     border-radius: 50%;
     background: #f59e0b;
+}
+
+@media (max-width: 480px) {
+    .fmt-celdas button {
+        padding: 10px 4px;
+        font-size: 0.625rem;
+        letter-spacing: 0.01em;
+    }
+
+    .fmt-celdas button i {
+        display: none;
+    }
 }
 
 .fmt-controles {
