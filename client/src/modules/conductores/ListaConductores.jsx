@@ -56,13 +56,15 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
             <div className={CUERPO}>
                 <div className="mb-4 flex flex-wrap items-center gap-3">
                     <span className="title-4 text-ink">Filtros</span>
-                    <input
-                        type="text"
-                        className={`${CAMPO} w-56 max-w-full`}
-                        placeholder="Filtrar por nombre..."
-                        value={texto}
-                        onChange={(e) => setTexto(e.target.value)}
-                    />
+                    <div className="w-56 max-w-full">
+                        <input
+                            type="text"
+                            className={CAMPO}
+                            placeholder="Filtrar por nombre..."
+                            value={texto}
+                            onChange={(e) => setTexto(e.target.value)}
+                        />
+                    </div>
                     <div className="w-44 max-w-full">
                         <Desplegable
                             variante="campo"
