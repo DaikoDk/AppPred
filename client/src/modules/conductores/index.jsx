@@ -29,6 +29,7 @@ export default function Conductores() {
     const [conductores, setConductores] = useState(/** @type {Conductor[]} */ ([]));
     const [errorLista, setErrorLista] = useState(false);
     // Panel de disponibilidad abierto; `version` fuerza a recargar el panel desde el servidor
+    const [enEdicion, setEnEdicion] = useState(false);
     const [panel, setPanel] = useState(
         /** @type {{ conductor: Conductor, slots: DisponibilidadSlot[], version: number } | null} */ (null)
     );
@@ -113,8 +114,19 @@ export default function Conductores() {
         <div className={RAIZ}>
             <FormConductor onGuardar={crear} />
 
-            <section className={TARJETA}>
-                <EncabezadoTarjeta icono={Table} titulo="Disponibilidad por Conductor" />
+            <section className={enEdicion ? `${TARJETA} border-editando` : TARJETA}>
+                <EncabezadoTarjeta
+                    icono={Table}
+                    titulo={
+                        enEdicion ? (
+                            <>
+                                Disponibilidad por Conductor <span className="text-warn">| Editando</span>
+                            </>
+                        ) : (
+                            'Disponibilidad por Conductor'
+                        )
+                    }
+                />
                 <div className={CUERPO}>
                     {panel ? (
                         <Disponibilidad
@@ -124,6 +136,7 @@ export default function Conductores() {
                             onGuardar={guardarPanel}
                             onCancelarEdicion={() => abrirDisponibilidad(panel.conductor.id)}
                             onCerrar={() => setPanel(null)}
+                            onEditando={setEnEdicion}
                         />
                     ) : (
                         <p className="body-6 text-muted">

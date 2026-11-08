@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FloppyDisk, PencilSimple, X } from '@phosphor-icons/react';
 import { nombreDia } from '../../utils/dias.js';
 import Boton from '../../components/ui/Boton.jsx';
@@ -23,12 +23,18 @@ import GrillaDisponibilidad from './GrillaDisponibilidad.jsx';
  *   inicial: Disponibilidad[],
  *   onGuardar: (slots: Disponibilidad[], atributos: Atributos) => Promise<void>,
  *   onCancelarEdicion: () => void,
- *   onCerrar: () => void
+ *   onCerrar: () => void,
+ *   onEditando?: (editando: boolean) => void
  * }} props
  */
-export default function Disponibilidad({ conductor, inicial, onGuardar, onCancelarEdicion, onCerrar }) {
+export default function Disponibilidad({ conductor, inicial, onGuardar, onCancelarEdicion, onCerrar, onEditando }) {
     const confirmar = useConfirmar();
     const [editando, setEditando] = useState(false);
+    // Avisa a la pestaña si la grilla está en edición (cambia el borde y el encabezado)
+    useEffect(() => {
+        onEditando?.(editando);
+        return () => onEditando?.(false);
+    }, [editando, onEditando]);
     const [slots, setSlots] = useState(inicial);
     const [atributos, setAtributos] = useState(
         /** @type {Atributos} */ ({
