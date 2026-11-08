@@ -547,6 +547,8 @@ async function toggleTurnosGrid() {
             }
         }
     } else {
+        // "Cerrar" al editar un programa equivale a cancelarlo; en modo plantilla solo se oculta la tabla
+        if (editandoProgramaId && !modoPlantilla) { cancelarEdicionPrograma(); return; }
         container.style.display = 'none';
         if (actions) actions.style.display = 'none';
         if (btn) btn.innerHTML = '<i class="fas fa-play"></i> Empezar a crear programa';
@@ -566,8 +568,7 @@ const DAY_COLORS = {
     LUNES: '#fbe4d5', MARTES: '#e2efd9', MIERCOLES: '#deeaf6',
     JUEVES: '#fff2cc', VIERNES: '#ead1dc', SABADO: '#ffdfc0', DOMINGO: '#ffe599'
 };
-const MOVER_DIA_SELECT = `<select class="mover-dia" onchange="moverFilaDia(this)" title="Mover a otro día">${DIAS_ORDEN.map(d => `<option value="${d}">Día: ${nombreDia(d)}</option>`).join('')}</select>`;
-const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>' + MOVER_DIA_SELECT;
+const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>';
 
 // El turno "Domingo (10:20 AM)" solo existe en domingo, aunque se haya guardado en otro día
 // La fila extra "REUNION DE / FIN DE SEMANA" (8:30AM) abre el domingo, antes del turno de las 10:20
@@ -584,20 +585,6 @@ function normalizarExtras(extras) {
 
 function diaDeTurno(t) {
     return /^Domingo/i.test(t.hora || '') ? 'DOMINGO' : t.dia;
-}
-
-function moverFilaDia(sel) {
-    const tr = sel.closest('tr');
-    const nuevo = sel.value;
-    if (!tr || nuevo === tr.dataset.dia) return;
-    tr.remove();
-    tr.dataset.dia = nuevo;
-    tr.style.background = DAY_COLORS[nuevo] || '#fff';
-    if (tr.dataset.antes === 'true') insertBeforeDay(nuevo, tr); else insertAfterDay(nuevo, tr);
-    tr.querySelector('td.abierto')?.classList.remove('abierto');
-    actualizarDias();
-    irDiaVista(DIAS_ORDEN.indexOf(nuevo));
-    showToast(`Fila movida a ${nombreDia(nuevo)}`, 'success');
 }
 
 function toggleMasAcciones(btn) {
@@ -889,19 +876,45 @@ function vistaTurnosFooterHTML() {
 
 let vistaObserver = null;
 
+// Al tocar una fila (en cualquier vista) ese día pasa a ser el activo de "Ver por día"
+function recordarDiaActivo(e) {
+    const tr = e.target.closest && e.target.closest('tr[data-dia]');
+    if (!tr) return;
+    const idx = DIAS_ORDEN.indexOf(tr.dataset.dia);
+    if (idx >= 0) diaVistaIdx = idx;
+}
+
 function initVistaTurnos() {
     const tbody = document.querySelector('#programa-table tbody');
     if (!tbody) return;
+    const cont = document.getElementById('turnos-container');
+    if (cont && !cont.dataset.recuerdaDia) {
+        cont.dataset.recuerdaDia = '1';
+        cont.addEventListener('focusin', recordarDiaActivo);
+        cont.addEventListener('pointerdown', recordarDiaActivo);
+    }
     vistaObserver?.disconnect();
     vistaObserver = new MutationObserver(actualizarDias);
     vistaObserver.observe(tbody, { childList: true });
     refrescarVistaTurnos();
 }
 
+// Listas personalizables: el botón con selectedcontent permite recortar con elipsis el texto largo
+function prepararSelects(tbody) {
+    tbody.querySelectorAll('select').forEach(sel => {
+        if (sel.firstElementChild && sel.firstElementChild.tagName === 'BUTTON') return;
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.appendChild(document.createElement('selectedcontent'));
+        sel.prepend(boton);
+    });
+}
+
 function refrescarVistaTurnos() {
     const container = document.getElementById('turnos-container');
     const tbody = document.querySelector('#programa-table tbody');
     if (!container || !tbody) return;
+    prepararSelects(tbody);
     container.dataset.vista = vistaTurnos;
 
     const inicio = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);
@@ -928,8 +941,6 @@ function refrescarVistaTurnos() {
         }
         const oculta = vistaTurnos === 'dia' && idx !== diaVistaIdx;
         tr.classList.toggle('fila-oculta', oculta);
-        const mover = tr.querySelector('.mover-dia');
-        if (mover) mover.value = tr.dataset.dia;
         if (idx === diaVistaIdx) hayFilasDia = true;
     });
 
@@ -954,6 +965,7 @@ function cambiarVistaTurnos(v) {
     vistaTurnos = v;
     try { localStorage.setItem('vistaTurnos', v); } catch { /* sin storage */ }
     refrescarVistaTurnos();
+    if (v === 'dia') document.getElementById('turnos-container')?.scrollIntoView({ block: 'start' });
 }
 
 function irDiaVista(i) {
@@ -1035,29 +1047,27 @@ async function guardarPrograma(e) {
 async function listarProgramas() {
     const tbody = document.getElementById('tbody-programas');
     if (!tbody) return;
-    tbody.innerHTML = '<tr class="fila-estado"><td colspan="4"><i class="fas fa-circle-notch fa-spin"></i> Cargando programas…</td></tr>';
+    tbody.innerHTML = '<tr class="fila-estado"><td colspan="3"><i class="fas fa-circle-notch fa-spin"></i> Cargando programas…</td></tr>';
     try {
         const d = await apiFetch('/api/programa-semanal');
         tbody.innerHTML = '';
         if (!(d.programas || []).length) {
-            tbody.innerHTML = '<tr class="fila-estado"><td colspan="4">No hay programas guardados</td></tr>';
+            tbody.innerHTML = '<tr class="fila-estado"><td colspan="3">No hay programas guardados</td></tr>';
         }
         (d.programas || []).forEach(p => {
-            const turnos = p.programa_semanal_turnos || [];
             tbody.innerHTML += `<tr>
                 <td class="col-semana"><strong>Semana</strong></td>
                 <td class="col-fechas">
                     <span class="fecha-icon"><i class="far fa-calendar"></i></span>
                     <span class="fecha-texto"><span class="fecha-rango">${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}</span><small class="fecha-sub">Programa semanal</small></span>
                 </td>
-                <td class="col-turnos"><span class="badge badge-info">${turnos.length} turnos</span></td>
                 <td class="col-acciones">
                     <button class="btn btn-sm btn-primary" onclick="editarPrograma('${p.id}')" title="Editar"><i class="fas fa-edit"></i><span class="btn-label">Editar</span></button>
                     <button class="btn btn-sm btn-danger" onclick="eliminarPrograma('${p.id}', '${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}')"><i class="fas fa-trash"></i><span class="btn-label">Eliminar</span></button>
                 </td>
             </tr>`;
         });
-    } catch { tbody.innerHTML = '<tr><td colspan="4">Error</td></tr>'; }
+    } catch { tbody.innerHTML = '<tr><td colspan="3">Error</td></tr>'; }
 }
 
 async function loadPlantilla() {
