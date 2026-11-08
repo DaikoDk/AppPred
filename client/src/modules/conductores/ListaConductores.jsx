@@ -1,4 +1,18 @@
 import { useState } from 'react';
+import { Table, Trash, Users } from '@phosphor-icons/react';
+import Boton from '../../components/ui/Boton.jsx';
+import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
+import {
+    CAMPO,
+    CASILLA,
+    CUERPO,
+    INSIGNIA,
+    TABLA,
+    TABLA_CONTENEDOR,
+    TARJETA,
+    TD,
+    TH
+} from '../../components/ui/estilos.js';
 import { OPCIONES_GRUPO, claseBadgeGrupo } from './grupos.js';
 
 /** @typedef {import('../../types/models').Conductor} Conductor */
@@ -29,117 +43,112 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
     );
 
     return (
-        <div className="card">
-            <div className="card-header">
-                <h3>
-                    <i className="fas fa-users"></i> Lista de Conductores
-                </h3>
-            </div>
-            <div className="card-body">
-                <div className="form-row" style={{ marginBottom: 10, alignItems: 'end', gap: 8 }}>
-                    <div className="form-group" style={{ flex: 2, marginBottom: 0 }}>
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Filtrar por nombre..."
-                            value={texto}
-                            onChange={(e) => setTexto(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <select className="form-control" value={grupo} onChange={(e) => setGrupo(e.target.value)}>
-                            <option value="">Todos los grupos</option>
-                            {OPCIONES_GRUPO.map((g) => (
-                                <option key={g.valor} value={g.valor}>
-                                    {g.texto}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="checkbox-label" style={{ fontSize: '0.8rem' }}>
-                            <input type="checkbox" checked={soloPc} onChange={(e) => setSoloPc(e.target.checked)} /> PC
-                            (Zoom)
-                        </label>
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="checkbox-label" style={{ fontSize: '0.8rem' }}>
-                            <input type="checkbox" checked={soloPMov} onChange={(e) => setSoloPMov(e.target.checked)} />{' '}
-                            P. Mov
-                        </label>
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="checkbox-label" style={{ fontSize: '0.8rem' }}>
-                            <input
-                                type="checkbox"
-                                checked={soloParque}
-                                onChange={(e) => setSoloParque(e.target.checked)}
-                            />{' '}
-                            Parque
-                        </label>
-                    </div>
+        <section className={TARJETA}>
+            <EncabezadoTarjeta icono={Users} titulo="Lista de Conductores" />
+            <div className={CUERPO}>
+                <div className="mb-4 grid grid-cols-1 items-end gap-3 sm:grid-cols-[2fr_1fr]">
+                    <input
+                        type="text"
+                        className={CAMPO}
+                        placeholder="Filtrar por nombre..."
+                        value={texto}
+                        onChange={(e) => setTexto(e.target.value)}
+                    />
+                    <select className={CAMPO} value={grupo} onChange={(e) => setGrupo(e.target.value)}>
+                        <option value="">Todos los grupos</option>
+                        {OPCIONES_GRUPO.map((g) => (
+                            <option key={g.valor} value={g.valor}>
+                                {g.texto}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <div className="table-container">
-                    <table className="table">
+                <div className="mb-4 flex flex-wrap gap-x-6 gap-y-3">
+                    <label className={CASILLA}>
+                        <input type="checkbox" checked={soloPc} onChange={(e) => setSoloPc(e.target.checked)} />
+                        PC (Zoom)
+                    </label>
+                    <label className={CASILLA}>
+                        <input type="checkbox" checked={soloPMov} onChange={(e) => setSoloPMov(e.target.checked)} />
+                        P. Mov
+                    </label>
+                    <label className={CASILLA}>
+                        <input type="checkbox" checked={soloParque} onChange={(e) => setSoloParque(e.target.checked)} />
+                        Parque
+                    </label>
+                </div>
+                <div className={TABLA_CONTENEDOR}>
+                    <table className={TABLA}>
                         <thead>
                             <tr>
-                                <th>Nombre</th>
-                                <th>Grupo</th>
-                                <th>Ubicación</th>
-                                <th>Etiquetas</th>
-                                <th>Disponibilidad</th>
-                                <th>Acciones</th>
+                                <th className={TH}>Nombre</th>
+                                <th className={TH}>Grupo</th>
+                                <th className={TH}>Ubicación</th>
+                                <th className={TH}>Etiquetas</th>
+                                <th className={TH}>Disponibilidad</th>
+                                <th className={TH}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {error && (
                                 <tr>
-                                    <td colSpan={5}>Error</td>
+                                    <td colSpan={5} className={`${TD} text-danger`}>
+                                        Error
+                                    </td>
                                 </tr>
                             )}
                             {visibles.map((c) => (
                                 <tr key={c.id} data-id={c.id}>
-                                    <td>
-                                        <strong className="cond-name">{c.nombre}</strong>
+                                    <td className={TD}>
+                                        <span className="title-4 text-ink">{c.nombre}</span>
                                     </td>
-                                    <td>
-                                        <span className={`badge ${claseBadgeGrupo(c.grupo)}`}>Grupo {c.grupo}</span>
+                                    <td className={TD}>
+                                        <span className={`${INSIGNIA} ${claseBadgeGrupo(c.grupo)}`}>
+                                            Grupo {c.grupo}
+                                        </span>
                                     </td>
-                                    <td>
-                                        <code>{c.ubicacion_casa || '—'}</code>
+                                    <td className={TD}>
+                                        <code className="caption-2 rounded-lg bg-fill px-2 py-0.5 text-muted">
+                                            {c.ubicacion_casa || '—'}
+                                        </code>
                                     </td>
-                                    <td>
-                                        {c.tiene_pc && <span className="badge badge-info">PC</span>}
-                                        {c.poca_movilidad && (
-                                            <>
-                                                {' '}
-                                                <span className="badge badge-warning">P.Mov</span>
-                                            </>
-                                        )}
-                                        {c.solo_parque && (
-                                            <>
-                                                {' '}
-                                                <span className="badge badge-success">Parque</span>
-                                            </>
-                                        )}
-                                        {!c.tiene_pc && !c.poca_movilidad && !c.solo_parque && '—'}
+                                    <td className={TD}>
+                                        <div className="flex flex-wrap gap-1">
+                                            {c.tiene_pc && (
+                                                <span className={`${INSIGNIA} bg-info-bg text-info`}>PC</span>
+                                            )}
+                                            {c.poca_movilidad && (
+                                                <span className={`${INSIGNIA} bg-warn-bg text-warn`}>P.Mov</span>
+                                            )}
+                                            {c.solo_parque && (
+                                                <span className={`${INSIGNIA} bg-ok-bg text-ok`}>Parque</span>
+                                            )}
+                                            {!c.tiene_pc && !c.poca_movilidad && !c.solo_parque && (
+                                                <span className="text-muted">—</span>
+                                            )}
+                                        </div>
                                     </td>
-                                    <td>
-                                        <button
-                                            className="btn btn-sm btn-secondary"
+                                    <td className={TD}>
+                                        <Boton
+                                            variante="secundario"
+                                            icono={Table}
+                                            compacto
                                             onClick={() => onDisponibilidad(c.id)}
                                         >
-                                            <i className="fas fa-table"></i> Disponibilidad
-                                        </button>
+                                            Disponibilidad
+                                        </Boton>
                                     </td>
-                                    <td>
-                                        <button
-                                            className="btn btn-sm btn-danger"
+                                    <td className={TD}>
+                                        <Boton
+                                            variante="peligroSuave"
+                                            icono={Trash}
+                                            soloIcono
+                                            compacto
                                             title="Desactivar"
                                             onClick={() => onDesactivar(c)}
                                         >
-                                            <i className="fas fa-trash"></i>
-                                        </button>
+                                            Desactivar
+                                        </Boton>
                                     </td>
                                 </tr>
                             ))}
@@ -147,6 +156,6 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                     </table>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

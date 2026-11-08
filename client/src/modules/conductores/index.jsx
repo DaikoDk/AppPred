@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Table } from '@phosphor-icons/react';
+import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
+import { CUERPO, RAIZ, TARJETA } from '../../components/ui/estilos.js';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import FormConductor from './FormConductor.jsx';
@@ -107,16 +110,12 @@ export default function Conductores() {
     };
 
     return (
-        <>
+        <div className={RAIZ}>
             <FormConductor onGuardar={crear} />
 
-            <div className="card">
-                <div className="card-header">
-                    <h3>
-                        <i className="fas fa-table"></i> Disponibilidad por Conductor
-                    </h3>
-                </div>
-                <div className="card-body">
+            <section className={TARJETA}>
+                <EncabezadoTarjeta icono={Table} titulo="Disponibilidad por Conductor" />
+                <div className={CUERPO}>
                     {panel ? (
                         <Disponibilidad
                             key={`${panel.conductor.id}-${panel.version}`}
@@ -127,12 +126,12 @@ export default function Conductores() {
                             onCerrar={() => setPanel(null)}
                         />
                     ) : (
-                        <p className="text-muted">
+                        <p className="body-6 text-muted">
                             Selecciona un conductor y haz clic en &quot;Disponibilidad&quot; para editar sus slots.
                         </p>
                     )}
                 </div>
-            </div>
+            </section>
 
             <ListaConductores
                 conductores={conductores}
@@ -140,6 +139,6 @@ export default function Conductores() {
                 onDisponibilidad={(id) => abrirDisponibilidad(id)}
                 onDesactivar={desactivar}
             />
-        </>
+        </div>
     );
 }

@@ -8,9 +8,9 @@ export const OPCIONES_GRUPO = [
     { valor: 'C', texto: 'Grupo C (Comodín)' }
 ];
 
-/** Color del badge del grupo, como en la lista actual. @param {GrupoConductor} grupo */
+/** Colores de la insignia del grupo (tokens del sistema, ADR-021). @param {GrupoConductor} grupo */
 export function claseBadgeGrupo(grupo) {
-    if (grupo === 'A') return 'badge-info';
-    if (grupo === 'C') return 'badge-purple';
-    return 'badge-warning';
+    if (grupo === 'A') return 'bg-info-bg text-info';
+    if (grupo === 'C') return 'bg-fill text-ink';
+    return 'bg-warn-bg text-warn';
 }

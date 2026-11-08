@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { DIAS, nombreDia } from '../../utils/dias.js';
-import { FRANJAS } from '../../utils/constantes.js';
-import { useToast } from '../../components/ui/Toast.jsx';
+import { FloppyDisk, PencilSimple, X } from '@phosphor-icons/react';
+import { nombreDia } from '../../utils/dias.js';
+import Boton from '../../components/ui/Boton.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
+import { CAMPO, CASILLA, ETIQUETA, INSIGNIA, RESUMEN } from '../../components/ui/estilos.js';
 import { OPCIONES_GRUPO } from './grupos.js';
+import GrillaDisponibilidad from './GrillaDisponibilidad.jsx';
 
 /**
  * @typedef {import('../../types/models').Conductor} Conductor
@@ -12,12 +14,9 @@ import { OPCIONES_GRUPO } from './grupos.js';
  * @typedef {Pick<Conductor, 'grupo' | 'tiene_pc' | 'poca_movilidad' | 'solo_parque' | 'ubicacion_casa'>} Atributos
  */
 
-/** Orden por día y franja, como sortKeyDisp() de la app anterior. @param {{ dia: Dia, hora: string }} s */
-const ordenSlot = (s) => DIAS.indexOf(s.dia) * 10 + FRANJAS.indexOf(s.hora);
-
 /**
  * Ver y editar la disponibilidad y los atributos de un conductor.
- * Los espacios quitados se guardan como `disponible: false` (no se borran) y se pueden restaurar.
+ * Quitar un horario lo guarda como `disponible: false` (no se borra), así que se puede volver a marcar.
  * @param {{
  *   conductor: Conductor,
  *   inicial: Disponibilidad[],
@@ -27,12 +26,9 @@ const ordenSlot = (s) => DIAS.indexOf(s.dia) * 10 + FRANJAS.indexOf(s.hora);
  * }} props
  */
 export default function Disponibilidad({ conductor, inicial, onGuardar, onCancelarEdicion, onCerrar }) {
-    const toast = useToast();
     const confirmar = useConfirmar();
     const [editando, setEditando] = useState(false);
     const [slots, setSlots] = useState(inicial);
-    const [nuevoDia, setNuevoDia] = useState(/** @type {Dia} */ ('LUNES'));
-    const [nuevaHora, setNuevaHora] = useState(FRANJAS[0]);
     const [atributos, setAtributos] = useState(
         /** @type {Atributos} */ ({
             grupo: conductor.grupo,
@@ -43,8 +39,7 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
         })
     );
 
-    const activos = slots.filter((s) => s.disponible).sort((a, b) => ordenSlot(a) - ordenSlot(b));
-    const quitados = slots.filter((s) => !s.disponible).sort((a, b) => ordenSlot(a) - ordenSlot(b));
+    const cantidadActivos = slots.filter((s) => s.disponible).length;
 
     /** @param {Dia} dia @param {string} hora @param {boolean} disponible */
     const marcar = (dia, hora, disponible) =>
@@ -55,31 +50,21 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
                 : [...lista, { dia, hora, disponible }];
         });
 
-    const agregar = () => {
-        if (slots.some((s) => s.dia === nuevoDia && s.hora === nuevaHora && s.disponible)) {
-            toast('Este horario ya está activo', 'warning');
+    /** Marcar es directo; quitar pide confirmación, como antes (RN-COND-04). @param {Dia} dia @param {string} hora */
+    const alternar = async (dia, hora) => {
+        const activo = slots.some((s) => s.dia === dia && s.hora === hora && s.disponible);
+        if (!activo) {
+            marcar(dia, hora, true);
             return;
         }
-        marcar(nuevoDia, nuevaHora, true);
-        toast(`✓ ${nombreDia(nuevoDia)} — ${nuevaHora}`, 'success');
-    };
-
-    /** @param {Disponibilidad} s */
-    const quitar = async (s) => {
         const ok = await confirmar({
             titulo: '¿Quitar este horario?',
-            mensaje: `${nombreDia(s.dia)} — ${s.hora}`,
+            mensaje: `${nombreDia(dia)} — ${hora}`,
             textoConfirmar: 'Quitar',
             peligro: true,
             icono: 'fa-trash'
         });
-        if (ok === true) marcar(s.dia, s.hora, false);
-    };
-
-    /** @param {Disponibilidad} s */
-    const restaurar = (s) => {
-        marcar(s.dia, s.hora, true);
-        toast(`Restaurado ${nombreDia(s.dia)} — ${s.hora}`, 'success');
+        if (ok === true) marcar(dia, hora, false);
     };
 
     const guardar = async () => {
@@ -92,172 +77,73 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
 
     /** @param {Partial<Atributos>} cambio */
     const cambiarAtributo = (cambio) => setAtributos((a) => ({ ...a, ...cambio }));
-    const estiloChico = { fontSize: '0.75rem', padding: '4px 6px' };
+
+    const textoGuardar =
+        cantidadActivos === 0
+            ? 'Guardar sin horarios'
+            : `Guardar ${cantidadActivos} ${cantidadActivos === 1 ? 'horario' : 'horarios'}`;
 
     return (
-        <div className="disp-editor" data-conductor-id={conductor.id}>
-            <h4 style={{ marginBottom: 10 }}>
+        <div data-conductor-id={conductor.id}>
+            <h4 className="title-2 mb-3 text-ink">
                 Conductor <strong>{conductor.nombre}</strong>
             </h4>
 
             {!editando ? (
                 <>
-                    {activos.length === 0 ? (
-                        <p className="text-muted">Sin slots de disponibilidad.</p>
-                    ) : (
-                        <div className="table-container">
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Día</th>
-                                        <th>Hora</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {activos.map((s) => (
-                                        <tr key={`${s.dia}|${s.hora}`}>
-                                            <td>{nombreDia(s.dia)}</td>
-                                            <td>{s.hora}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                    <div style={{ marginTop: 10, fontSize: '0.8rem', color: '#555' }}>
-                        Grupo: <strong>{conductor.grupo || '—'}</strong> | PC Zoom:{' '}
-                        <strong>{conductor.tiene_pc ? 'Sí' : 'No'}</strong> | Poca movilidad:{' '}
-                        <strong>{conductor.poca_movilidad ? 'Sí' : 'No'}</strong>
+                    <GrillaDisponibilidad slots={slots} editable={false} />
+                    <div className="caption-1 mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted">
+                        <span>
+                            Grupo: <strong className="text-ink">{conductor.grupo || '—'}</strong>
+                        </span>
+                        <span>|</span>
+                        <span>
+                            PC Zoom: <strong className="text-ink">{conductor.tiene_pc ? 'Sí' : 'No'}</strong>
+                        </span>
+                        <span>|</span>
+                        <span>
+                            Poca movilidad:{' '}
+                            <strong className="text-ink">{conductor.poca_movilidad ? 'Sí' : 'No'}</strong>
+                        </span>
                         {conductor.solo_parque && (
                             <>
-                                {' | '}
-                                <span className="badge badge-success">Solo Parque</span>
+                                <span>|</span>
+                                <span className={`${INSIGNIA} bg-ok-bg text-ok`}>Solo Parque</span>
                             </>
                         )}
                         {conductor.ubicacion_casa && (
                             <>
-                                {' | Ubicación: '}
-                                <code>{conductor.ubicacion_casa}</code>
+                                <span>|</span>
+                                <span>
+                                    Ubicación:{' '}
+                                    <code className="caption-2 rounded-lg bg-fill px-2 py-0.5 text-ink">
+                                        {conductor.ubicacion_casa}
+                                    </code>
+                                </span>
                             </>
                         )}
                     </div>
-                    <div style={{ marginTop: 15, display: 'flex', gap: 8 }}>
-                        <button className="btn btn-primary" onClick={() => setEditando(true)}>
-                            <i className="fas fa-edit"></i> Editar
-                        </button>
-                        <button className="btn btn-secondary" onClick={onCerrar}>
-                            <i className="fas fa-times"></i> Cerrar
-                        </button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <Boton variante="primario" icono={PencilSimple} onClick={() => setEditando(true)}>
+                            Editar
+                        </Boton>
+                        <Boton variante="secundario" icono={X} onClick={onCerrar}>
+                            Cerrar
+                        </Boton>
                     </div>
                 </>
             ) : (
                 <>
-                    <div className="table-container">
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th>Día</th>
-                                    <th>Hora</th>
-                                    <th>Estado</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {activos.map((s) => (
-                                    <tr key={`a|${s.dia}|${s.hora}`}>
-                                        <td>{nombreDia(s.dia)}</td>
-                                        <td>{s.hora}</td>
-                                        <td>
-                                            <span className="badge badge-success">Disponible</span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-danger"
-                                                onClick={() => quitar(s)}
-                                            >
-                                                <i className="fas fa-trash"></i> Eliminar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {quitados.map((s) => (
-                                    <tr
-                                        key={`q|${s.dia}|${s.hora}`}
-                                        style={{ opacity: 0.5, textDecoration: 'line-through' }}
-                                    >
-                                        <td>{nombreDia(s.dia)}</td>
-                                        <td>{s.hora}</td>
-                                        <td>
-                                            <span className="badge badge-secondary">Eliminado</span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                className="btn btn-sm btn-warning"
-                                                onClick={() => restaurar(s)}
-                                            >
-                                                <i className="fas fa-undo"></i> Restaurar
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <p className="body-6 mb-3 text-muted">Toca una casilla para marcarla o quitarla.</p>
+                    <GrillaDisponibilidad slots={slots} editable onAlternar={alternar} />
 
-                    <div className="form-row disp-add-row" style={{ marginTop: 10, alignItems: 'end' }}>
-                        <div className="form-group">
-                            <label>Día</label>
-                            <select
-                                className="form-control disp-add-dia"
-                                value={nuevoDia}
-                                onChange={(e) => setNuevoDia(/** @type {Dia} */ (e.target.value))}
-                            >
-                                {DIAS.map((d) => (
-                                    <option key={d} value={d}>
-                                        {nombreDia(d)}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label>Hora</label>
-                            <select
-                                className="form-control disp-add-hora"
-                                value={nuevaHora}
-                                onChange={(e) => setNuevaHora(e.target.value)}
-                            >
-                                {FRANJAS.map((f) => (
-                                    <option key={f} value={f}>
-                                        {f}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="form-group" style={{ alignSelf: 'end' }}>
-                            <button type="button" className="btn btn-secondary" onClick={agregar}>
-                                <i className="fas fa-plus"></i> Guardar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div
-                        style={{
-                            marginTop: 15,
-                            padding: 12,
-                            background: '#f9f9f9',
-                            borderRadius: 6,
-                            border: '1px solid #eee'
-                        }}
-                    >
-                        <strong style={{ fontSize: '0.85rem' }}>Atributos del conductor</strong>
-                        <div className="form-row" style={{ marginTop: 8, alignItems: 'end' }}>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label style={{ fontSize: '0.75rem' }}>Grupo</label>
+                    <div className={`${RESUMEN} mt-4`}>
+                        <span className="title-4 text-ink">Atributos del conductor</span>
+                        <div className="mt-3 grid grid-cols-1 items-end gap-3 sm:grid-cols-2">
+                            <div className="min-w-0">
+                                <label className={ETIQUETA}>Grupo</label>
                                 <select
-                                    className="form-control"
-                                    style={estiloChico}
+                                    className={CAMPO}
                                     value={atributos.grupo}
                                     onChange={(e) =>
                                         cambiarAtributo({ grupo: /** @type {Atributos['grupo']} */ (e.target.value) })
@@ -270,57 +156,52 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
                                     ))}
                                 </select>
                             </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label style={{ fontSize: '0.75rem' }}>Ubicación Casa (lat,lng)</label>
+                            <div className="min-w-0">
+                                <label className={ETIQUETA}>Ubicación Casa (lat,lng)</label>
                                 <input
                                     type="text"
-                                    className="form-control"
-                                    style={estiloChico}
+                                    className={CAMPO}
                                     placeholder="-12.0464,-77.0428"
                                     value={atributos.ubicacion_casa || ''}
                                     onChange={(e) => cambiarAtributo({ ubicacion_casa: e.target.value })}
                                 />
                             </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="checkbox-label" style={{ fontSize: '0.75rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={atributos.tiene_pc}
-                                        onChange={(e) => cambiarAtributo({ tiene_pc: e.target.checked })}
-                                    />{' '}
-                                    Tiene PC (Zoom)
-                                </label>
-                            </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="checkbox-label" style={{ fontSize: '0.75rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={atributos.poca_movilidad}
-                                        onChange={(e) => cambiarAtributo({ poca_movilidad: e.target.checked })}
-                                    />{' '}
-                                    Poca Movilidad
-                                </label>
-                            </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <label className="checkbox-label" style={{ fontSize: '0.75rem' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={atributos.solo_parque}
-                                        onChange={(e) => cambiarAtributo({ solo_parque: e.target.checked })}
-                                    />{' '}
-                                    Solo Parque
-                                </label>
-                            </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <label className={CASILLA}>
+                                <input
+                                    type="checkbox"
+                                    checked={atributos.tiene_pc}
+                                    onChange={(e) => cambiarAtributo({ tiene_pc: e.target.checked })}
+                                />
+                                Tiene PC (Zoom)
+                            </label>
+                            <label className={CASILLA}>
+                                <input
+                                    type="checkbox"
+                                    checked={atributos.poca_movilidad}
+                                    onChange={(e) => cambiarAtributo({ poca_movilidad: e.target.checked })}
+                                />
+                                Poca Movilidad
+                            </label>
+                            <label className={CASILLA}>
+                                <input
+                                    type="checkbox"
+                                    checked={atributos.solo_parque}
+                                    onChange={(e) => cambiarAtributo({ solo_parque: e.target.checked })}
+                                />
+                                Solo Parque
+                            </label>
                         </div>
                     </div>
 
-                    <div style={{ marginTop: 15, display: 'flex', gap: 8 }}>
-                        <button className="btn btn-primary" onClick={guardar}>
-                            <i className="fas fa-save"></i> Confirmar
-                        </button>
-                        <button className="btn btn-secondary" onClick={onCancelarEdicion}>
-                            <i className="fas fa-times"></i> Cancelar
-                        </button>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <Boton variante="primario" icono={FloppyDisk} onClick={guardar}>
+                            {textoGuardar}
+                        </Boton>
+                        <Boton variante="secundario" icono={X} onClick={onCancelarEdicion}>
+                            Cancelar
+                        </Boton>
                     </div>
                 </>
             )}
