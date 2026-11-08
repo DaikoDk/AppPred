@@ -1,18 +1,42 @@
 // @ts-check
-// Pestañas de la app. El orden y los iconos son los del sidebar de la app anterior (public/dashboard.html).
+// Navegación de la app. El menú lateral tiene las áreas grandes; las pestañas de Hoja de Predicación son sus secciones.
+import { CalendarCheck, ChartBar, ClipboardText, GearSix, MapPin, NotePencil, Users } from '@phosphor-icons/react';
 
-/** @typedef {{ ruta: string, titulo: string, tooltip: string, icono: string, soloSuperAdmin?: boolean }} ItemNav */
+/** @typedef {{ ruta: string, titulo: string, tooltip: string, icono: string, soloSuperAdmin?: boolean }} ItemMenu */
+/** @typedef {{ ruta: string, titulo: string, icono: import('@phosphor-icons/react').Icon, soloSuperAdmin?: boolean }} ItemPestana */
 
-/** @type {ItemNav[]} */
+/** Menú lateral (iconos de Font Awesome, como hasta ahora). Admin queda aparte: es para pocos usuarios (ADR-022). */
+/** @type {ItemMenu[]} */
 export const ITEMS_NAV = [
-    { ruta: '/programa', titulo: 'Programa', tooltip: 'Programa', icono: 'fa-calendar-alt' },
-    { ruta: '/asignacion', titulo: 'Asignación', tooltip: 'Asignación', icono: 'fa-calendar-check' },
-    { ruta: '/plantilla', titulo: 'Plantilla', tooltip: 'Plantilla', icono: 'fa-pencil-alt' },
-    { ruta: '/conductores', titulo: 'Conductores', tooltip: 'Conductores', icono: 'fa-users' },
-    { ruta: '/puntos', titulo: 'Puntos de Reunión', tooltip: 'Puntos Reunión', icono: 'fa-map-pin' },
-    { ruta: '/historial', titulo: 'Historial', tooltip: 'Historial', icono: 'fa-chart-bar' },
+    { ruta: '/hoja', titulo: 'Hoja de Predicación', tooltip: 'Hoja Predicación', icono: 'fa-clipboard-list' },
     { ruta: '/admin', titulo: 'Admin', tooltip: 'Admin', icono: 'fa-shield-alt', soloSuperAdmin: true }
 ];
+
+/** Pestañas dentro de Hoja de Predicación, en el orden de la barra (iconos Phosphor, ADR-021). */
+/** @type {ItemPestana[]} */
+export const PESTANAS_HOJA = [
+    { ruta: '/hoja/programa', titulo: 'Programa', icono: NotePencil },
+    { ruta: '/hoja/asignacion', titulo: 'Asignación', icono: CalendarCheck },
+    { ruta: '/hoja/plantilla', titulo: 'Plantilla', icono: ClipboardText },
+    { ruta: '/hoja/conductores', titulo: 'Conductores', icono: Users },
+    { ruta: '/hoja/puntos', titulo: 'Puntos de Reunión', icono: MapPin },
+    { ruta: '/hoja/historial', titulo: 'Historial', icono: ChartBar },
+    { ruta: '/hoja/configuracion', titulo: 'Configuración', icono: GearSix, soloSuperAdmin: true }
+];
+
+/** Rutas de antes de Hoja de Predicación. Se redirigen para no romper favoritos ni enlaces guardados. */
+/** @type {Record<string, string>} */
+export const RUTAS_ANTIGUAS = {
+    '/programa': '/hoja/programa',
+    '/asignacion': '/hoja/asignacion',
+    '/plantilla': '/hoja/plantilla',
+    '/conductores': '/hoja/conductores',
+    '/puntos': '/hoja/puntos',
+    '/historial': '/hoja/historial'
+};
+
+/** Pestaña de entrada: raíz, /hoja y rutas desconocidas van aquí. */
+export const RUTA_INICIO = '/hoja/programa';
 
 /** @param {string} ruta */
 export function tituloDeRuta(ruta) {

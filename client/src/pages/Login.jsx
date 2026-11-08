@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { iniciarSesionConGoogle } from '../api/auth.js';
 import { useSesion } from '../hooks/useSesion.jsx';
 import { useToast } from '../components/ui/Toast.jsx';
+import { RUTA_INICIO } from '../components/layout/navegacion.js';
 
 // Pantalla de login. Mismo diseño que public/index.html.
 export default function Login() {
@@ -30,7 +31,7 @@ export default function Login() {
             });
     }, [iniciar, toast]);
 
-    if (usuario) return <Navigate to="/programa" replace />;
+    if (usuario) return <Navigate to={RUTA_INICIO} replace />;
 
     return (
         <div className="auth-container">

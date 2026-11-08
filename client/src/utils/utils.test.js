@@ -3,7 +3,7 @@ import { aISO, fechaDelDia, finDeSemana, formatDate, parseLocalDate } from './fe
 import { mensajeError } from './errores.js';
 import { nombreDia } from './dias.js';
 import { diaDeExtra, diaDeTurno, normalizarExtras } from './reglasDia.js';
-import { extraerSpreadsheetId } from '../modules/admin/api.js';
+import { extraerSpreadsheetId } from '../modules/configuracion/api.js';
 
 describe('fechas (RN-DATA-04, RN-PLAN-07)', () => {
     it('lee "YYYY-MM-DD" como fecha local, sin desfase de zona horaria', () => {

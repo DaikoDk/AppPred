@@ -3,16 +3,7 @@ import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import { useSesion } from '../../hooks/useSesion.jsx';
 import { mensajeError } from '../../utils/errores.js';
-import {
-    agregarCorreo,
-    alternarSuperAdmin,
-    eliminarCorreo,
-    extraerSpreadsheetId,
-    guardarSpreadsheetId,
-    listarCorreos,
-    obtenerConfiguracion,
-    renunciarSuperAdmin
-} from './api.js';
+import { agregarCorreo, alternarSuperAdmin, eliminarCorreo, listarCorreos, renunciarSuperAdmin } from './api.js';
 
 /** @typedef {import('./api.js').CorreoAutorizado} CorreoAutorizado */
 
@@ -22,15 +13,13 @@ const MAX_SUPER_ADMINS = 2;
 
 const BOTON_CHICO = { fontSize: '0.75rem', padding: '2px 8px', height: 'auto', lineHeight: 1.4 };
 
-// Pestaña Admin (solo super admins). Reglas: RN-AUTH-01..08
+// Pestaña Admin (solo super admins, fuera de Hoja de Predicación; ADR-022). Reglas: RN-AUTH-01..08
 export default function Admin() {
     const toast = useToast();
     const confirmar = useConfirmar();
     const { usuario, refrescarRol } = useSesion();
     const [correos, setCorreos] = useState(/** @type {CorreoAutorizado[]} */ ([]));
     const [nuevoCorreo, setNuevoCorreo] = useState('');
-    const [spreadsheet, setSpreadsheet] = useState('');
-    const [spreadsheetUrl, setSpreadsheetUrl] = useState('');
 
     const cargarCorreos = useCallback(async () => {
         try {
@@ -40,35 +29,9 @@ export default function Admin() {
         }
     }, [toast]);
 
-    const cargarConfig = useCallback(async () => {
-        try {
-            const cfg = await obtenerConfiguracion();
-            setSpreadsheet(cfg.spreadsheet_id || '');
-            setSpreadsheetUrl(cfg.spreadsheet_url || '');
-        } catch {
-            // sin permiso: la ruta ya está protegida para super admins
-        }
-    }, []);
-
     useEffect(() => {
         cargarCorreos();
-        cargarConfig();
-    }, [cargarCorreos, cargarConfig]);
-
-    const guardarConfig = async () => {
-        const entrada = spreadsheet.trim();
-        if (!entrada) {
-            toast('Ingresa el ID o URL del spreadsheet', 'warning');
-            return;
-        }
-        try {
-            await guardarSpreadsheetId(extraerSpreadsheetId(entrada));
-            toast('Spreadsheet ID guardado', 'success');
-            cargarConfig();
-        } catch (err) {
-            toast(mensajeError(err, 'Error al guardar'), 'error');
-        }
-    };
+    }, [cargarCorreos]);
 
     const agregar = async () => {
         const email = nuevoCorreo.trim();
@@ -128,7 +91,7 @@ export default function Admin() {
         try {
             const res = await renunciarSuperAdmin();
             toast(res.message || 'Has renunciado como super admin', 'success');
-            await refrescarRol(); // sin el rol, la ruta /admin redirige a Programa
+            await refrescarRol(); // sin el rol, la ruta /admin redirige a Hoja de Predicación
         } catch (err) {
             toast(mensajeError(err, 'Error al renunciar'), 'error');
         }
@@ -144,47 +107,6 @@ export default function Admin() {
                 </h3>
             </div>
             <div className="card-body">
-                <div className="card" style={{ marginBottom: 20, border: '1px solid #e0e0e0' }}>
-                    <div className="card-header" style={{ padding: '10px 15px' }}>
-                        <h3 style={{ fontSize: '0.9rem' }}>
-                            <i className="fas fa-cog"></i> Configuración
-                        </h3>
-                    </div>
-                    <div className="card-body" style={{ padding: '10px 15px' }}>
-                        <div className="form-group" style={{ marginBottom: 8 }}>
-                            <label style={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                                ID del Spreadsheet de Google Sheets
-                            </label>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="ID del spreadsheet"
-                                    style={{ flex: 1 }}
-                                    value={spreadsheet}
-                                    onChange={(e) => setSpreadsheet(e.target.value)}
-                                />
-                                <button
-                                    className="btn btn-primary"
-                                    style={{ whiteSpace: 'nowrap' }}
-                                    onClick={guardarConfig}
-                                >
-                                    <i className="fas fa-save"></i> Guardar
-                                </button>
-                            </div>
-                            <div style={{ marginTop: 4, fontSize: '0.8rem' }}>
-                                {spreadsheetUrl ? (
-                                    <a href={spreadsheetUrl} target="_blank" rel="noopener noreferrer">
-                                        <i className="fas fa-external-link-alt"></i> Abrir spreadsheet
-                                    </a>
-                                ) : (
-                                    <span className="text-muted">No configurado</span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <p>Gestiona los emails autorizados para acceder al sistema.</p>
                 <div className="stats-row" style={{ marginBottom: 15, gap: 10 }}>
                     <div className="stat-card" style={{ padding: '8px 16px' }}>
