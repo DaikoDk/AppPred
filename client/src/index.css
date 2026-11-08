@@ -1,0 +1,92 @@
+/* Estilos del cliente: Tailwind v4 con el sistema de diseño de la skill landing page design (ADR-021).
+   Capas: el CSS anterior (legacy) pierde frente a las utilidades, así conviven mientras se migra módulo por módulo.
+   Cuando no quede ningún componente que use clases de styles.css, se elimina esa capa. */
+@layer theme, base, legacy, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import '@fontsource-variable/geist';
+@import './styles/styles.css' layer(legacy);
+
+@theme {
+    /* Tipografía: una sola familia (Geist), sin cursivas ni pesos extremos */
+    --font-sans: 'Geist Variable', system-ui, sans-serif;
+
+    /* Marca de AppPred. La skill no impone paleta: se conservan los colores actuales. */
+    --color-primary: #2f5496;
+    --color-primary-dark: #1e3a5f;
+    --color-primary-light: #4a7bc8;
+    --color-ink: #181818;
+    --color-muted: #666666;
+    --color-soft: #8a8a8a;
+    --color-surface: #ffffff;
+    --color-canvas: #f6f6f7;
+    --color-fill: #f0f0f2;
+    --color-line: #e4e4e7;
+    --color-ok: #1f8a4c;
+    --color-ok-bg: #e6f5ec;
+    --color-warn: #9a5b00;
+    --color-warn-bg: #fff3df;
+    --color-danger: #b42318;
+    --color-danger-bg: #fdecea;
+    --color-info: #1d5fa8;
+    --color-info-bg: #e8f1fb;
+
+    /* Colores de cada día: son datos del programa (iguales a la hoja de Google) */
+    --color-lunes: #fbe4d5;
+    --color-martes: #e2efd9;
+    --color-miercoles: #deeaf6;
+    --color-jueves: #fff2cc;
+    --color-viernes: #ead1dc;
+    --color-sabado: #ffdfc0;
+    --color-domingo: #ffe599;
+
+    /* Movimiento: curva con desaceleración, nunca ease, linear ni ease-in-out */
+    --ease-skill: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- Estilos de texto con nombre (skill, sección B1). Se usan en lugar de combinar tamaño y peso a mano. ---- */
+@utility heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; }
+@utility heading-2 { font-size: 48px; line-height: 48px; font-weight: 600; }
+@utility heading-3 { font-size: 36px; line-height: 40px; font-weight: 600; }
+@utility heading-4 { font-size: 30px; line-height: 36px; font-weight: 600; }
+@utility heading-5 { font-size: 24px; line-height: 32px; font-weight: 600; }
+@utility heading-6 { font-size: 20px; line-height: 28px; font-weight: 600; }
+@utility title-1 { font-size: 20px; line-height: 28px; font-weight: 500; }
+@utility title-2 { font-size: 18px; line-height: 28px; font-weight: 500; }
+@utility title-3 { font-size: 16px; line-height: 24px; font-weight: 500; }
+@utility title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+@utility title-5 { font-size: 12px; line-height: 16px; font-weight: 500; }
+@utility body-1 { font-size: 16px; line-height: 24px; font-weight: 600; }
+@utility body-2 { font-size: 16px; line-height: 24px; font-weight: 500; }
+@utility body-3 { font-size: 16px; line-height: 24px; font-weight: 400; }
+@utility body-4 { font-size: 14px; line-height: 20px; font-weight: 600; }
+@utility body-5 { font-size: 14px; line-height: 20px; font-weight: 500; }
+@utility body-6 { font-size: 14px; line-height: 20px; font-weight: 400; }
+@utility button-lg { font-size: 18px; line-height: 28px; font-weight: 600; }
+@utility button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+@utility button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+@utility button-xsm { font-size: 12px; line-height: 16px; font-weight: 600; }
+@utility caption-1 { font-size: 14px; line-height: 20px; font-weight: 500; }
+@utility caption-2 { font-size: 14px; line-height: 20px; font-weight: 400; }
+@utility caption-3 { font-size: 12px; line-height: 16px; font-weight: 600; }
+@utility caption-4 { font-size: 12px; line-height: 16px; font-weight: 500; }
+@utility caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+/* Foco visible en todo elemento interactivo (accesibilidad) */
+@layer base {
+    :focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+    h1, h2, h3, h4 { text-wrap: balance; }
+    p, li { text-wrap: pretty; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: opacity 200ms linear !important;
+        transform: none !important;
+    }
+}

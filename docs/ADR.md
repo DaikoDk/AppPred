@@ -215,7 +215,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - El cliente nuevo vive en `client/` (Vite + React, JavaScript con JSX) y se sirve en `/nuevo` hasta el corte.
 - Se deja preparado para TypeScript: `tsconfig` con `checkJs`, tipos del dominio en `client/src/types/models.d.ts`, JSDoc con `// @ts-check` y reglas de escritura en `client/MIGRACION-TS.md`. La migración a TS se hace archivo por archivo cuando todos los módulos estén estables.
 - Estructura por módulos: `client/src/modules/<modulo>/` con páginas, componentes y llamadas a la API propias; solo lo compartido va a `components/ui`; los módulos no se importan entre sí; cada módulo se carga con `React.lazy`.
-- Estilos: `styles.css` se copia **sin cambios** y los componentes usan las mismas clases (no CSS Modules ni Tailwind por ahora).
+- Estilos: *(Reemplazado por ADR-021)* `styles.css` se copió sin cambios y los componentes usaban las mismas clases.
 - Render: el build pasa a ser `pnpm install && pnpm build` (el gestor de paquetes del proyecto es pnpm); el start sigue siendo `node server.js`.
 
 **Consecuencias:**
@@ -234,3 +234,22 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - La paridad con el front anterior se verificó en el navegador comparando la tabla (clases, atributos, valores y estilos calculados) y el cuerpo enviado al servidor, con las escrituras interceptadas para no tocar la base compartida.
 
 **Consecuencias:** Un cambio en esas funciones exige actualizar sus pruebas. Las pantallas (JSX) no tienen pruebas automáticas todavía; se verifican en el navegador.
+
+## ADR-021: Tailwind CSS v4 con el sistema de diseño de la skill landing page design
+
+**Estado:** Vigente (migración en curso, módulo por módulo)
+
+**Contexto:** Se pidió aplicar el sistema visual de la skill `landing-page-design` (`~/.claude/skills/landing-page-design/SKILL.md`), cuya escala de tamaños, radios y movimiento se expresan con el vocabulario de Tailwind. Reemplaza lo decidido sobre estilos en ADR-019 ("no Tailwind por ahora").
+
+**Decisión:**
+- Tailwind v4 con el plugin de Vite (`@tailwindcss/vite`). El tema vive en `client/src/index.css`: familia Geist (paquete `@fontsource-variable/geist`, autoalojada), colores de marca, colores de los días y la curva `ease-skill` (`cubic-bezier(0.22,1,0.36,1)`).
+- Los 27 estilos de texto con nombre de la skill (Heading 1 a 6, Title 1 a 5, Body 1 a 6, Button lg a Xsm, Caption 1 a 5) son utilidades (`heading-3`, `body-6`, `button-sm`...). Todo texto usa uno; no se combinan tamaño y peso sueltos.
+- Íconos: Phosphor (`@phosphor-icons/react`, importación por ícono). Font Awesome sale con la migración.
+- Espaciados solo los de la tabla de la skill (0, 2, 4, 8, 12, 16, 24, 32, 40, 48, 64, 80 y 96 px) y radios de Tailwind con la fórmula de anidado (radio interior = radio exterior menos separación; si da 2 o menos, se deja sin cambios).
+- Fondos planos; el único degradado es el texto del título del hero (blanco a gris o negro a gris). Sin cursivas ni pesos 900. Bordes siempre completos.
+- Convivencia: el CSS anterior (`styles.css`) se importa en una capa `legacy` que pierde frente a las utilidades. Cada componente migrado deja de usar sus clases y, al terminar, se elimina `styles.css`.
+
+**Consecuencias:**
+- Los componentes se reescriben con clases de Tailwind sin cambiar su comportamiento ni las reglas de negocio (la migración es solo visual).
+- La CSP no cambia: fuentes e íconos se empaquetan con la app, no vienen de CDN.
+- Las mejoras de la maqueta que cambian comportamiento (pantalla de inicio, filtros y sugerencias en Asignación, cuadrícula de disponibilidad) **no** forman parte de esta decisión y requieren aprobación aparte.

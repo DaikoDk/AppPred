@@ -45,7 +45,7 @@ Gestor de paquetes: **pnpm** (no usar npm ni crear `package-lock.json`). Desde l
 - Commits: tipo convencional (`feat:`, `fix:`, `docs:`...), una idea por commit, **sin línea `Co-Authored-By`**.
 - Front:
   - Un módulo por pestaña en `client/src/modules/<modulo>/` (página, componentes, `api.js` y lógica pura); los módulos no se importan entre sí. Lo compartido va a `components/ui`, `utils` o `hooks`.
-  - Estilos: solo las clases de `client/src/styles/styles.css` (copiado sin cambios del front anterior). No CSS Modules ni Tailwind sin decidirlo antes (ADR-019). Prettier no debe tocar ese archivo: córrelo siempre desde `client/` (`pnpm format`).
+  - Estilos: Tailwind v4 con el sistema de la skill `landing-page-design` (ADR-021). Todo texto usa un estilo con nombre (`heading-3`, `body-6`, `button-sm`...); espaciados solo de la tabla de la skill; íconos Phosphor; sin cursivas, degradados de fondo ni bordes de un solo lado. Un componente nuevo no usa clases de `styles.css`. Ese archivo es CSS anterior en la capa `legacy`: no se le agregan reglas y no lo toca Prettier (córrelo siempre desde `client/`, con `pnpm format`).
   - Escribir JSX listo para TypeScript siguiendo `client/MIGRACION-TS.md`: tipos del dominio desde `client/src/types/models.d.ts`, JSDoc en props y funciones, `// @ts-check` en `.js`.
   - Confirmaciones con `useConfirmar`, carga con `useCargando`, avisos con `useToast`; nunca `alert`/`confirm` (ADR-016).
 - Si se añade un servicio externo o CDN, actualizar la CSP de `server.js` (ADR-002).
