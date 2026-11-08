@@ -97,37 +97,38 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
 
             {!editando ? (
                 <>
-                    <GrillaDisponibilidad slots={slots} editable={false} />
-                    <div className="caption-1 mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted">
-                        <span>
-                            Grupo: <strong className="text-ink">{conductor.grupo || '—'}</strong>
-                        </span>
-                        <span>|</span>
-                        <span>
-                            PC Zoom: <strong className="text-ink">{conductor.tiene_pc ? 'Sí' : 'No'}</strong>
-                        </span>
-                        <span>|</span>
-                        <span>
-                            Poca movilidad:{' '}
-                            <strong className="text-ink">{conductor.poca_movilidad ? 'Sí' : 'No'}</strong>
-                        </span>
-                        {conductor.solo_parque && (
-                            <>
-                                <span>|</span>
-                                <span className={`${INSIGNIA} bg-ok-bg text-ok`}>Solo Parque</span>
-                            </>
-                        )}
-                        {conductor.ubicacion_casa && (
-                            <>
-                                <span>|</span>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                        <div className="min-w-0 flex-1">
+                            <GrillaDisponibilidad slots={slots} editable={false} />
+                        </div>
+
+                        <div className={`${RESUMEN} caption-1 text-muted lg:w-72 lg:shrink-0`}>
+                            <div className="flex flex-col gap-2">
                                 <span>
-                                    Ubicación:{' '}
-                                    <code className="caption-2 rounded-lg bg-fill px-2 py-0.5 text-ink">
-                                        {conductor.ubicacion_casa}
-                                    </code>
+                                    Grupo: <strong className="text-ink">{conductor.grupo || '—'}</strong>
                                 </span>
-                            </>
-                        )}
+                                <span>
+                                    PC Zoom: <strong className="text-ink">{conductor.tiene_pc ? 'Sí' : 'No'}</strong>
+                                </span>
+                                <span>
+                                    Poca movilidad:{' '}
+                                    <strong className="text-ink">{conductor.poca_movilidad ? 'Sí' : 'No'}</strong>
+                                </span>
+                                {conductor.solo_parque && (
+                                    <span>
+                                        <span className={`${INSIGNIA} bg-ok-bg text-ok`}>Solo Parque</span>
+                                    </span>
+                                )}
+                                {conductor.ubicacion_casa && (
+                                    <span>
+                                        Ubicación:{' '}
+                                        <code className="caption-2 rounded-lg bg-fill px-2 py-0.5 text-ink">
+                                            {conductor.ubicacion_casa}
+                                        </code>
+                                    </span>
+                                )}
+                            </div>
+                        </div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                         <Boton variante="primario" icono={PencilSimple} onClick={() => setEditando(true)}>
