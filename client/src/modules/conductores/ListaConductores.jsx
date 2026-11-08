@@ -16,6 +16,9 @@ import {
 } from '../../components/ui/estilos.js';
 import { OPCIONES_GRUPO, claseBadgeGrupo } from './grupos.js';
 
+// En móvil cada fila es una tarjeta (la tabla de seis columnas no entra); desde 640px vuelve a ser tabla
+const TD_FILA = 'body-5 text-ink sm:border-b sm:border-line sm:px-3 sm:py-3';
+
 /** @typedef {import('../../types/models').Conductor} Conductor */
 
 /**
@@ -56,7 +59,7 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
             <div className={CUERPO}>
                 <div className="mb-4 flex flex-wrap items-center gap-3">
                     <span className="title-4 text-ink">Filtros</span>
-                    <div className="w-56 max-w-full">
+                    <div className="min-w-0 flex-1 sm:w-56 sm:flex-none">
                         <input
                             type="text"
                             className={CAMPO}
@@ -65,7 +68,7 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                             onChange={(e) => setTexto(e.target.value)}
                         />
                     </div>
-                    <div className="w-44 max-w-full">
+                    <div className="w-full sm:w-44">
                         <Desplegable
                             variante="campo"
                             rotulo="Grupo"
@@ -88,13 +91,18 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                         <input type="checkbox" checked={soloParque} onChange={(e) => setSoloParque(e.target.checked)} />
                         Parque
                     </label>
-                    <Boton variante="primario" icono={UserPlus} onClick={onNuevo} className="ml-auto">
+                    <Boton
+                        variante="primario"
+                        icono={UserPlus}
+                        onClick={onNuevo}
+                        className="w-full sm:ml-auto sm:w-auto"
+                    >
                         Nuevo conductor
                     </Boton>
                 </div>
                 <div className={TABLA_CONTENEDOR}>
-                    <table className={TABLA}>
-                        <thead>
+                    <table className={`${TABLA} block sm:table`}>
+                        <thead className="hidden sm:table-header-group">
                             <tr>
                                 <th className={TH}>Nombre</th>
                                 <th className={TH}>Grupo</th>
@@ -104,31 +112,35 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                                 <th className={TH}>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="block sm:table-row-group">
                             {error && (
-                                <tr>
+                                <tr className="grid">
                                     <td colSpan={5} className={`${TD} text-danger`}>
                                         Error
                                     </td>
                                 </tr>
                             )}
                             {visibles.map((c) => (
-                                <tr key={c.id} data-id={c.id}>
-                                    <td className={TD}>
+                                <tr
+                                    key={c.id}
+                                    data-id={c.id}
+                                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-b border-line py-3 sm:table-row sm:border-b-0 sm:py-0"
+                                >
+                                    <td className={`${TD_FILA} col-start-1 row-start-1 min-w-0`}>
                                         <span className="title-4 text-ink">{c.nombre}</span>
                                     </td>
-                                    <td className={TD}>
+                                    <td className={`${TD_FILA} col-start-1 row-start-2`}>
                                         <span className={`${INSIGNIA} ${claseBadgeGrupo(c.grupo)}`}>
                                             Grupo {c.grupo}
                                         </span>
                                     </td>
-                                    <td className={TD}>
+                                    <td className={`${TD_FILA} hidden sm:table-cell`}>
                                         <code className="caption-2 rounded-lg bg-fill px-2 py-0.5 text-muted">
                                             {c.ubicacion_casa || '—'}
                                         </code>
                                     </td>
-                                    <td className={TD}>
-                                        <div className="flex flex-wrap gap-1">
+                                    <td className={`${TD_FILA} col-start-2 row-start-2`}>
+                                        <div className="flex flex-wrap justify-end gap-1 sm:justify-start">
                                             {c.tiene_pc && (
                                                 <span className={`${INSIGNIA} bg-info-bg text-info`}>PC</span>
                                             )}
@@ -143,17 +155,18 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                                             )}
                                         </div>
                                     </td>
-                                    <td className={TD}>
+                                    <td className={`${TD_FILA} col-span-2 row-start-3`}>
                                         <Boton
                                             variante="secundario"
                                             icono={Table}
                                             compacto
+                                            className="w-full sm:w-auto"
                                             onClick={() => onDisponibilidad(c.id)}
                                         >
                                             Disponibilidad
                                         </Boton>
                                     </td>
-                                    <td className={TD}>
+                                    <td className={`${TD_FILA} col-start-2 row-start-1`}>
                                         <Boton
                                             variante="peligroSuave"
                                             icono={Trash}
