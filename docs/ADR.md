@@ -203,3 +203,21 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 **Observación:** `utils/animation.js` (clase de toasts para el navegador, en carpeta de servidor) no se importa en ningún lado. Las dependencias `axios`, `bcryptjs`, `joi`, `node-cron` y `xlsx` (npm) no se usan en `routes/`, `server.js` ni `utils/`. `public/dashboard.html` carga `xlsx` desde CDN pero la exportación a Excel se quitó de la interfaz. `generarPuntuacion` en `utils/geolib.js` tampoco se usa; solo `generarDistanciaHaversine`.
 
 **Acción recomendada:** no borrar sin verificar; confirmar con la persona responsable antes de limpiar.
+
+## ADR-019: Cliente en JSX con JSDoc y tipos, preparado para TypeScript; estructura por módulos
+
+**Estado:** Propuesto (Fase 0 hecha en `feat/migracion-react`)
+
+**Contexto:** El sistema va a tener más módulos y entre 10 y 15 usuarios más (de 4 a unos 14-19). La migración a React ya exige replicar las reglas de negocio sin perder ninguna; sumar TypeScript a la vez agrega fricción.
+
+**Decisión:**
+- El cliente nuevo vive en `client/` (Vite + React, JavaScript con JSX) y se sirve en `/nuevo` hasta el corte.
+- Se deja preparado para TypeScript: `tsconfig` con `checkJs`, tipos del dominio en `client/src/types/models.d.ts`, JSDoc con `// @ts-check` y reglas de escritura en `client/MIGRACION-TS.md`. La migración a TS se hace archivo por archivo cuando todos los módulos estén estables.
+- Estructura por módulos: `client/src/modules/<modulo>/` con páginas, componentes y llamadas a la API propias; solo lo compartido va a `components/ui`; los módulos no se importan entre sí; cada módulo se carga con `React.lazy`.
+- Estilos: `styles.css` se copia **sin cambios** y los componentes usan las mismas clases (no CSS Modules ni Tailwind por ahora).
+- Render: el build pasa a ser `npm install && npm run build`; el start sigue siendo `node server.js`.
+
+**Consecuencias:**
+- `client/src/types/models.d.ts` es fuente de verdad de formas de datos del cliente y debe mantenerse alineado con la API y con `REGLAS-NEGOCIO.md`.
+- Hay dos copias del CSS mientras dure la migración (`public/css/styles.css` y `client/src/styles/styles.css`); un cambio de estilos hay que hacerlo en ambas hasta el corte.
+- Con más usuarios hay decisiones pendientes que **no se toman sin aprobación**: subir o mover a `config` los límites de usuarios y de super admins (RN-AUTH-02, RN-AUTH-03), definir permisos por módulo (hoy solo existe super admin), el límite de 200 peticiones por minuto por IP y la edición concurrente de un mismo programa (ADR-008).

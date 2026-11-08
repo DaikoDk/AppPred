@@ -32,6 +32,10 @@ app.use('/api/', limiter);
 
 app.use(express.static('public'));
 
+// App React en migración (ADR-013): solo existe si se ejecutó `npm run build`
+app.use('/nuevo', express.static('client/dist'));
+app.get(/^\/nuevo(\/.*)?$/, (req, res) => res.sendFile('index.html', { root: 'client/dist' }, err => { if (err) res.status(404).end(); }));
+
 app.get('/', (req, res) => res.sendFile('index.html', { root: 'public' }));
 
 app.use('/api/auth', require('./routes/auth'));

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client ci && npm --prefix client run build",
     "test": "echo \"Error: no hay pruebas aún\" && exit 1",
     "deploy": "git push render"
   },

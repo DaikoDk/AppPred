@@ -17,3 +17,10 @@ Thumbs.db
 
 # Páginas generadas por Archify
 .archify/
+
+# Cliente React (migración)
+!client/package.json
+!client/package-lock.json
+!client/tsconfig.json
+!client/.prettierrc.json
+client/dist/

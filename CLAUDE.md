@@ -41,6 +41,13 @@ Ambos documentos están deducidos del código. Por eso:
 - Si se añade un servicio externo o CDN, actualizar la CSP de `server.js` (ADR-002).
 - Secretos: `.env` y `secrets/` están ignorados; nunca los subas ni los imprimas.
 
-## Migración a React (propuesta)
+## Migración a React (en curso, rama `feat/migracion-react`)
 
-Pendiente de aprobación (ADR-013). Si se ejecuta, no cambiar los estilos y usar `docs/REGLAS-NEGOCIO.md` como lista de paridad.
+Ver ADR-013 y ADR-019. El cliente nuevo está en `client/` y se sirve en `/nuevo`; la app actual (`public/`) sigue siendo la principal hasta el corte.
+
+- No cambiar los estilos: `client/src/styles/styles.css` es copia de `public/css/styles.css`. Un cambio de estilos se hace en ambas copias hasta el corte.
+- Usar `docs/REGLAS-NEGOCIO.md` como lista de paridad: al migrar un módulo, verificar cada RN que lo toca.
+- Escribir JSX listo para TypeScript siguiendo `client/MIGRACION-TS.md`: tipos del dominio desde `client/src/types/models.d.ts`, JSDoc en props y funciones, `// @ts-check` en `.js`.
+- Estructura por módulos en `client/src/modules/<modulo>/`; los módulos no se importan entre sí.
+- Antes de cada commit del cliente: `npm --prefix client run lint` y `npm --prefix client run typecheck`.
+- Con más usuarios y módulos previstos, no asumir límites ni roles actuales (RN-AUTH-02/03): consultar antes de cambiarlos.
