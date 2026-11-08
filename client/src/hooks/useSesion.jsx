@@ -9,7 +9,8 @@ import { borrarSesion, consultarEsSuperAdmin, guardarSesion, leerUsuarioGuardado
  *   esSuperAdmin: boolean,
  *   cargando: boolean,
  *   iniciar: (token: string, usuario: Usuario) => void,
- *   cerrar: () => void
+ *   cerrar: () => void,
+ *   refrescarRol: () => Promise<void>
  * }} Sesion
  */
 
@@ -30,6 +31,11 @@ export function SesionProvider({ children }) {
         guardarSesion(token, u);
         setUsuario(u);
         consultarEsSuperAdmin().then(setEsSuperAdmin);
+    }, []);
+
+    // Tras cambiar roles (por ejemplo, renunciar como super admin) se vuelve a consultar
+    const refrescarRol = useCallback(async () => {
+        setEsSuperAdmin(await consultarEsSuperAdmin());
     }, []);
 
     // Al abrir la app: si hay token, se valida contra el servidor (como checkAuth del front actual)
@@ -63,8 +69,8 @@ export function SesionProvider({ children }) {
     }, [cerrar]);
 
     const valor = useMemo(
-        () => ({ usuario, esSuperAdmin, cargando, iniciar, cerrar }),
-        [usuario, esSuperAdmin, cargando, iniciar, cerrar]
+        () => ({ usuario, esSuperAdmin, cargando, iniciar, cerrar, refrescarRol }),
+        [usuario, esSuperAdmin, cargando, iniciar, cerrar, refrescarRol]
     );
     return <SesionContext.Provider value={valor}>{children}</SesionContext.Provider>;
 }
