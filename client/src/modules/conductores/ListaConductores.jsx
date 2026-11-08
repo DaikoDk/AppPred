@@ -88,10 +88,7 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                         <input type="checkbox" checked={soloParque} onChange={(e) => setSoloParque(e.target.checked)} />
                         Parque
                     </label>
-                    <span className="text-soft" aria-hidden="true">
-                        |
-                    </span>
-                    <Boton variante="primario" icono={UserPlus} onClick={onNuevo}>
+                    <Boton variante="primario" icono={UserPlus} onClick={onNuevo} className="ml-auto">
                         Nuevo conductor
                     </Boton>
                 </div>
