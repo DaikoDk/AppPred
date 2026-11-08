@@ -53,3 +53,4 @@ Ver ADR-013 y ADR-019. El cliente nuevo está en `client/` y se sirve en `/nuevo
 - Estructura por módulos en `client/src/modules/<modulo>/`; los módulos no se importan entre sí.
 - Antes de cada commit del cliente: `pnpm --dir client lint` y `pnpm --dir client typecheck`.
 - Con más usuarios y módulos previstos, no asumir límites ni roles actuales (RN-AUTH-02/03): consultar antes de cambiarlos.
+- Login en `/nuevo`: el botón usa el mismo `/api/auth/google`, pero Supabase vuelve a `SUPABASE_AUTH_REDIRECT_URL` (hoy `/`, la app actual). Como el `localStorage` es del mismo origen, el token sirve en ambas apps. Para que el login termine dentro de `/nuevo/` hay que cambiar esa URL y permitirla en Supabase (decisión del corte; no cambiarla antes).

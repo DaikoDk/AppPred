@@ -23,4 +23,5 @@ Thumbs.db
 !client/pnpm-lock.yaml
 !client/tsconfig.json
 !client/.prettierrc.json
+!client/.prettierignore
 client/dist/
