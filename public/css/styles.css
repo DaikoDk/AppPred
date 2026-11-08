@@ -2627,6 +2627,16 @@ body {
     }
 }
 
+/* Acciones del editor de programa: alineadas a la derecha, con el botón principal en el extremo */
+#programa-actions {
+    direction: rtl;
+}
+
+#programa-actions .btn {
+    direction: ltr;
+    margin: 0 0 8px 8px;
+}
+
 /* Print styles */
 @media print {
     .sidebar, .top-bar, .btn, .btn-group, .modal-overlay, .toast {

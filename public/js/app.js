@@ -547,6 +547,8 @@ async function toggleTurnosGrid() {
             }
         }
     } else {
+        // "Cerrar" al editar un programa equivale a cancelarlo; en modo plantilla solo se oculta la tabla
+        if (editandoProgramaId && !modoPlantilla) { cancelarEdicionPrograma(); return; }
         container.style.display = 'none';
         if (actions) actions.style.display = 'none';
         if (btn) btn.innerHTML = '<i class="fas fa-play"></i> Empezar a crear programa';
