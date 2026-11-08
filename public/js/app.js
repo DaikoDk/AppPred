@@ -1168,6 +1168,8 @@ async function loadPlantilla() {
     document.getElementById('edit-banner').style.display = 'none';
     const cancelBtn = document.getElementById('btn-cancelar-edicion');
     if (cancelBtn) cancelBtn.style.display = 'none';
+    const menuWrap = document.getElementById('menu-programa-wrap');
+    if (menuWrap) menuWrap.style.display = 'none';
     const rstBtn = document.getElementById('btn-restablecer-plantilla');
     if (rstBtn) rstBtn.style.display = 'none';
 
@@ -1393,8 +1395,123 @@ async function editarPrograma(id) {
         if (submitBtn) submitBtn.textContent = 'Actualizar Programa';
         const cancelBtn = document.getElementById('btn-cancelar-edicion');
         if (cancelBtn) cancelBtn.style.display = 'inline-block';
+        const menuWrap = document.getElementById('menu-programa-wrap');
+        if (menuWrap) menuWrap.style.display = 'inline-block';
         showToast('Editando programa — modifica los turnos y guarda', 'info');
     } catch (err) { showToast(err.message || 'Error al cargar programa', 'error'); }
+}
+
+function toggleMenuPrograma(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('menu-programa');
+    if (!menu) return;
+    menu.hidden = !menu.hidden;
+    if (menu.hidden) return;
+    // se ancla al lado que tenga espacio para no salirse de la pantalla
+    menu.style.left = 'auto';
+    menu.style.right = '0';
+    if (menu.getBoundingClientRect().left < 8) { menu.style.left = '0'; menu.style.right = 'auto'; }
+}
+
+document.addEventListener('click', () => {
+    const menu = document.getElementById('menu-programa');
+    if (menu) menu.hidden = true;
+});
+
+// Filas del editor tal como están ahora en pantalla
+function leerFilasEditor() {
+    const turnos = [...document.querySelectorAll('#programa-table tbody tr.programa-row[data-dia]')].map(row => ({
+        dia: row.dataset.dia,
+        hora: row.querySelector('.turno-hora')?.value || '',
+        grupo: row.querySelector('.turno-grupo')?.value || '',
+        territorio: row.querySelector('.turno-territorio')?.value || '',
+        punto_reunion: row.querySelector('.turno-punto')?.value || '',
+        modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO'
+    }));
+    const extras = [...document.querySelectorAll('#programa-table tbody tr.extra-fila-row')].map(row => ({
+        dia: row.dataset.dia,
+        hora: row.querySelector('.extra-fila-hora')?.value || '',
+        grupo: row.querySelector('.extra-fila-grupo')?.value || '',
+        territorio: row.querySelector('.extra-fila-territorio')?.value || '',
+        punto_reunion: row.querySelector('.extra-fila-punto')?.value || '',
+        conductor: row.querySelector('.extra-fila-conductor')?.value || '',
+        orden: row.dataset.antes === 'true' ? -1 : 0
+    }));
+    return { turnos, extras };
+}
+
+// Estructura de la plantilla; en cada celda gana la plantilla si tiene información y,
+// si está vacía, se conserva lo que ya tenía el programa en esa misma fila.
+function combinarConPlantilla(actual, plantillaTurnos, plantillaExtras) {
+    const vacio = v => v == null || String(v).trim() === '';
+    const gana = (tpl, prog) => (vacio(tpl) ? (prog ?? tpl) : tpl);
+    const usados = {};
+    const siguiente = (mapa, clave) => {
+        const lista = mapa[clave] || [];
+        const n = usados[clave] || 0;
+        usados[clave] = n + 1;
+        return lista[n];
+    };
+    const indexar = (filas, clave) => filas.reduce((m, f) => { (m[clave(f)] = m[clave(f)] || []).push(f); return m; }, {});
+
+    const progTurnos = indexar(actual.turnos, t => `T|${t.dia}|${t.hora}|${t.grupo}`);
+    const turnos = plantillaTurnos.map(t => {
+        const dia = diaDeTurno(t);
+        const p = siguiente(progTurnos, `T|${dia}|${t.hora}|${t.grupo}`);
+        return {
+            ...t,
+            dia,
+            territorio: gana(t.territorio, p?.territorio),
+            punto_reunion: gana(t.punto_reunion, p?.punto_reunion),
+            // FISICO es el valor por defecto: solo gana la plantilla si indica otra modalidad
+            modalidad: (t.modalidad && t.modalidad !== 'FISICO') ? t.modalidad : (p?.modalidad || t.modalidad || 'FISICO')
+        };
+    });
+
+    const lado = e => ((e.orden || 0) < 0 ? 'antes' : 'despues');
+    const progExtras = indexar(actual.extras, e => `E|${e.dia}|${lado(e)}`);
+    const extras = normalizarExtras(plantillaExtras).map(e => {
+        const p = siguiente(progExtras, `E|${e.dia}|${lado(e)}`);
+        return {
+            ...e,
+            hora: gana(e.hora, p?.hora),
+            grupo: gana(e.grupo, p?.grupo),
+            territorio: gana(e.territorio, p?.territorio),
+            punto_reunion: gana(e.punto_reunion, p?.punto_reunion),
+            conductor: gana(e.conductor, p?.conductor)
+        };
+    });
+    return { turnos, extras };
+}
+
+async function actualizarConPlantilla() {
+    const menu = document.getElementById('menu-programa');
+    if (menu) menu.hidden = true;
+    if (!editandoProgramaId || modoPlantilla) return;
+    const ok = await confirmarModal({
+        titulo: '¿Actualizar con la plantilla?',
+        mensaje: 'Las filas del programa se ajustan a las de la plantilla actual: las filas que la plantilla no tiene se quitan y las nuevas se agregan. '
+            + 'En cada celda gana la plantilla si tiene información; si está vacía en la plantilla, se conserva lo que ya tiene el programa. '
+            + 'El cambio se aplica al tocar Actualizar Programa y, como al guardar cualquier edición, habrá que volver a ejecutar la asignación de conductores de esta semana.',
+        textoConfirmar: 'Actualizar filas',
+        peligro: true,
+        icono: 'fa-file-import'
+    });
+    if (!ok) return;
+    try {
+        const d = await apiFetch('/api/programa-semanal/plantilla');
+        const prog = d.programa;
+        if (prog && (prog.programa_semanal_turnos || []).length > 0) {
+            const { turnos, extras } = combinarConPlantilla(leerFilasEditor(), prog.programa_semanal_turnos, prog.filas_extra || []);
+            renderTurnosDesdeDatos(turnos, extras);
+        } else {
+            showToast('La plantilla no tiene filas; no se cambió nada', 'warning');
+            return;
+        }
+        showToast('Filas actualizadas con la plantilla. Toca Actualizar Programa para guardar.', 'success');
+    } catch (err) {
+        showToast(err.message || 'No se pudo cargar la plantilla', 'error');
+    }
 }
 
 function cancelarEdicionPrograma() {
@@ -1411,6 +1528,8 @@ function cancelarEdicionPrograma() {
     if (submitText) submitText.textContent = 'Guardar Programa';
     const cancelBtn = document.getElementById('btn-cancelar-edicion');
     if (cancelBtn) cancelBtn.style.display = 'none';
+    const menuWrap = document.getElementById('menu-programa-wrap');
+    if (menuWrap) menuWrap.style.display = 'none';
     const resetBtn = document.getElementById('btn-restablecer-plantilla');
     if (resetBtn) resetBtn.style.display = 'none';
     const progCards = document.querySelectorAll('#tab-programa > .card');

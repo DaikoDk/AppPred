@@ -78,6 +78,12 @@
                                 <div id="programa-actions" style="display:none;margin-top:20px">
                                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <span class="btn-text">Guardar Programa</span></button>
                                     <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary" onclick="cancelarEdicionPrograma()" style="display:none"><i class="fas fa-times"></i> Cancelar Edición</button>
+                                    <span id="menu-programa-wrap" class="menu-flotante-wrap" style="display:none">
+                                        <button type="button" class="btn btn-secondary" onclick="toggleMenuPrograma(event)" title="Más acciones" aria-label="Más acciones"><i class="fas fa-ellipsis-h"></i></button>
+                                        <div id="menu-programa" class="menu-flotante" hidden>
+                                            <button type="button" onclick="actualizarConPlantilla()"><i class="fas fa-file-import"></i> Actualizar con la plantilla</button>
+                                        </div>
+                                    </span>
                                     <button type="button" id="btn-restablecer-plantilla" class="btn btn-warning" onclick="restablecerPlantilla()" style="display:none"><i class="fas fa-undo"></i> Restablecer Plantilla</button>
                                 </div>
                             </form>

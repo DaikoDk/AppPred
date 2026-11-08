@@ -2904,6 +2904,54 @@ body {
     box-shadow: inset 0 0 0 999px rgba(220, 38, 38, 0.07);
 }
 
+/* Menú flotante del editor de programa (⋯) */
+.menu-flotante-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-flotante {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    min-width: 260px;
+    z-index: 60;
+    direction: ltr;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+}
+
+.menu-flotante[hidden] {
+    display: none;
+}
+
+.menu-flotante button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 12px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    text-align: left;
+    cursor: pointer;
+}
+
+.menu-flotante button:hover {
+    background: #f1f5f9;
+}
+
+.menu-flotante i {
+    color: #64748b;
+}
+
 /* Pantalla de carga que bloquea la interfaz */
 .cargando-overlay {
     position: fixed;
