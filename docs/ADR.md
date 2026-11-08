@@ -29,7 +29,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 **Decisión:** `server.js` monta `express.static('public')` y las rutas `/api/*`. Front y back comparten origen, por lo que no hay CORS real entre ellos (aun así `cors({ origin: true })` está activo).
 
 **Consecuencias:**
-- Un solo servicio, un solo comando de arranque (`npm start`).
+- Un solo servicio, un solo comando de arranque (`pnpm start`).
 - La CSP de `helmet` se define en `server.js` con lista explícita de orígenes (cdnjs, Google Fonts, Supabase). **Agregar un CDN o API externa nuevo exige actualizar la CSP.**
 - `scriptSrcAttr: 'unsafe-inline'` está habilitado porque el HTML usa `onclick` en línea (consecuencia de ADR-001).
 - Rate limit de 200 solicitudes por minuto sobre `/api/`.
@@ -215,7 +215,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - Se deja preparado para TypeScript: `tsconfig` con `checkJs`, tipos del dominio en `client/src/types/models.d.ts`, JSDoc con `// @ts-check` y reglas de escritura en `client/MIGRACION-TS.md`. La migración a TS se hace archivo por archivo cuando todos los módulos estén estables.
 - Estructura por módulos: `client/src/modules/<modulo>/` con páginas, componentes y llamadas a la API propias; solo lo compartido va a `components/ui`; los módulos no se importan entre sí; cada módulo se carga con `React.lazy`.
 - Estilos: `styles.css` se copia **sin cambios** y los componentes usan las mismas clases (no CSS Modules ni Tailwind por ahora).
-- Render: el build pasa a ser `npm install && npm run build`; el start sigue siendo `node server.js`.
+- Render: el build pasa a ser `pnpm install && pnpm build` (el gestor de paquetes del proyecto es pnpm); el start sigue siendo `node server.js`.
 
 **Consecuencias:**
 - `client/src/types/models.d.ts` es fuente de verdad de formas de datos del cliente y debe mantenerse alineado con la API y con `REGLAS-NEGOCIO.md`.

@@ -20,7 +20,7 @@ Thumbs.db
 
 # Cliente React (migración)
 !client/package.json
-!client/package-lock.json
+!client/pnpm-lock.yaml
 !client/tsconfig.json
 !client/.prettierrc.json
 client/dist/

@@ -27,8 +27,10 @@ Ambos documentos están deducidos del código. Por eso:
 
 ## Comandos
 
-- `npm run dev`: servidor con recarga (puerto 3005 por defecto).
-- `npm start`: producción (Render ejecuta `node server.js`).
+- Gestor de paquetes: **pnpm** (no usar npm ni crear `package-lock.json`).
+- `pnpm dev`: servidor con recarga (puerto 3005 por defecto).
+- `pnpm dev:client`: cliente React con Vite (puerto 5173, proxy a `/api`).
+- `pnpm start`: producción (Render ejecuta `node server.js`).
 - No hay pruebas automáticas. Verifica en navegador; nunca escribas en el Google Sheet de producción para probar.
 
 ## Convenciones
@@ -49,5 +51,5 @@ Ver ADR-013 y ADR-019. El cliente nuevo está en `client/` y se sirve en `/nuevo
 - Usar `docs/REGLAS-NEGOCIO.md` como lista de paridad: al migrar un módulo, verificar cada RN que lo toca.
 - Escribir JSX listo para TypeScript siguiendo `client/MIGRACION-TS.md`: tipos del dominio desde `client/src/types/models.d.ts`, JSDoc en props y funciones, `// @ts-check` en `.js`.
 - Estructura por módulos en `client/src/modules/<modulo>/`; los módulos no se importan entre sí.
-- Antes de cada commit del cliente: `npm --prefix client run lint` y `npm --prefix client run typecheck`.
+- Antes de cada commit del cliente: `pnpm --dir client lint` y `pnpm --dir client typecheck`.
 - Con más usuarios y módulos previstos, no asumir límites ni roles actuales (RN-AUTH-02/03): consultar antes de cambiarlos.

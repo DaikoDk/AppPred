@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "dev:client": "npm --prefix client run dev",
-    "build": "npm --prefix client ci && npm --prefix client run build",
+    "dev:client": "pnpm --dir client dev",
+    "build": "pnpm --dir client install --frozen-lockfile && pnpm --dir client build",
     "test": "echo \"Error: no hay pruebas aún\" && exit 1",
     "deploy": "git push render"
   },

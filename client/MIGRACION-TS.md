@@ -4,7 +4,7 @@ El cliente está escrito en **JSX** (JavaScript), pero deja listo lo necesario p
 
 ## Lo que ya está configurado
 
-- `tsconfig.json` con `allowJs`, `checkJs` y `strict`. `npm run typecheck` revisa también los `.js`/`.jsx`. Solo `noImplicitAny` está apagado para poder avanzar; se enciende cuando termine la migración (paso 5).
+- `tsconfig.json` con `allowJs`, `checkJs` y `strict`. `pnpm typecheck` revisa también los `.js`/`.jsx`. Solo `noImplicitAny` está apagado para poder avanzar; se enciende cuando termine la migración (paso 5).
 - `src/types/models.d.ts`: tipos del dominio (`Turno`, `FilaExtra`, `Programa`, `Conductor`, `PuntoReunion`, `Usuario`, `Formato`, `Dia`...). Reflejan la API y `docs/REGLAS-NEGOCIO.md`. **Son la fuente de verdad de las formas de datos**: si cambia la API, se cambia aquí.
 - `// @ts-check` en los archivos `.js` de utilidades y API (`src/api`, `src/utils`).
 - ESLint, Prettier y `react-hooks` configurados.
@@ -41,7 +41,7 @@ El cliente está escrito en **JSX** (JavaScript), pero deja listo lo necesario p
 
 1. Renombrar `Archivo.jsx` a `Archivo.tsx` (o `.js` a `.ts`) y actualizar sus importaciones.
 2. Pasar los `@typedef`/`@param` de JSDoc a anotaciones de TypeScript. Los tipos de dominio se importan con `import type { Turno } from '../../types/models'`.
-3. Ejecutar `npm run typecheck` y corregir.
+3. Ejecutar `pnpm typecheck` y corregir.
 4. Commit propio por módulo: `refactor: pasar <modulo> a TypeScript`.
 5. Cuando no queden `.js`/`.jsx` con lógica: activar `noImplicitAny` y quitar `allowJs`.
 
@@ -60,7 +60,7 @@ El cliente está escrito en **JSX** (JavaScript), pero deja listo lo necesario p
 
 ## Comandos
 
-- `npm run typecheck`: revisión de tipos (incluye JS con `checkJs`).
-- `npm run lint`: reglas de ESLint.
-- `npm run format`: Prettier.
+- `pnpm typecheck`: revisión de tipos (incluye JS con `checkJs`).
+- `pnpm lint`: reglas de ESLint.
+- `pnpm format`: Prettier.
 - Antes de cada commit del cliente: `lint` y `typecheck` deben pasar.
