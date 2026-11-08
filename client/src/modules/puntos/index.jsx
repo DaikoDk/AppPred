@@ -185,7 +185,7 @@ export default function Puntos() {
                                             {!p.fijo && (
                                                 <div className="flex gap-2">
                                                     <Boton
-                                                        variante="secundario"
+                                                        variante="primario"
                                                         icono={PencilSimple}
                                                         soloIcono
                                                         compacto
@@ -195,7 +195,7 @@ export default function Puntos() {
                                                         Editar
                                                     </Boton>
                                                     <Boton
-                                                        variante="peligroSuave"
+                                                        variante="peligro"
                                                         icono={Trash}
                                                         soloIcono
                                                         compacto

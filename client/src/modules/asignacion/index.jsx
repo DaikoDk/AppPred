@@ -458,7 +458,7 @@ export default function Asignacion() {
                                                         {asignados > 0 && (
                                                             <>
                                                                 <Boton
-                                                                    variante="secundario"
+                                                                    variante="primario"
                                                                     icono={Eye}
                                                                     compacto
                                                                     onClick={() => verAsignacion(p.id)}
@@ -478,7 +478,7 @@ export default function Asignacion() {
                                                             </>
                                                         )}
                                                         <Boton
-                                                            variante="peligroSuave"
+                                                            variante="peligro"
                                                             icono={Eraser}
                                                             compacto
                                                             onClick={() => limpiar(p)}

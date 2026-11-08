@@ -45,10 +45,10 @@ export default function ProgramasGuardados({ programas, error, onEditar, onElimi
                     </span>
                 </div>
                 <div className="flex shrink-0 flex-col gap-2 md:flex-row">
-                    <Boton variante="secundario" icono={PencilSimple} onClick={() => onEditar(p.id)} compacto>
+                    <Boton variante="primario" icono={PencilSimple} onClick={() => onEditar(p.id)} compacto>
                         Editar
                     </Boton>
-                    <Boton variante="peligroSuave" icono={Trash} onClick={() => onEliminar(p)} compacto>
+                    <Boton variante="peligro" icono={Trash} onClick={() => onEliminar(p)} compacto>
                         Eliminar
                     </Boton>
                 </div>

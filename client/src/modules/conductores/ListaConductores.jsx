@@ -197,7 +197,7 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                                         </td>
                                         <td className={`${TD_FILA} ${detalle} col-start-2 row-start-4 sm:table-cell`}>
                                             <Boton
-                                                variante="peligroSuave"
+                                                variante="peligro"
                                                 icono={Trash}
                                                 soloIcono
                                                 compacto
