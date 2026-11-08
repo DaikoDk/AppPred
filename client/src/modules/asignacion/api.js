@@ -25,6 +25,15 @@ export async function asignacionesDeSemana(semanaId) {
     return d.asignaciones || [];
 }
 
+/**
+ * Turnos con conductor y filas libres de la semana, con su formato, para armar la imagen PNG (RN-IMG-01).
+ * @param {string} semanaId
+ */
+export async function datosParaImagen(semanaId) {
+    const [turnos, extras] = await Promise.all([asignacionesDeSemana(semanaId), filasLibres(semanaId)]);
+    return { turnos, extras };
+}
+
 /** Previsualización del algoritmo; no escribe (RN-ASIG-01). @param {string} semanaId @returns {Promise<DatosResultados>} */
 export function ejecutarAlgoritmo(semanaId) {
     return apiFetch('/api/asignacion/asignar', { method: 'POST', body: JSON.stringify({ semana_id: semanaId }) });

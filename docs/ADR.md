@@ -273,3 +273,19 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - Un módulo nuevo que sea parte de la hoja se agrega como pestaña en `PESTANAS_HOJA`, no como entrada del menú lateral. Una área nueva con su propio menú se agrega en `ITEMS_NAV`.
 - Los enlaces guardados a las rutas de antes siguen funcionando por redirección. Quitar una redirección rompe esos enlaces, así que no se quita sin revisar.
 - Admin no tiene la configuración del spreadsheet: quien administra la exportación lo hace desde la pestaña Configuración de la hoja.
+
+## ADR-023: La imagen PNG del programa se genera en el navegador con Canvas
+
+**Estado:** Vigente
+
+**Contexto:** Se pidió descargar como imagen lo que se envía a Google Sheets. Las opciones eran armarla en el servidor (con una librería de dibujo), con una librería que convierte HTML a imagen, o directamente en el navegador.
+
+**Decisión:**
+- Se dibuja en el front con la API Canvas del navegador (`modules/asignacion/imagenPng.js`), a partir de un modelo de tabla puro y probado (`tablaImagen.js`). No agrega dependencias ni cambia la CSP (ADR-002).
+- Los datos salen de endpoints que ya existen (asignaciones de la semana y filas libres). El de asignaciones ahora devuelve también `formato` (solo lectura) para respetar el formato por celda (RN-SHEET-09, ADR-012).
+- No toca `utils/googleSheets.js`: la exportación a Sheets, zona de mayor riesgo, queda igual.
+
+**Consecuencias:**
+- Los colores por día y del encabezado están **duplicados** en `tablaImagen.js` (`COLORES`) y en `DAY_THEMES` del backend. Si cambian en uno, hay que cambiarlos en el otro; las pruebas de `tablaImagen.test.js` fijan las reglas de orden y colores.
+- Las fuentes son las del dispositivo (Arial y Arial Black si existen, con respaldo): el aspecto puede variar un poco entre equipos.
+- Reglas: RN-IMG-01 a RN-IMG-04.

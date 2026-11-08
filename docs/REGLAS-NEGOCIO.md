@@ -130,6 +130,13 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-SHEET-09 (Back):** El formato por celda (alineación, negrita, cursiva, tachado) del editor se aplica al final y **gana** sobre el formato general.
 - **RN-SHEET-10 (Back):** La respuesta incluye el enlace al Sheet y el enlace directo a la pestaña nueva (`#gid=`).
 
+### Imagen PNG del programa (Front)
+
+- **RN-IMG-01 (Front):** En Asignación, cada programa con asignaciones tiene un botón **PNG** que descarga la tabla del programa como imagen. No escribe nada en la base ni en Google Sheets, y es independiente de la exportación (RN-SHEET-*).
+- **RN-IMG-02 (Front):** La imagen tiene el mismo contenido y orden que la hoja exportada: título `Semana del <d de mes> al <d de mes> del <año>`, encabezado `DÍA | HORA | GRUPO | TERRITORIO | PUNTO DE REUNIÓN | CONDUCTOR`, textos en mayúsculas, `—` para territorio o punto vacíos y `SIN ASIGNAR` sin conductor (RN-SHEET-03); por día, filas libres con `orden < 0`, turnos por franja y el resto de las libres (RN-SHEET-04).
+- **RN-IMG-03 (Front):** Los colores son los de la hoja: base y alterno por día, alternancia solo entre filas regulares y filas de reunión especial en azul oscuro con texto blanco (RN-SHEET-05, 06 y 07). El formato por celda (alineación, negrita, cursiva, tachado) se aplica y gana (RN-SHEET-09).
+- **RN-IMG-04 (Front):** El ancho de cada columna sale del texto más largo, sin contar las reuniones especiales (RN-SHEET-08). La imagen se genera al doble de resolución.
+
 ## Formato por celda
 
 - **RN-FMT-01 (Back):** Por celda solo se admiten: `h` (left/center/right), `v` (top/middle/bottom) y `b`, `i`, `s` en verdadero. Todo lo demás se descarta al guardar.
