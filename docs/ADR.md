@@ -255,3 +255,21 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - Las mejoras de la maqueta que cambian comportamiento (pantalla de inicio, filtros y sugerencias en Asignación, cuadrícula de disponibilidad) **no** forman parte de esta decisión y requieren aprobación aparte.
 
 **Actualización (editor de Programa):** el editor de escritorio se escribió con Tailwind y la skill (`EditorEscritorio.jsx`): cada día define el color (`--dia`) y todos los campos de sus filas lo usan; reemplaza el `<select>` nativo por un desplegable propio (`Desplegable.jsx` y `PanelFlotante.jsx`) con buscador en listas largas, teclado y foco. Solo se usa desde **1321 px**; por debajo se mantiene el editor y la responsividad anteriores (`EditorTurnos.jsx`, con vista por día y por semana, que sigue con las clases de `styles.css`). Ambos editan la misma lista de filas. Los componentes nuevos llevan la clase `tw`, un reseteo acotado (fuente Geist y botones sin el aspecto del navegador) en lugar del preflight de Tailwind, para no alterar el CSS anterior.
+
+## ADR-022: Hoja de Predicación como área con pestañas; Admin aparte
+
+**Estado:** Vigente
+
+**Contexto:** El menú lateral tenía siete entradas planas (Programa, Asignación, Plantilla, Conductores, Puntos de Reunión, Historial y Admin). Todas son parte de la preparación de la hoja de predicación, y el menú crecía con cada módulo nuevo. Admin sigue siendo para pocos usuarios (RN-AUTH-04).
+
+**Decisión:**
+- El menú lateral tiene áreas: **Hoja de Predicación** (`/hoja`) y **Admin** (`/admin`, solo super admin).
+- Dentro de Hoja de Predicación, una barra de pestañas (`components/ui/Pestanas.jsx`) con una ruta por pestaña: `/hoja/programa`, `/hoja/asignacion`, `/hoja/plantilla`, `/hoja/conductores`, `/hoja/puntos`, `/hoja/historial` y `/hoja/configuracion` (solo super admin). La pestaña activa sale de la URL.
+- Las rutas de antes se redirigen a su pestaña (`RUTAS_ANTIGUAS` en `components/layout/navegacion.js`).
+- La configuración del spreadsheet pasa de Admin a Hoja de Predicación porque es parte de la exportación del programa. Admin queda con la gestión de emails y super admins.
+- Las pestañas siguen el patrón de pestañas WAI-ARIA y se cargan bajo demanda, como los módulos (ADR-019).
+
+**Consecuencias:**
+- Un módulo nuevo que sea parte de la hoja se agrega como pestaña en `PESTANAS_HOJA`, no como entrada del menú lateral. Una área nueva con su propio menú se agrega en `ITEMS_NAV`.
+- Los enlaces guardados a las rutas de antes siguen funcionando por redirección. Quitar una redirección rompe esos enlaces, así que no se quita sin revisar.
+- Admin no tiene la configuración del spreadsheet: quien administra la exportación lo hace desde la pestaña Configuración de la hoja.

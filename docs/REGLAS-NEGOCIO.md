@@ -31,7 +31,7 @@ Convenciones: **Back** = se aplica en el servidor. **Front** = solo en `client/s
 - **RN-AUTH-05 (Back):** Un super admin no puede eliminarse a sí mismo ni cambiarse el rol con el interruptor; para quitarse el rol usa "Renunciar".
 - **RN-AUTH-06 (Back):** No se puede renunciar si es el único super admin.
 - **RN-AUTH-07 (Back):** El formato del correo se valida al añadir; un duplicado responde 409.
-- **RN-AUTH-08 (Front):** La pestaña Admin solo se muestra a super admins.
+- **RN-AUTH-08 (Front):** Admin (menú lateral) y la pestaña Configuración de Hoja de Predicación solo se muestran a super admins.
 - **RN-AUTH-09 (Back):** La sesión (JWT) dura 24 h por defecto. Sin token: 401; token inválido o vencido: 403.
 
 ## Plantilla y estructura del programa
@@ -154,6 +154,7 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-UI-05:** Retirada. Aplicaba a los `onclick` del front anterior; React no los usa.
 - **RN-UI-06 (Front):** Mientras se guarda o exporta, una pantalla de carga bloquea toda la interfaz.
 - **RN-UI-07 (Front):** Tras guardar o limpiar una asignación, la lista "Semana" vuelve a "Seleccionar semana..." (como en el front anterior).
-- **RN-UI-08 (Front):** Las rutas son `/programa`, `/asignacion`, `/plantilla`, `/conductores`, `/puntos`, `/historial` y `/admin`; `/` y `/dashboard.html` llevan a `/programa` (o al login si no hay sesión). `/` también completa el regreso del login con Google.
+- **RN-UI-08 (Front):** Hoja de Predicación es `/hoja`, con una pestaña por URL: `/hoja/programa`, `/hoja/asignacion`, `/hoja/plantilla`, `/hoja/conductores`, `/hoja/puntos`, `/hoja/historial` y `/hoja/configuracion` (solo super admin). `/hoja` lleva a `/hoja/programa`. Las rutas de antes (`/programa`, `/asignacion`, `/plantilla`, `/conductores`, `/puntos`, `/historial`) redirigen a su pestaña. `/admin` queda fuera de la hoja (menú lateral, solo super admin). `/`, `/dashboard.html` y rutas desconocidas llevan a `/hoja/programa` (o al login si no hay sesión). `/` también completa el regreso del login con Google.
+- **RN-UI-11 (Front):** La barra de pestañas de la hoja marca la activa según la URL, así que F5 y Atrás la mantienen. Con las flechas izquierda y derecha, Inicio y Fin se cambia de pestaña; solo la activa entra con Tab. Las pestañas de super admin no aparecen para los demás.
 - **RN-UI-09 (Front):** El editor de turnos tiene dos presentaciones con el mismo comportamiento y datos: chips por día en pantallas de 1321 px o más, y la tabla con vista por día y por semana por debajo. Un cambio de comportamiento del editor se hace en las dos.
 - **RN-UI-10 (Front):** Las listas del editor (hora, grupo, punto de reunión, modalidad) no tienen una opción "inválida": si el valor guardado ya no existe en la lista (por ejemplo un punto desactivado) se muestra y se conserva al guardar.
