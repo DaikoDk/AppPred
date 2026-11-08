@@ -1,8 +1,17 @@
 // @ts-check
 // Navegación de la app. El menú lateral tiene las áreas grandes; las pestañas de Hoja de Predicación son sus secciones.
-import { CalendarCheck, ChartBar, ClipboardText, GearSix, MapPin, NotePencil, Users } from '@phosphor-icons/react';
+import {
+    CalendarCheck,
+    ChartBar,
+    ClipboardText,
+    GearSix,
+    MapPin,
+    NotePencil,
+    ShieldCheck,
+    Users
+} from '@phosphor-icons/react';
 
-/** @typedef {{ ruta: string, titulo: string, tooltip: string, icono: string, soloSuperAdmin?: boolean }} ItemMenu */
+/** @typedef {{ ruta: string, titulo: string, tooltip: string, icono: import('@phosphor-icons/react').Icon, soloSuperAdmin?: boolean }} ItemMenu */
 /**
  * @typedef {{
  *   ruta: string,
@@ -14,11 +23,11 @@ import { CalendarCheck, ChartBar, ClipboardText, GearSix, MapPin, NotePencil, Us
  * }} ItemPestana
  */
 
-/** Menú lateral (iconos de Font Awesome, como hasta ahora). Admin queda aparte: es para pocos usuarios (ADR-022). */
+/** Menú lateral (iconos Phosphor, ADR-021). Admin queda aparte: es para pocos usuarios (ADR-022). */
 /** @type {ItemMenu[]} */
 export const ITEMS_NAV = [
-    { ruta: '/hoja', titulo: 'Hoja de Predicación', tooltip: 'Hoja Predicación', icono: 'fa-clipboard-list' },
-    { ruta: '/admin', titulo: 'Admin', tooltip: 'Admin', icono: 'fa-shield-alt', soloSuperAdmin: true }
+    { ruta: '/hoja', titulo: 'Hoja de Predicación', tooltip: 'Hoja Predicación', icono: ClipboardText },
+    { ruta: '/admin', titulo: 'Admin', tooltip: 'Admin', icono: ShieldCheck, soloSuperAdmin: true }
 ];
 
 /**
