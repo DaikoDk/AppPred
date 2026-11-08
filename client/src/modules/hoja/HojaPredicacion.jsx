@@ -1,6 +1,8 @@
 // @ts-check
+import { Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { Outlet, useOutletContext } from 'react-router-dom';
+import ActividadMientras from '../../components/ui/ActividadMientras.jsx';
 import BarraInferior from '../../components/ui/BarraInferior.jsx';
 import Pestanas from '../../components/ui/Pestanas.jsx';
 import { PESTANAS_HOJA } from '../../components/layout/navegacion.js';
@@ -23,7 +25,10 @@ export default function HojaPredicacion() {
             <div className="tw sticky top-[76px] z-20 mx-auto -mt-8 mb-6 hidden w-full max-w-[1244px] bg-[#f5f7fa] pt-8 sm:block">
                 <Pestanas items={items} etiqueta="Secciones de Hoja de Predicación" />
             </div>
-            <Outlet />
+            {/* Mientras carga el código de una pestaña solo cambia el contenido; el indicador de carga avisa */}
+            <Suspense fallback={<ActividadMientras />}>
+                <Outlet />
+            </Suspense>
             {slotBarra && createPortal(<BarraInferior barra={barra} mas={mas} />, slotBarra)}
         </>
     );

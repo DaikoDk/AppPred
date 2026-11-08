@@ -1,3 +1,4 @@
+import IndicadorCarga from '../ui/IndicadorCarga.jsx';
 import { useSesion } from '../../hooks/useSesion.jsx';
 
 /**
@@ -22,6 +23,7 @@ export default function TopBar({ titulo, onAlternarSidebar }) {
                     </div>
                 </div>
             </div>
+            <IndicadorCarga />
         </header>
     );
 }

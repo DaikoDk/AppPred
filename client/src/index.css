@@ -48,6 +48,16 @@
 
     /* Entrada de paneles flotantes: sube 8 px y aparece (solo transform y opacity) */
     --animate-sube: sube 300ms var(--ease-skill);
+    /* Barra de carga: un tramo recorre la barra de izquierda a derecha (solo transform) */
+    --animate-barra: barra 1200ms var(--ease-skill) infinite;
+    @keyframes barra {
+        from {
+            transform: translateX(-100%);
+        }
+        to {
+            transform: translateX(300%);
+        }
+    }
     @keyframes sube {
         from {
             opacity: 0;
