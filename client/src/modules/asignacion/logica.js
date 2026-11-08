@@ -22,6 +22,7 @@ import { parseLocalDate } from '../../utils/fechas.js';
  * @typedef {{
  *   id: string, dia: string, hora: string, grupo: string, territorio: string | null,
  *   punto_reunion: string | null, conductor_id: string | null,
+ *   formato?: import('../../types/models').Formato | null,
  *   conductores?: ConductorAsignado | null
  * }} TurnoGuardado
  * @typedef {{ turno_id: string, conductor_id: string, conductor_nombre: string, cantidad_semanal?: number }} Asignacion

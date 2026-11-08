@@ -273,7 +273,7 @@ router.get('/asignaciones/semana/:semana_id', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('programa_semanal_turnos')
-            .select(`id, dia, hora, grupo, territorio, punto_reunion, conductor_id, score, conductores (id, nombre, grupo)`)
+            .select(`id, dia, hora, grupo, territorio, punto_reunion, conductor_id, score, formato, conductores (id, nombre, grupo)`)
             .eq('semana_id', req.params.semana_id)
             .order('dia')
             .order('hora')

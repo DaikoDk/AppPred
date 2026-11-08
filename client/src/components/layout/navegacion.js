@@ -1,27 +1,55 @@
 // @ts-check
 // Navegación de la app. El menú lateral tiene las áreas grandes; las pestañas de Hoja de Predicación son sus secciones.
-import { CalendarCheck, ChartBar, ClipboardText, GearSix, MapPin, NotePencil, Users } from '@phosphor-icons/react';
+import {
+    CalendarCheck,
+    ChartBar,
+    ClipboardText,
+    GearSix,
+    MapPin,
+    NotePencil,
+    ShieldCheck,
+    Users
+} from '@phosphor-icons/react';
 
-/** @typedef {{ ruta: string, titulo: string, tooltip: string, icono: string, soloSuperAdmin?: boolean }} ItemMenu */
-/** @typedef {{ ruta: string, titulo: string, icono: import('@phosphor-icons/react').Icon, soloSuperAdmin?: boolean }} ItemPestana */
+/** @typedef {{ ruta: string, titulo: string, tooltip: string, icono: import('@phosphor-icons/react').Icon, soloSuperAdmin?: boolean }} ItemMenu */
+/**
+ * @typedef {{
+ *   ruta: string,
+ *   titulo: string,
+ *   corto: string,
+ *   icono: import('@phosphor-icons/react').Icon,
+ *   soloSuperAdmin?: boolean,
+ *   enBarra: boolean
+ * }} ItemPestana
+ */
 
-/** Menú lateral (iconos de Font Awesome, como hasta ahora). Admin queda aparte: es para pocos usuarios (ADR-022). */
+/** Menú lateral (iconos Phosphor, ADR-021). Admin queda aparte: es para pocos usuarios (ADR-022). */
 /** @type {ItemMenu[]} */
 export const ITEMS_NAV = [
-    { ruta: '/hoja', titulo: 'Hoja de Predicación', tooltip: 'Hoja Predicación', icono: 'fa-clipboard-list' },
-    { ruta: '/admin', titulo: 'Admin', tooltip: 'Admin', icono: 'fa-shield-alt', soloSuperAdmin: true }
+    { ruta: '/hoja', titulo: 'Hoja de Predicación', tooltip: 'Hoja Predicación', icono: ClipboardText },
+    { ruta: '/admin', titulo: 'Admin', tooltip: 'Admin', icono: ShieldCheck, soloSuperAdmin: true }
 ];
 
-/** Pestañas dentro de Hoja de Predicación, en el orden de la barra (iconos Phosphor, ADR-021). */
-/** @type {ItemPestana[]} */
+/**
+ * Pestañas dentro de Hoja de Predicación, en el orden de la barra (iconos Phosphor, ADR-021).
+ * `corto` es el texto de la barra inferior del móvil; `enBarra` dice cuáles van en la barra y cuáles en "Más".
+ * @type {ItemPestana[]}
+ */
 export const PESTANAS_HOJA = [
-    { ruta: '/hoja/programa', titulo: 'Programa', icono: NotePencil },
-    { ruta: '/hoja/asignacion', titulo: 'Asignación', icono: CalendarCheck },
-    { ruta: '/hoja/plantilla', titulo: 'Plantilla', icono: ClipboardText },
-    { ruta: '/hoja/conductores', titulo: 'Conductores', icono: Users },
-    { ruta: '/hoja/puntos', titulo: 'Puntos de Reunión', icono: MapPin },
-    { ruta: '/hoja/historial', titulo: 'Historial', icono: ChartBar },
-    { ruta: '/hoja/configuracion', titulo: 'Configuración', icono: GearSix, soloSuperAdmin: true }
+    { ruta: '/hoja/programa', titulo: 'Programa', corto: 'Programa', icono: NotePencil, enBarra: true },
+    { ruta: '/hoja/asignacion', titulo: 'Asignación', corto: 'Asignación', icono: CalendarCheck, enBarra: true },
+    { ruta: '/hoja/plantilla', titulo: 'Plantilla', corto: 'Plantilla', icono: ClipboardText, enBarra: false },
+    { ruta: '/hoja/conductores', titulo: 'Conductores', corto: 'Conductores', icono: Users, enBarra: true },
+    { ruta: '/hoja/puntos', titulo: 'Puntos de Reunión', corto: 'Puntos', icono: MapPin, enBarra: true },
+    { ruta: '/hoja/historial', titulo: 'Historial', corto: 'Historial', icono: ChartBar, enBarra: false },
+    {
+        ruta: '/hoja/configuracion',
+        titulo: 'Configuración',
+        corto: 'Config.',
+        icono: GearSix,
+        soloSuperAdmin: true,
+        enBarra: false
+    }
 ];
 
 /** Rutas de antes de Hoja de Predicación. Se redirigen para no romper favoritos ni enlaces guardados. */

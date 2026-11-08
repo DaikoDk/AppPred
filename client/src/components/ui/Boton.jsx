@@ -1,14 +1,17 @@
 const BASE =
-    'button-sm inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border py-2 transition-[transform,background-color,border-color] duration-300 ease-skill active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50';
+    'button-sm inline-flex cursor-pointer items-center justify-center gap-0.5 rounded-lg border py-2 transition-[transform,background-color,border-color] duration-300 ease-skill active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50';
 
+// Estándar de botones: acciones sobre un elemento (Ver, Editar) y principales (Guardar) en azul sólido (primario); confirmación y
+// exportación (Sheets) en verde sólido (exito); destructivas (Eliminar, Limpiar) en rojo sólido (peligro); descargas de imagen (PNG) en violeta (acento);
+// neutras o de cancelar (Cancelar, Cerrar) con fondo blanco y borde (secundario).
 // Clases completas y estáticas para que Tailwind las detecte
 const VARIANTES = {
     primario: 'border-transparent bg-primary text-white hover:bg-primary-dark',
     secundario: 'border-line bg-surface text-ink hover:bg-fill',
     exito: 'border-transparent bg-ok text-white hover:bg-[#17703d]',
-    peligro: 'border-transparent bg-danger text-white hover:bg-[#8e1b12]',
-    peligroSuave: 'border-transparent bg-danger-bg text-danger hover:bg-[#f9d6d2]',
-    advertencia: 'border-transparent bg-warn text-white hover:bg-[#7a4800]'
+    peligro: 'border-transparent bg-danger text-white hover:bg-[#b42318]',
+    advertencia: 'border-transparent bg-warn text-white hover:bg-[#7a4800]',
+    acento: 'border-transparent bg-acento text-white hover:bg-acento-dark'
 };
 
 /**

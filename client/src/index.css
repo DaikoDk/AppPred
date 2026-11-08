@@ -27,8 +27,10 @@
     --color-ok-bg: #e6f5ec;
     --color-warn: #9a5b00;
     --color-warn-bg: #fff3df;
-    --color-danger: #b42318;
+    --color-danger: #d92d20;
     --color-danger-bg: #fdecea;
+    --color-acento: #6941c6;
+    --color-acento-dark: #53389e;
     --color-info: #1d5fa8;
     --color-info-bg: #e8f1fb;
     --color-tinta: #dde7f6;
@@ -48,6 +50,16 @@
 
     /* Entrada de paneles flotantes: sube 8 px y aparece (solo transform y opacity) */
     --animate-sube: sube 300ms var(--ease-skill);
+    /* Barra de carga: un tramo recorre la barra de izquierda a derecha (solo transform) */
+    --animate-barra: barra 1200ms var(--ease-skill) infinite;
+    @keyframes barra {
+        from {
+            transform: translateX(-100%);
+        }
+        to {
+            transform: translateX(300%);
+        }
+    }
     @keyframes sube {
         from {
             opacity: 0;
@@ -245,5 +257,24 @@
         animation: none !important;
         transition: opacity 200ms linear !important;
         transform: none !important;
+    }
+}
+
+/* Pantalla de alto fijo en móvil (la activa Layout con la clase shell-movil): el documento no se desplaza y solo el
+   contenido hace scroll. El CSS anterior fija body en min-height: 100vh, que en Android es más alto que lo visible y
+   deja el documento desplazable: el navegador lo sube y la barra inferior queda con un hueco debajo. */
+@layer components {
+    @media (max-width: 639px) {
+        html.shell-movil,
+        html.shell-movil body {
+            height: var(--alto-app, 100dvh);
+            min-height: 0;
+            overflow: hidden;
+        }
+        /* El fondo azul va solo en html: lo que queda fuera del alto de la app (la barra del navegador) toma el color de la
+           barra inferior. Si se pone también en body, toda la pantalla se vuelve azul. */
+        html.shell-movil {
+            background-color: var(--color-primary);
+        }
     }
 }

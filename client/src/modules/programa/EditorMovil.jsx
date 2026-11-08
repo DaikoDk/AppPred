@@ -192,7 +192,7 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                                     </Boton>
                                     <Boton
                                         compacto
-                                        variante="peligroSuave"
+                                        variante="peligro"
                                         icono={Trash}
                                         onClick={() => onCambiar((x) => quitarFila(x, f.clave))}
                                     >
