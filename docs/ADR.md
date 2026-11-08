@@ -289,4 +289,5 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - Los colores por día y del encabezado están **duplicados** en `tablaImagen.js` (`COLORES`) y en `DAY_THEMES` del backend. Si cambian en uno, hay que cambiarlos en el otro; las pruebas de `tablaImagen.test.js` fijan las reglas de orden y colores.
 - Las fuentes son las del dispositivo (Arial y Arial Black si existen, con respaldo): el aspecto puede variar un poco entre equipos.
 - El PDF se obtiene imprimiendo esa misma imagen desde un iframe oculto con `@page { size: A4 landscape }`: no hay librería de PDF y cambia según el navegador cómo se ve el cuadro de impresión.
-- Reglas: RN-IMG-01 a RN-IMG-05.
+- Compartir usa la Web Share API con archivos cuando el navegador la soporta; si no, descarga y abre WhatsApp Web (no permite adjuntar archivos por URL).
+- Reglas: RN-IMG-01 a RN-IMG-06.

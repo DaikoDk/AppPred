@@ -33,8 +33,7 @@ import {
 } from '../../components/ui/estilos.js';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
-import { dibujarTabla, descargarPng } from './imagenPng.js';
-import { construirTabla } from './tablaImagen.js';
+import ModalPng from './ModalPng.jsx';
 import { useCargando } from '../../components/ui/Cargando.jsx';
 import { formatDate } from '../../utils/fechas.js';
 import { mensajeError } from '../../utils/errores.js';
@@ -83,6 +82,8 @@ export default function Asignacion() {
     const [ejecutando, setEjecutando] = useState(false);
     // Programa que se está imprimiendo (modal de impresión en A4 horizontal)
     const [imprimiendo, setImprimiendo] = useState(/** @type {ProgramaEstado | null} */ (null));
+    // Programa cuya imagen PNG se muestra en el modal de descarga y compartir (RN-IMG-06)
+    const [conImagen, setConImagen] = useState(/** @type {ProgramaEstado | null} */ (null));
     const [res, setRes] = useState(/** @type {EstadoResultados | null} */ (null));
 
     const recargarProgramas = useCallback(async () => {
@@ -260,29 +261,6 @@ export default function Asignacion() {
         } catch (err) {
             cargando.ocultar();
             toast(mensajeError(err, 'Error al exportar'), 'error');
-        }
-    };
-
-    /** Descarga la tabla del programa asignado como imagen PNG (RN-IMG-01). @param {ProgramaEstado} p */
-    const exportarPng = async (p) => {
-        cargando.mostrar('Generando imagen…');
-        try {
-            const { turnos, extras } = await api.datosParaImagen(p.id);
-            const tabla = construirTabla({
-                turnos,
-                extras: normalizarExtras(extras),
-                semanaInicio: p.semana_inicio,
-                semanaFin: p.semana_fin
-            });
-            await descargarPng(
-                dibujarTabla(tabla),
-                `Programa ${formatDate(p.semana_inicio)} - ${formatDate(p.semana_fin)}`
-            );
-            cargando.ocultar();
-            toast('Imagen descargada', 'success');
-        } catch (err) {
-            cargando.ocultar();
-            toast(mensajeError(err, 'Error al generar la imagen'), 'error');
         }
     };
 
@@ -502,8 +480,8 @@ export default function Asignacion() {
                                                                     variante="acento"
                                                                     icono={ImageSquare}
                                                                     compacto
-                                                                    onClick={() => exportarPng(p)}
-                                                                    title="Descargar como imagen PNG"
+                                                                    onClick={() => setConImagen(p)}
+                                                                    title="Descargar o compartir como imagen PNG"
                                                                 >
                                                                     PNG
                                                                 </Boton>
@@ -560,6 +538,7 @@ export default function Asignacion() {
                     </div>
                 </div>
             </section>
+            {conImagen && <ModalPng programa={conImagen} onCerrar={() => setConImagen(null)} />}
             {imprimiendo && <ModalImprimir programa={imprimiendo} onCerrar={() => setImprimiendo(null)} />}
         </div>
     );

@@ -1,6 +1,8 @@
 // @ts-check
-// Dibuja la tabla del programa en un canvas y la descarga como PNG. Sin dependencias: usa la API Canvas del navegador.
-import { COLORES } from './tablaImagen.js';
+// Dibuja la tabla del programa en un canvas y la descarga o comparte como PNG. Sin dependencias: usa la API Canvas del navegador.
+import { COLORES, construirTabla } from './tablaImagen.js';
+import * as api from './api.js';
+import { normalizarExtras } from '../../utils/reglasDia.js';
 
 /** @typedef {import('./tablaImagen.js').TablaImagen} TablaImagen */
 
@@ -156,28 +158,67 @@ export function dibujarTabla(tabla) {
 }
 
 /**
+ * @param {HTMLCanvasElement} canvas @returns {Promise<Blob>}
+ */
+function aBlob(canvas) {
+    return new Promise((resolver, rechazar) => {
+        canvas.toBlob((blob) => {
+            if (blob) resolver(blob);
+            else rechazar(new Error('No se pudo generar la imagen'));
+        }, 'image/png');
+    });
+}
+
+/** @param {Blob} blob @param {string} nombre sin extensión */
+function descargarBlob(blob, nombre) {
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `${nombre}.png`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
+}
+
+/**
  * Descarga el canvas como archivo PNG.
  * @param {HTMLCanvasElement} canvas @param {string} nombre sin extensión
  * @returns {Promise<void>}
  */
-export function descargarPng(canvas, nombre) {
-    return new Promise((resolver, rechazar) => {
-        canvas.toBlob((blob) => {
-            if (!blob) {
-                rechazar(new Error('No se pudo generar la imagen'));
-                return;
-            }
-            const url = URL.createObjectURL(blob);
-            const enlace = document.createElement('a');
-            enlace.href = url;
-            enlace.download = `${nombre}.png`;
-            document.body.appendChild(enlace);
-            enlace.click();
-            enlace.remove();
-            URL.revokeObjectURL(url);
-            resolver();
-        }, 'image/png');
+export async function descargarPng(canvas, nombre) {
+    descargarBlob(await aBlob(canvas), nombre);
+}
+
+/**
+ * Comparte el PNG por la hoja de compartir del sistema (en el celular aparece WhatsApp). Si el navegador no puede
+ * compartir archivos (en la PC), descarga la imagen y abre WhatsApp Web con el texto para adjuntarla (RN-IMG-06).
+ * Si el usuario cierra la hoja de compartir, se lanza AbortError.
+ * @param {HTMLCanvasElement} canvas @param {string} nombre sin extensión @param {string} texto
+ * @returns {Promise<'compartido' | 'descargado'>}
+ */
+export async function compartirPng(canvas, nombre, texto) {
+    const blob = await aBlob(canvas);
+    const archivo = new File([blob], `${nombre}.png`, { type: 'image/png' });
+    if (navigator.canShare?.({ files: [archivo] })) {
+        await navigator.share({ files: [archivo], title: nombre, text: texto });
+        return 'compartido';
+    }
+    descargarBlob(blob, nombre);
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+    return 'descargado';
+}
+
+/** Dibuja el programa asignado como imagen (RN-IMG-01 a 04). @param {import('./api.js').ProgramaEstado} programa */
+export async function canvasDelPrograma(programa) {
+    const { turnos, extras } = await api.datosParaImagen(programa.id);
+    const tabla = construirTabla({
+        turnos,
+        extras: normalizarExtras(extras),
+        semanaInicio: programa.semana_inicio,
+        semanaFin: programa.semana_fin
     });
+    return dibujarTabla(tabla);
 }
 
 /**

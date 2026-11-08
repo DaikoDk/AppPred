@@ -6,10 +6,7 @@ import Modal from '../../components/ui/Modal.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { mensajeError } from '../../utils/errores.js';
 import { formatDate } from '../../utils/fechas.js';
-import { normalizarExtras } from '../../utils/reglasDia.js';
-import * as api from './api.js';
-import { dibujarTabla, imprimirImagen } from './imagenPng.js';
-import { construirTabla } from './tablaImagen.js';
+import { canvasDelPrograma, imprimirImagen } from './imagenPng.js';
 
 /**
  * Modal para imprimir el programa asignado en una hoja A4 horizontal (RN-IMG-05). Muestra la vista previa de la
@@ -26,14 +23,8 @@ export default function ModalImprimir({ programa, onCerrar }) {
         let activo = true;
         (async () => {
             try {
-                const { turnos, extras } = await api.datosParaImagen(programa.id);
-                const tabla = construirTabla({
-                    turnos,
-                    extras: normalizarExtras(extras),
-                    semanaInicio: programa.semana_inicio,
-                    semanaFin: programa.semana_fin
-                });
-                if (activo) setImagen(dibujarTabla(tabla).toDataURL('image/png'));
+                const lienzo = await canvasDelPrograma(programa);
+                if (activo) setImagen(lienzo.toDataURL('image/png'));
             } catch (err) {
                 if (!activo) return;
                 setError(true);
@@ -43,7 +34,7 @@ export default function ModalImprimir({ programa, onCerrar }) {
         return () => {
             activo = false;
         };
-    }, [programa.id, programa.semana_inicio, programa.semana_fin, toast]);
+    }, [programa, toast]);
 
     return (
         <Modal
