@@ -402,15 +402,15 @@ export default function Asignacion() {
                 <EncabezadoTarjeta icono={Stack} titulo="Programas" subtitulo="Estado de asignación de cada semana" />
                 <div className={CUERPO}>
                     <div className={TABLA_CONTENEDOR}>
-                        <table className={TABLA} id="tabla-programas-asignacion">
-                            <thead>
+                        <table className={`${TABLA} max-sm:block`} id="tabla-programas-asignacion">
+                            <thead className="max-sm:hidden">
                                 <tr>
-                                    <th className={TH}>Semana</th>
+                                    <th className={`${TH} max-sm:hidden`}>Semana</th>
                                     <th className={TH}>Inicio - Fin</th>
                                     <th className={TH}>Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="tbody-programas-asignacion">
+                            <tbody id="tbody-programas-asignacion" className="max-sm:block">
                                 {errorLista && (
                                     <tr>
                                         <td colSpan={3} className={`${TD} text-danger`}>
@@ -436,11 +436,11 @@ export default function Asignacion() {
                                     (programas || []).map((p) => {
                                         const asignados = p.asignados || 0;
                                         return (
-                                            <tr key={p.id}>
-                                                <td className={TD}>
+                                            <tr key={p.id} className="max-sm:block">
+                                                <td className={`${TD} max-sm:hidden`}>
                                                     <span className="title-4 text-ink">Semana</span>
                                                 </td>
-                                                <td className={TD}>
+                                                <td className={`${TD} max-sm:block max-sm:border-0 max-sm:pb-1`}>
                                                     <div className="flex items-center gap-3">
                                                         <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-fill text-primary">
                                                             <CalendarBlank size={20} aria-hidden="true" />
@@ -463,8 +463,8 @@ export default function Asignacion() {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className={TD}>
-                                                    <div className="flex flex-wrap items-center gap-2">
+                                                <td className={`${TD} max-sm:block`}>
+                                                    <div className="grid grid-cols-[repeat(3,1fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
                                                         {asignados > 0 && (
                                                             <>
                                                                 <Boton
@@ -491,6 +491,7 @@ export default function Asignacion() {
                                                             variante="peligro"
                                                             icono={Eraser}
                                                             compacto
+                                                            className={asignados > 0 ? '' : 'max-sm:col-span-full'}
                                                             onClick={() => limpiar(p)}
                                                             title="Limpiar"
                                                         >
