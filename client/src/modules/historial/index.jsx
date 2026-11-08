@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react';
+import { ChartBar } from '@phosphor-icons/react';
 import { apiFetch } from '../../api/client.js';
+import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
+import {
+    CIFRA,
+    CUERPO,
+    INSIGNIA,
+    RAIZ,
+    RESUMEN,
+    TABLA,
+    TABLA_CONTENEDOR,
+    TARJETA,
+    TD,
+    TH
+} from '../../components/ui/estilos.js';
 
 /**
  * @typedef {import('../../types/models').Programa} Programa
@@ -62,56 +76,60 @@ export default function Historial() {
     }, [toast]);
 
     return (
-        <div className="card">
-            <div className="card-header">
-                <h3>
-                    <i className="fas fa-chart-bar"></i> Estadísticas
-                </h3>
-            </div>
-            <div className="card-body">
-                <div className="stats-row">
-                    <div className="stat-card">
-                        <span className="stat-value">{datos.total}</span>
-                        <span className="stat-label">Total Asignaciones</span>
+        <div className={RAIZ}>
+            <section className={TARJETA}>
+                <EncabezadoTarjeta
+                    icono={ChartBar}
+                    titulo="Estadísticas"
+                    subtitulo="Turnos asignados en los programas guardados"
+                />
+                <div className={CUERPO}>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div className={RESUMEN}>
+                            <span className={CIFRA}>{datos.total}</span>
+                            <span className="caption-1 block text-muted">Total Asignaciones</span>
+                        </div>
+                        {/* La app anterior muestra 100% si hay programas; se mantiene igual hasta definir la fórmula */}
+                        <div className={RESUMEN}>
+                            <span className={`${CIFRA} text-ok`}>{datos.hayProgramas ? '100%' : '0%'}</span>
+                            <span className="caption-1 block text-muted">Tasa Asignación</span>
+                        </div>
+                        <div className={RESUMEN}>
+                            <span className={`${CIFRA} text-info`}>{datos.conductoresConTurnos}</span>
+                            <span className="caption-1 block text-muted">Conductores Activos</span>
+                        </div>
                     </div>
-                    {/* La app anterior muestra 100% si hay programas; se mantiene igual hasta definir la fórmula */}
-                    <div className="stat-card success">
-                        <span className="stat-value">{datos.hayProgramas ? '100%' : '0%'}</span>
-                        <span className="stat-label">Tasa Asignación</span>
-                    </div>
-                    <div className="stat-card info">
-                        <span className="stat-value">{datos.conductoresConTurnos}</span>
-                        <span className="stat-label">Conductores Activos</span>
-                    </div>
-                </div>
-                <h4>Historial por Conductor</h4>
-                <div className="table-container">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Conductor</th>
-                                <th>Grupo</th>
-                                <th>Total Turnos</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {datos.filas.map((c) => (
-                                <tr key={c.id}>
-                                    <td>{c.nombre}</td>
-                                    <td>
-                                        <span className={`badge badge-${c.grupo === 'A' ? 'info' : 'warning'}`}>
-                                            {c.grupo || '—'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <strong>{c.total}</strong>
-                                    </td>
+                    <h4 className="title-2 mt-6 mb-3 text-ink">Historial por Conductor</h4>
+                    <div className={TABLA_CONTENEDOR}>
+                        <table className={TABLA}>
+                            <thead>
+                                <tr>
+                                    <th className={TH}>Conductor</th>
+                                    <th className={TH}>Grupo</th>
+                                    <th className={TH}>Total Turnos</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {datos.filas.map((c) => (
+                                    <tr key={c.id}>
+                                        <td className={TD}>{c.nombre}</td>
+                                        <td className={TD}>
+                                            <span
+                                                className={`${INSIGNIA} ${c.grupo === 'A' ? 'bg-info-bg text-info' : 'bg-warn-bg text-warn'}`}
+                                            >
+                                                {c.grupo || '—'}
+                                            </span>
+                                        </td>
+                                        <td className={TD}>
+                                            <strong className="title-4 text-ink">{c.total}</strong>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </section>
         </div>
     );
 }

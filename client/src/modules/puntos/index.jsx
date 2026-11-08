@@ -1,6 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
+import { FloppyDisk, List, MapPin, PencilSimple, Trash } from '@phosphor-icons/react';
+import Boton from '../../components/ui/Boton.jsx';
+import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
+import {
+    CAMPO,
+    CUERPO,
+    ETIQUETA,
+    INSIGNIA,
+    RAIZ,
+    TABLA,
+    TABLA_CONTENEDOR,
+    TARJETA,
+    TD,
+    TH
+} from '../../components/ui/estilos.js';
 import { mensajeError } from '../../utils/errores.js';
 import { actualizarPunto, crearPunto, desactivarPunto, listarPuntos } from './api.js';
 
@@ -92,101 +107,104 @@ export default function Puntos() {
     };
 
     return (
-        <>
-            <div className="card">
-                <div className="card-header">
-                    <h3>
-                        <i className="fas fa-map-pin"></i> Nuevo Punto de Reunión
-                    </h3>
-                </div>
-                <div className="card-body">
-                    <form onSubmit={enviar}>
-                        <div className="form-row">
-                            <div className="form-group" style={{ flex: 2 }}>
-                                <label>Nombre / Referencia</label>
+        <div className={RAIZ}>
+            <section className={TARJETA}>
+                <EncabezadoTarjeta icono={MapPin} titulo="Nuevo Punto de Reunión" />
+                <div className={CUERPO}>
+                    <form onSubmit={enviar} className="flex flex-col gap-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[2fr_1fr]">
+                            <div className="min-w-0">
+                                <label className={ETIQUETA}>Nombre / Referencia</label>
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className={CAMPO}
                                     required
                                     placeholder="FAM "
                                     value={datos.nombre}
                                     onChange={(e) => setDatos((d) => ({ ...d, nombre: e.target.value }))}
                                 />
                             </div>
-                            <div className="form-group">
-                                <label>Coordenadas (lat,lng)</label>
+                            <div className="min-w-0">
+                                <label className={ETIQUETA}>Coordenadas (lat,lng)</label>
                                 <input
                                     type="text"
-                                    className="form-control"
+                                    className={CAMPO}
                                     placeholder="-11.9525,-77.0614"
                                     value={datos.ubicacion}
                                     onChange={(e) => setDatos((d) => ({ ...d, ubicacion: e.target.value }))}
                                 />
                             </div>
                         </div>
-                        <button type="submit" className="btn btn-primary" disabled={guardando}>
-                            <i className="fas fa-save"></i>{' '}
-                            <span className="btn-text">{editandoId ? 'Actualizar Punto' : 'Guardar Punto'}</span>
-                        </button>
+                        <div>
+                            <Boton type="submit" variante="primario" icono={FloppyDisk} disabled={guardando}>
+                                {editandoId ? 'Actualizar Punto' : 'Guardar Punto'}
+                            </Boton>
+                        </div>
                     </form>
                 </div>
-            </div>
-            <div className="card">
-                <div className="card-header">
-                    <h3>
-                        <i className="fas fa-list"></i> Puntos de Reunión
-                    </h3>
-                </div>
-                <div className="card-body">
-                    <div className="table-container">
-                        <table className="table">
+            </section>
+            <section className={TARJETA}>
+                <EncabezadoTarjeta icono={List} titulo="Puntos de Reunión" />
+                <div className={CUERPO}>
+                    <div className={TABLA_CONTENEDOR}>
+                        <table className={TABLA}>
                             <thead>
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>Coordenadas</th>
-                                    <th>Acciones</th>
+                                    <th className={TH}>Nombre</th>
+                                    <th className={TH}>Coordenadas</th>
+                                    <th className={TH}>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {error && (
                                     <tr>
-                                        <td colSpan={3}>Error</td>
+                                        <td colSpan={3} className={`${TD} text-danger`}>
+                                            Error
+                                        </td>
                                     </tr>
                                 )}
                                 {puntos.map((p) => (
                                     <tr key={p.id} data-id={p.id}>
-                                        <td>
-                                            <strong>
+                                        <td className={TD}>
+                                            <span className="title-4 text-ink">
                                                 {p.nombre}
                                                 {p.fijo && (
                                                     <>
                                                         {' '}
-                                                        <span className="badge badge-secondary">Fijo</span>
+                                                        <span className={`${INSIGNIA} bg-fill text-muted`}>Fijo</span>
                                                     </>
                                                 )}
-                                            </strong>
+                                            </span>
                                         </td>
-                                        <td>
-                                            <code>{p.ubicacion || '—'}</code>
+                                        <td className={TD}>
+                                            <code className="caption-2 rounded-lg bg-fill px-2 py-0.5 text-muted">
+                                                {p.ubicacion || '—'}
+                                            </code>
                                         </td>
-                                        <td>
+                                        <td className={TD}>
                                             {!p.fijo && (
-                                                <>
-                                                    <button
-                                                        className="btn btn-sm btn-primary"
+                                                <div className="flex gap-2">
+                                                    <Boton
+                                                        variante="secundario"
+                                                        icono={PencilSimple}
+                                                        soloIcono
+                                                        compacto
                                                         title="Editar"
                                                         onClick={() => editar(p)}
                                                     >
-                                                        <i className="fas fa-edit"></i>
-                                                    </button>{' '}
-                                                    <button
-                                                        className="btn btn-sm btn-danger"
+                                                        Editar
+                                                    </Boton>
+                                                    <Boton
+                                                        variante="peligroSuave"
+                                                        icono={Trash}
+                                                        soloIcono
+                                                        compacto
                                                         title="Desactivar"
                                                         onClick={() => desactivar(p)}
                                                     >
-                                                        <i className="fas fa-trash"></i>
-                                                    </button>
-                                                </>
+                                                        Desactivar
+                                                    </Boton>
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
@@ -195,7 +213,7 @@ export default function Puntos() {
                         </table>
                     </div>
                 </div>
-            </div>
-        </>
+            </section>
+        </div>
     );
 }
