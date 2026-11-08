@@ -17,7 +17,8 @@ export default function Sidebar({ colapsado, abierto, onNavegar }) {
                     <i className="fas fa-map-marker-alt"></i> <span>Predicación</span>
                 </h1>
             </div>
-            <nav className="sidebar-nav">
+            {/* Contraído, los tooltips salen hacia la derecha: sin recorte no aparece la barra de desplazamiento */}
+            <nav className={`sidebar-nav ${colapsado ? 'overflow-visible!' : ''}`}>
                 {ITEMS_NAV.filter((i) => !i.soloSuperAdmin || esSuperAdmin).map((item) => (
                     <NavLink
                         key={item.ruta}
