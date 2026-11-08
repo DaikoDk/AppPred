@@ -48,30 +48,26 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
         <section className={TARJETA}>
             <EncabezadoTarjeta icono={Users} titulo="Lista de Conductores" />
             <div className={CUERPO}>
-                <div className="mb-4 flex justify-end">
-                    <Boton variante="primario" icono={UserPlus} onClick={onNuevo}>
-                        Nuevo conductor
-                    </Boton>
-                </div>
-                <div className="mb-4 grid grid-cols-1 items-end gap-3 sm:grid-cols-[2fr_1fr]">
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                    <span className="title-4 text-ink">Filtros</span>
                     <input
                         type="text"
-                        className={CAMPO}
+                        className={`${CAMPO} w-56 max-w-full`}
                         placeholder="Filtrar por nombre..."
                         value={texto}
                         onChange={(e) => setTexto(e.target.value)}
                     />
-                    <Desplegable
-                        variante="campo"
-                        rotulo="Grupo"
-                        valor={grupo}
-                        onCambiar={setGrupo}
-                        etiquetaVacio="Todos los grupos"
-                        textoVacioChip="Todos los grupos"
-                        opciones={OPCIONES_GRUPO.map((g) => ({ valor: g.valor, etiqueta: g.texto }))}
-                    />
-                </div>
-                <div className="mb-4 flex flex-wrap gap-x-6 gap-y-3">
+                    <div className="w-44 max-w-full">
+                        <Desplegable
+                            variante="campo"
+                            rotulo="Grupo"
+                            valor={grupo}
+                            onCambiar={setGrupo}
+                            etiquetaVacio="Todos los grupos"
+                            textoVacioChip="Todos los grupos"
+                            opciones={OPCIONES_GRUPO.map((g) => ({ valor: g.valor, etiqueta: g.texto }))}
+                        />
+                    </div>
                     <label className={CASILLA}>
                         <input type="checkbox" checked={soloPc} onChange={(e) => setSoloPc(e.target.checked)} />
                         PC (Zoom)
@@ -84,6 +80,12 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                         <input type="checkbox" checked={soloParque} onChange={(e) => setSoloParque(e.target.checked)} />
                         Parque
                     </label>
+                    <span className="text-soft" aria-hidden="true">
+                        |
+                    </span>
+                    <Boton variante="primario" icono={UserPlus} onClick={onNuevo}>
+                        Nuevo conductor
+                    </Boton>
                 </div>
                 <div className={TABLA_CONTENEDOR}>
                     <table className={TABLA}>
