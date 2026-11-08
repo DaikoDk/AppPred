@@ -43,7 +43,7 @@ export default function Pestanas({ items, etiqueta }) {
             role="tablist"
             aria-label={etiqueta}
             onKeyDown={teclado}
-            className="tw flex gap-1 overflow-x-auto border-b border-line"
+            className="tw flex gap-1 overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
             {items.map((item, i) => {
                 const Icono = item.icono;
@@ -58,7 +58,7 @@ export default function Pestanas({ items, etiqueta }) {
                         role="tab"
                         aria-selected={esActiva}
                         tabIndex={esActiva ? 0 : -1}
-                        className={`button-sm -mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 whitespace-nowrap transition-[color,border-color] duration-300 ease-skill outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-t-lg ${esActiva ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-ink'}`}
+                        className={`button-sm no-underline -mb-px flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 whitespace-nowrap transition-[color,border-color] duration-300 ease-skill outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-t-lg ${esActiva ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-ink'}`}
                     >
                         <Icono size={16} aria-hidden="true" />
                         {item.titulo}

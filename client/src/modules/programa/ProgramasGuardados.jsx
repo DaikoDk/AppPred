@@ -18,7 +18,7 @@ const COLUMNAS = 'md:grid-cols-[1fr_1.5fr_1fr]';
  * }} props  `programas` en null = cargando.
  */
 export default function ProgramasGuardados({ programas, error, onEditar, onEliminar }) {
-    const estado = 'body-6 p-6 text-center text-muted';
+    const estado = 'body-6 list-none p-6 text-center text-muted';
     let cuerpo;
     if (error) {
         cuerpo = <li className={estado}>Error</li>;
@@ -73,7 +73,9 @@ export default function ProgramasGuardados({ programas, error, onEditar, onElimi
                     <span>Inicio - Fin</span>
                     <span>Acciones</span>
                 </div>
-                <ul id="tbody-programas">{cuerpo}</ul>
+                <ul id="tbody-programas" className="list-none">
+                    {cuerpo}
+                </ul>
             </div>
         </section>
     );
