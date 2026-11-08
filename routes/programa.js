@@ -57,7 +57,7 @@ async function asegurarPlantilla() {
 async function obtenerPlantilla() {
     const { data: prog } = await supabase
         .from('programa_semanal')
-        .select(`id, semana_inicio, semana_fin, creado, programa_semanal_turnos (id, dia, hora, grupo, territorio, punto_reunion, modalidad, conductor_id, creado)`)
+        .select(`id, semana_inicio, semana_fin, creado, programa_semanal_turnos (id, dia, hora, grupo, territorio, punto_reunion, modalidad, conductor_id, creado, formato)`)
         .eq('id', TEMPLATE_ID)
         .single();
     if (!prog) return null;
@@ -68,6 +68,23 @@ async function obtenerPlantilla() {
         .order('dia')
         .order('orden');
     return { ...prog, filas_extra: extras || [] };
+}
+
+// Formato por celda: { campo: { h: left|center|right, v: top|middle|bottom, b, i, s } }. Se descarta lo desconocido.
+const CAMPOS_FORMATO = ['hora', 'grupo', 'territorio', 'punto_reunion', 'conductor'];
+function limpiarFormato(formato) {
+    const limpio = {};
+    if (!formato || typeof formato !== 'object') return limpio;
+    CAMPOS_FORMATO.forEach(campo => {
+        const f = formato[campo];
+        if (!f || typeof f !== 'object') return;
+        const celda = {};
+        if (['left', 'center', 'right'].includes(f.h)) celda.h = f.h;
+        if (['top', 'middle', 'bottom'].includes(f.v)) celda.v = f.v;
+        ['b', 'i', 's'].forEach(k => { if (f[k] === true) celda[k] = true; });
+        if (Object.keys(celda).length) limpio[campo] = celda;
+    });
+    return limpio;
 }
 
 router.post('/', async (req, res) => {
@@ -90,7 +107,8 @@ router.post('/', async (req, res) => {
             grupo: t.grupo,
             territorio: t.territorio || null,
             punto_reunion: t.punto_reunion || null,
-            modalidad: t.modalidad || 'FISICO'
+            modalidad: t.modalidad || 'FISICO',
+            formato: limpiarFormato(t.formato)
         }));
         const { error: turnosError } = await supabase.from('programa_semanal_turnos').insert(turnosData);
         if (turnosError) {
@@ -107,7 +125,8 @@ router.post('/', async (req, res) => {
                 territorio: f.territorio || '',
                 punto_reunion: f.punto_reunion || '',
                 conductor: f.conductor || '',
-                orden: f.orden || 0
+                orden: f.orden || 0,
+                formato: limpiarFormato(f.formato)
             }));
             const { error: extraError } = await supabase.from('programa_semanal_extra_filas').insert(extraData);
             if (extraError) throw extraError;
@@ -138,7 +157,7 @@ router.get('/', async (req, res) => {
             .from('programa_semanal')
             .select(`
                 id, semana_inicio, semana_fin, creado,
-                programa_semanal_turnos (id, dia, hora, grupo, territorio, punto_reunion, modalidad, conductor_id, creado)
+                programa_semanal_turnos (id, dia, hora, grupo, territorio, punto_reunion, modalidad, conductor_id, creado, formato)
             `)
             .order('semana_inicio', { ascending: false });
         if (error) throw error;
@@ -226,7 +245,7 @@ router.get('/:id', async (req, res) => {
             .from('programa_semanal')
             .select(`
                 id, semana_inicio, semana_fin, creado,
-                programa_semanal_turnos (id, dia, hora, grupo, territorio, punto_reunion, modalidad, conductor_id, creado)
+                programa_semanal_turnos (id, dia, hora, grupo, territorio, punto_reunion, modalidad, conductor_id, creado, formato)
             `)
             .eq('id', req.params.id)
             .single();
@@ -336,7 +355,8 @@ router.put('/:id', async (req, res) => {
             grupo: t.grupo,
             territorio: t.territorio || null,
             punto_reunion: t.punto_reunion || null,
-            modalidad: t.modalidad || 'FISICO'
+            modalidad: t.modalidad || 'FISICO',
+            formato: limpiarFormato(t.formato)
         }));
         const { error: insError } = await supabase.from('programa_semanal_turnos').insert(turnosData);
         if (insError) throw insError;
@@ -351,7 +371,8 @@ router.put('/:id', async (req, res) => {
                 territorio: f.territorio || '',
                 punto_reunion: f.punto_reunion || '',
                 conductor: f.conductor || '',
-                orden: f.orden || 0
+                orden: f.orden || 0,
+                formato: limpiarFormato(f.formato)
             }));
             if (extraData.length > 0) {
                 const { error: extraError } = await supabase.from('programa_semanal_extra_filas').insert(extraData);

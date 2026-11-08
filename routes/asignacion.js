@@ -300,7 +300,7 @@ router.post('/exportar-sheets', async (req, res) => {
 
         const { data: asignaciones, error: asigError } = await supabase
             .from('programa_semanal_turnos')
-            .select(`id, dia, hora, grupo, territorio, punto_reunion, conductor_id, score, conductores (id, nombre, grupo)`)
+            .select(`id, dia, hora, grupo, territorio, punto_reunion, conductor_id, score, formato, conductores (id, nombre, grupo)`)
             .eq('semana_id', semana_id)
             .order('dia')
             .order('hora')
@@ -322,6 +322,7 @@ router.post('/exportar-sheets', async (req, res) => {
             territorio: t.territorio,
             punto_reunion: t.punto_reunion,
             es_extra: false,
+            formato: t.formato || {},
             asignado: !!t.conductor_id,
             conductor_asignado: t.conductores ? { id: t.conductores.id, nombre: t.conductores.nombre, grupo: t.conductores.grupo } : null
         }));
@@ -336,6 +337,7 @@ router.post('/exportar-sheets', async (req, res) => {
                 punto_reunion: f.punto_reunion || '',
                 conductor_extra: f.conductor || '',
                 es_extra: true,
+                formato: f.formato || {},
                 asignado: false,
                 conductor_asignado: null,
                 orden: f.orden ?? 0

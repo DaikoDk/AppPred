@@ -120,6 +120,41 @@ function calcularAnchosColumnas(dataRows) {
     return anchos.map(w => Math.min(MAX, Math.ceil(w)));
 }
 
+// Columnas del Sheet por campo (C = día; D..H = datos)
+const COLUMNA_CAMPO = { hora: 3, grupo: 4, territorio: 5, punto_reunion: 6, conductor: 7 };
+const ALINEACION_H = { left: 'LEFT', center: 'CENTER', right: 'RIGHT' };
+const ALINEACION_V = { top: 'TOP', middle: 'MIDDLE', bottom: 'BOTTOM' };
+
+// Un repeatCell por celda con formato; solo toca las propiedades indicadas para no pisar fuente ni colores
+function requestsFormatoCeldas(formatosFilas, sheetId, startRow) {
+    const requests = [];
+    Object.entries(formatosFilas).forEach(([ri, formato]) => {
+        const fila = startRow + Number(ri);
+        Object.entries(formato || {}).forEach(([campo, f]) => {
+            const col = COLUMNA_CAMPO[campo];
+            if (col == null || !f) return;
+            const formatoCelda = {};
+            const campos = [];
+            if (ALINEACION_H[f.h]) { formatoCelda.horizontalAlignment = ALINEACION_H[f.h]; campos.push('userEnteredFormat.horizontalAlignment'); }
+            if (ALINEACION_V[f.v]) { formatoCelda.verticalAlignment = ALINEACION_V[f.v]; campos.push('userEnteredFormat.verticalAlignment'); }
+            const texto = {};
+            if (f.b) { texto.bold = true; campos.push('userEnteredFormat.textFormat.bold'); }
+            if (f.i) { texto.italic = true; campos.push('userEnteredFormat.textFormat.italic'); }
+            if (f.s) { texto.strikethrough = true; campos.push('userEnteredFormat.textFormat.strikethrough'); }
+            if (Object.keys(texto).length) formatoCelda.textFormat = texto;
+            if (!campos.length) return;
+            requests.push({
+                repeatCell: {
+                    range: { sheetId, startRowIndex: fila, endRowIndex: fila + 1, startColumnIndex: col, endColumnIndex: col + 1 },
+                    cell: { userEnteredFormat: formatoCelda },
+                    fields: campos.join(',')
+                }
+            });
+        });
+    });
+    return requests;
+}
+
 async function getSpreadsheetId() {
     const { data } = await supabase
         .from('config')
@@ -162,6 +197,7 @@ async function exportAsignacionToSheets(asignaciones, semanaInfo) {
     dataRows.push(colHeaders); // headers
 
     const dayBlocks = []; // { dia, startRowIndex (in dataRows), endRowIndex (exclusive), rows }
+    const formatosFilas = {}; // índice en dataRows -> formato por celda
 
     DIAS_ORDEN.forEach(dia => {
         const regs = regulares.filter(r => r.dia === dia);
@@ -182,7 +218,8 @@ async function exportAsignacionToSheets(asignaciones, semanaInfo) {
                 grupo: (e.grupo || '').trim().toUpperCase(),
                 territorio: (e.territorio || '').trim().toUpperCase(),
                 punto: (e.punto_reunion || '').trim().toUpperCase(),
-                conductor: (e.conductor_extra || '').trim().toUpperCase()
+                conductor: (e.conductor_extra || '').trim().toUpperCase(),
+                formato: e.formato || {}
             });
         });
 
@@ -192,7 +229,8 @@ async function exportAsignacionToSheets(asignaciones, semanaInfo) {
                 grupo: (r.grupo || '').toUpperCase(),
                 territorio: (r.territorio || '—').toUpperCase(),
                 punto: (r.punto_reunion || '—').toUpperCase(),
-                conductor: r.asignado && r.conductor_asignado ? (r.conductor_asignado.nombre || '').toUpperCase() : 'SIN ASIGNAR'
+                conductor: r.asignado && r.conductor_asignado ? (r.conductor_asignado.nombre || '').toUpperCase() : 'SIN ASIGNAR',
+                formato: r.formato || {}
             });
         });
 
@@ -202,7 +240,8 @@ async function exportAsignacionToSheets(asignaciones, semanaInfo) {
                 grupo: (e.grupo || '').trim().toUpperCase(),
                 territorio: (e.territorio || '').trim().toUpperCase(),
                 punto: (e.punto_reunion || '').trim().toUpperCase(),
-                conductor: (e.conductor_extra || '').trim().toUpperCase()
+                conductor: (e.conductor_extra || '').trim().toUpperCase(),
+                formato: e.formato || {}
             });
         });
 
@@ -211,6 +250,7 @@ async function exportAsignacionToSheets(asignaciones, semanaInfo) {
         const diaCell = `${nombreDia}\n${num}`;
 
         allItems.forEach((item, idx) => {
+            if (item.formato && Object.keys(item.formato).length) formatosFilas[dataRows.length] = item.formato;
             dataRows.push([idx === 0 ? diaCell : '', item.hora, item.grupo, item.territorio, item.punto, item.conductor]);
         });
 
@@ -480,6 +520,9 @@ async function exportAsignacionToSheets(asignaciones, semanaInfo) {
         }
     });
 
+    // ---- Formato por celda definido en el editor (gana sobre el formato general) ----
+    requests.push(...requestsFormatoCeldas(formatosFilas, sId, startRow));
+
     await sheets.spreadsheets.batchUpdate({
         spreadsheetId,
         requestBody: { requests }
@@ -493,4 +536,4 @@ async function exportAsignacionToSheets(asignaciones, semanaInfo) {
     };
 }
 
-module.exports = { exportAsignacionToSheets, calcularAnchosColumnas, nombreHojaUnico };
+module.exports = { exportAsignacionToSheets, calcularAnchosColumnas, nombreHojaUnico, requestsFormatoCeldas };

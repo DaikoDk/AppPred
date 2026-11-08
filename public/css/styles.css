@@ -3142,6 +3142,234 @@ body {
     margin: 2px 0;
 }
 
+/* ===== Formato por celda ===== */
+.fmt-btn {
+    display: none;
+}
+
+/* Opción "Formato de celdas" dentro del menú ⋯ (escritorio) */
+#programa-table tbody tr[data-dia] td:last-child .fmt-btn,
+#turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child .fmt-btn {
+    display: none !important;
+}
+
+@media (min-width: 769px) {
+    #programa-table tbody tr[data-dia] td.abierto .fmt-btn {
+        display: flex !important;
+        align-items: center;
+        position: absolute;
+        right: 6px;
+        z-index: 40;
+        width: 224px;
+        height: 34px;
+        padding: 0 12px !important;
+        justify-content: flex-start;
+        gap: 10px;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        background: #fff !important;
+        color: #334155 !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+        top: calc(100% + 64px);
+        border-top: none !important;
+        border-radius: 0 0 8px 8px;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra[title*="abajo"] {
+        border-radius: 0;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .fmt-btn::after {
+        content: "Formato de celdas";
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .fmt-btn:hover {
+        background: #f1f5f9 !important;
+    }
+}
+
+/* Opción "Formato de celdas" en el menú flotante de las tarjetas (móvil) */
+@media (max-width: 768px) {
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .fmt-btn {
+        display: none !important;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .fmt-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        position: absolute;
+        right: 0;
+        z-index: 30;
+        width: 236px;
+        height: 42px;
+        padding: 0 14px;
+        overflow: visible;
+        top: calc(100% + 88px);
+        font-size: 13px;
+        font-weight: 500;
+        color: #334155;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .fmt-btn i {
+        color: #64748b;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .fmt-btn::after {
+        content: "Formato de celdas";
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra[title*="abajo"] {
+        border-radius: 0;
+    }
+}
+
+/* Indicador: la fila tiene formato propio (punto en el ⋯) */
+#programa-table tr.con-formato .mas-btn {
+    position: relative;
+}
+
+#programa-table tr.con-formato .mas-btn::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2563eb;
+}
+
+/* Vista previa del formato en el editor */
+#programa-table td.fmt-h-left input, #programa-table td.fmt-h-left select { text-align: left !important; text-align-last: left; }
+#programa-table td.fmt-h-center input, #programa-table td.fmt-h-center select { text-align: center !important; text-align-last: center; }
+#programa-table td.fmt-h-right input, #programa-table td.fmt-h-right select { text-align: right !important; text-align-last: right; }
+#programa-table td.fmt-h-left selectedcontent { text-align: left; }
+#programa-table td.fmt-h-center selectedcontent { text-align: center; }
+#programa-table td.fmt-h-right selectedcontent { text-align: right; }
+#programa-table td.fmt-b input, #programa-table td.fmt-b select { font-weight: 700 !important; }
+#programa-table td.fmt-i input, #programa-table td.fmt-i select { font-style: italic !important; }
+#programa-table td.fmt-s input, #programa-table td.fmt-s select { text-decoration: line-through !important; }
+
+/* Modal de formato */
+.modal-formato {
+    width: 420px;
+}
+
+.modal-formato .fmt-fila {
+    margin-top: 2px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.fmt-celdas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin: 16px 0 14px;
+}
+
+.fmt-celdas button {
+    position: relative;
+    padding: 7px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+}
+
+.fmt-celdas button.activo {
+    background: #2f5496;
+    border-color: #2f5496;
+    color: #fff;
+}
+
+.fmt-celdas button.con-formato::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f59e0b;
+}
+
+.fmt-controles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.fmt-grupo {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 10px;
+    background: #f1f5f9;
+}
+
+.fmt-grupo button {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #475569;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.fmt-grupo button:hover {
+    background: #e2e8f0;
+}
+
+.fmt-grupo button.activo {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.fmt-reset {
+    margin-top: 14px;
+    border: none;
+    background: none;
+    font-size: 12.5px;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.fmt-reset:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.fmt-nota {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.fmt-nota[hidden] {
+    display: none;
+}
+
 /* Print styles */
 @media print {
     .sidebar, .top-bar, .btn, .btn-group, .modal-overlay, .toast {

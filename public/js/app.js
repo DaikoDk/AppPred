@@ -645,8 +645,150 @@ const DAY_COLORS = {
     LUNES: '#fbe4d5', MARTES: '#e2efd9', MIERCOLES: '#deeaf6',
     JUEVES: '#fff2cc', VIERNES: '#ead1dc', SABADO: '#ffdfc0', DOMINGO: '#ffe599'
 };
-const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>';
+const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>'
+    + '<button type="button" class="fmt-btn" onclick="abrirFormatoFila(this)" title="Formato de celdas"><i class="fas fa-paintbrush"></i></button>';
 
+// ---- Formato por celda (alineación, negrita/cursiva/tachado, alineación vertical) ----
+// Se guarda en cada fila como { campo: { h, v, b, i, s } } y la exportación a Sheets lo respeta.
+const CAMPOS_FORMATO = [
+    { campo: 'hora', etiqueta: 'Hora' },
+    { campo: 'grupo', etiqueta: 'Grupo' },
+    { campo: 'territorio', etiqueta: 'Territorio' },
+    { campo: 'punto_reunion', etiqueta: 'P. Reunión' },
+    { campo: 'conductor', etiqueta: 'Conductor' }
+];
+const FORMATO_DEFECTO = { h: 'center', v: 'middle' }; // igual que la exportación actual
+
+function fmtAttr(formato) {
+    return encodeURIComponent(JSON.stringify(formato || {}));
+}
+
+function leerFormatoFila(tr) {
+    try { return JSON.parse(decodeURIComponent(tr?.dataset.formato || '%7B%7D')) || {}; } catch { return {}; }
+}
+
+// Quita lo que coincide con el formato por defecto para no guardar ruido
+function limpiarFormato(formato) {
+    const limpio = {};
+    Object.entries(formato || {}).forEach(([campo, f]) => {
+        const c = {};
+        if (f.h && f.h !== FORMATO_DEFECTO.h) c.h = f.h;
+        if (f.v && f.v !== FORMATO_DEFECTO.v) c.v = f.v;
+        ['b', 'i', 's'].forEach(k => { if (f[k]) c[k] = true; });
+        if (Object.keys(c).length) limpio[campo] = c;
+    });
+    return limpio;
+}
+
+// Vista previa en el editor (la celda Conductor solo existe en las filas libres)
+function aplicarFormatoFila(tr) {
+    const formato = leerFormatoFila(tr);
+    const celdas = tr.children;
+    const indice = { hora: 1, grupo: 2, territorio: 3, punto_reunion: 4, conductor: tr.classList.contains('extra-fila-row') ? 5 : -1 };
+    Object.entries(indice).forEach(([campo, i]) => {
+        const td = celdas[i];
+        if (!td || i < 0) return;
+        td.classList.remove('fmt-h-left', 'fmt-h-center', 'fmt-h-right', 'fmt-b', 'fmt-i', 'fmt-s');
+        const f = formato[campo];
+        if (!f) return;
+        if (f.h) td.classList.add(`fmt-h-${f.h}`);
+        ['b', 'i', 's'].forEach(k => { if (f[k]) td.classList.add(`fmt-${k}`); });
+    });
+    tr.classList.toggle('con-formato', Object.keys(formato).length > 0);
+}
+
+const ICONO_V = {
+    top: '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 3h12M10 17V7M6.5 10.5 10 7l3.5 3.5"/></svg>',
+    middle: '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 10h12M10 2v5M7.5 4.5 10 7l2.5-2.5M10 18v-5M7.5 15.5 10 13l2.5 2.5"/></svg>',
+    bottom: '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 17h12M10 3v10M6.5 9.5 10 13l3.5-3.5"/></svg>'
+};
+
+function abrirFormatoFila(btn) {
+    const tr = btn.closest('tr');
+    if (!tr) return;
+    tr.querySelector('td.abierto')?.classList.remove('abierto');
+    const borrador = JSON.parse(JSON.stringify(leerFormatoFila(tr)));
+    const esLibre = tr.classList.contains('extra-fila-row');
+    const hora = tr.querySelector('.turno-hora, .extra-fila-hora')?.value || '';
+    const grupoSel = tr.querySelector('.turno-grupo');
+    const grupo = grupoSel ? (GRUPO_LABEL[grupoSel.value] || grupoSel.value) : (tr.querySelector('.extra-fila-grupo')?.value || '');
+    let celda = 'territorio';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+        <div class="modal-content modal-confirm modal-formato" role="dialog" aria-modal="true">
+            <button type="button" class="modal-cerrar" data-accion="cancelar" aria-label="Cerrar">&times;</button>
+            <div class="modal-confirm-body">
+                <div class="modal-confirm-icon"><i class="fas fa-paintbrush"></i></div>
+                <h3>Formato de celdas</h3>
+                <p class="fmt-fila"></p>
+                <div class="fmt-celdas">${CAMPOS_FORMATO.map(c => `<button type="button" data-celda="${c.campo}">${c.etiqueta}</button>`).join('')}</div>
+                <div class="fmt-controles">
+                    <div class="fmt-grupo" title="Alineación horizontal">
+                        <button type="button" data-h="left" title="Izquierda"><i class="fas fa-align-left"></i></button>
+                        <button type="button" data-h="center" title="Centro"><i class="fas fa-align-center"></i></button>
+                        <button type="button" data-h="right" title="Derecha"><i class="fas fa-align-right"></i></button>
+                    </div>
+                    <div class="fmt-grupo" title="Estilo">
+                        <button type="button" data-t="b" title="Negrita"><i class="fas fa-bold"></i></button>
+                        <button type="button" data-t="i" title="Cursiva"><i class="fas fa-italic"></i></button>
+                        <button type="button" data-t="s" title="Tachado"><i class="fas fa-strikethrough"></i></button>
+                    </div>
+                    <div class="fmt-grupo" title="Alineación vertical">
+                        <button type="button" data-v="top" title="Arriba">${ICONO_V.top}</button>
+                        <button type="button" data-v="middle" title="Centro">${ICONO_V.middle}</button>
+                        <button type="button" data-v="bottom" title="Abajo">${ICONO_V.bottom}</button>
+                    </div>
+                </div>
+                <button type="button" class="fmt-reset" data-accion="reset"><i class="fas fa-rotate-left"></i> Formato por defecto en esta celda</button>
+                <p class="fmt-nota" hidden></p>
+            </div>
+            <div class="modal-confirm-actions">
+                <button type="button" class="btn btn-primary" data-accion="aplicar">Aplicar</button>
+                <button type="button" class="btn btn-secondary" data-accion="cancelar">Cancelar</button>
+            </div>
+        </div>`;
+    overlay.querySelector('.fmt-fila').textContent = [nombreDia(tr.dataset.dia), hora, grupo].filter(Boolean).join(' · ');
+
+    const pintar = () => {
+        const f = { ...FORMATO_DEFECTO, ...(borrador[celda] || {}) };
+        overlay.querySelectorAll('[data-celda]').forEach(b => {
+            b.classList.toggle('activo', b.dataset.celda === celda);
+            b.classList.toggle('con-formato', Object.keys(limpiarFormato({ x: borrador[b.dataset.celda] || {} })).length > 0);
+        });
+        overlay.querySelectorAll('[data-h]').forEach(b => b.classList.toggle('activo', b.dataset.h === f.h));
+        overlay.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('activo', b.dataset.v === f.v));
+        overlay.querySelectorAll('[data-t]').forEach(b => b.classList.toggle('activo', !!f[b.dataset.t]));
+        const nota = overlay.querySelector('.fmt-nota');
+        nota.hidden = !(celda === 'conductor' && !esLibre);
+        nota.textContent = 'En este turno la celda Conductor es el nombre asignado; el formato se aplica al exportar.';
+    };
+    const editar = cambio => { borrador[celda] = { ...(borrador[celda] || {}), ...cambio }; pintar(); };
+
+    const cerrar = () => { document.removeEventListener('keydown', onKey); overlay.remove(); };
+    const onKey = e => { if (e.key === 'Escape') cerrar(); };
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) return cerrar();
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.dataset.celda) { celda = b.dataset.celda; pintar(); }
+        else if (b.dataset.h) editar({ h: b.dataset.h });
+        else if (b.dataset.v) editar({ v: b.dataset.v });
+        else if (b.dataset.t) editar({ [b.dataset.t]: !(borrador[celda] || {})[b.dataset.t] });
+        else if (b.dataset.accion === 'reset') { delete borrador[celda]; pintar(); }
+        else if (b.dataset.accion === 'cancelar') cerrar();
+        else if (b.dataset.accion === 'aplicar') {
+            tr.dataset.formato = fmtAttr(limpiarFormato(borrador));
+            aplicarFormatoFila(tr);
+            cerrar();
+            showToast('Formato aplicado. Se guarda al guardar el programa.', 'success');
+        }
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(overlay);
+    pintar();
+}
 
 // El turno "Domingo (10:20 AM)" solo existe en domingo, aunque se haya guardado en otro día
 // La fila extra "REUNION DE / FIN DE SEMANA" (8:30AM) abre el domingo, antes del turno de las 10:20
@@ -784,7 +926,7 @@ function renderTurnosDesdeDatos(turnos, extras) {
                 const optsP = opcionesPuntos().replace(`value="${t.punto_reunion || ''}"`, `value="${t.punto_reunion || ''}" selected`);
                 const optsM = MODALIDAD_OPTIONS.map(m => `<option value="${m}" ${t.modalidad === m ? 'selected' : ''}>${m}</option>`).join('');
                 const CELL = 'padding:1px 2px;border-bottom:1px solid #ddd';
-                html += `<tr class="programa-row" data-dia="${dia}" style="background:${color}">
+                html += `<tr class="programa-row" data-dia="${dia}" data-formato="${fmtAttr(t.formato)}" style="background:${color}">
                     <td class="dia-cell" style="${CELL};font-weight:600;font-size:0.7rem">${diaCell}</td>
                     <td style="${CELL}"><select class="form-control turno-hora" style="${COMPACT_STYLE}">${optsH}</select></td>
                     <td style="${CELL}"><select class="form-control turno-grupo" style="${COMPACT_STYLE}">${optsG}</select></td>
@@ -801,7 +943,7 @@ function renderTurnosDesdeDatos(turnos, extras) {
             } else {
                 const e = item.datos;
                 const inp = (val, cls, ph, w) => `<input type="text" class="${cls}" placeholder="${ph}" style="width:${w};border:1px solid #ddd;border-radius:3px;padding:2px 4px;font-size:0.7rem" value="${val || ''}">`;
-                html += `<tr class="extra-fila-row" data-dia="${dia}" data-antes="${(e.orden || 0) < 0 ? 'true' : 'false'}" style="background:${color}">
+                html += `<tr class="extra-fila-row" data-dia="${dia}" data-antes="${(e.orden || 0) < 0 ? 'true' : 'false'}" data-formato="${fmtAttr(e.formato)}" style="background:${color}">
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc"></td>
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(e.hora, 'extra-fila-hora', 'Hora', '70px')}</td>
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(e.grupo, 'extra-fila-grupo', 'Grupo', '100%')}</td>
@@ -838,6 +980,7 @@ function agregarFilaTurno(dia, datos, refRow) {
 
     const tr = document.createElement('tr');
     tr.className = 'programa-row';
+    tr.dataset.formato = fmtAttr(d.formato);
     tr.dataset.dia = dia;
     tr.style.background = color;
     tr.innerHTML = `
@@ -869,6 +1012,7 @@ function agregarFilaExtra(dia, datos, alInicio, refRow) {
     const esBefore = alInicio === true || alInicio === 'before';
     const tr = document.createElement('tr');
     tr.className = 'extra-fila-row';
+    tr.dataset.formato = fmtAttr(d.formato);
     tr.dataset.dia = dia;
     tr.dataset.antes = esBefore ? 'true' : 'false';
     tr.style.background = color;
@@ -993,6 +1137,7 @@ function refrescarVistaTurnos() {
     const tbody = document.querySelector('#programa-table tbody');
     if (!container || !tbody) return;
     prepararSelects(tbody);
+    tbody.querySelectorAll('tr[data-dia]').forEach(aplicarFormatoFila);
     container.dataset.vista = vistaTurnos;
 
     const inicio = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);
@@ -1072,7 +1217,8 @@ async function guardarPrograma(e) {
                 grupo,
                 territorio: row.querySelector('.turno-territorio')?.value || null,
                 punto_reunion: row.querySelector('.turno-punto')?.value || null,
-                modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO'
+                modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO',
+                formato: leerFormatoFila(row)
             });
         });
         if (turnos.length === 0) { showToast('Completa al menos un turno (selecciona grupo)', 'warning'); return; }
@@ -1086,7 +1232,8 @@ async function guardarPrograma(e) {
                 territorio: row.querySelector('.extra-fila-territorio')?.value || '',
                 punto_reunion: row.querySelector('.extra-fila-punto')?.value || '',
                 conductor: row.querySelector('.extra-fila-conductor')?.value || '',
-                orden: row.dataset.antes === 'true' ? -1 : 0
+                orden: row.dataset.antes === 'true' ? -1 : 0,
+                formato: leerFormatoFila(row)
             });
         });
 
@@ -1379,16 +1526,17 @@ async function editarPrograma(id) {
                 grupo: t.grupo,
                 territorio: t.territorio,
                 punto_reunion: t.punto_reunion,
-                modalidad: t.modalidad
+                modalidad: t.modalidad,
+                formato: t.formato
             });
         });
 
         const extras = normalizarExtras(prog.filas_extra);
         extras.filter(f => (f.orden ?? 0) < 0).forEach(f => {
-            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor }, true);
+            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor, formato: f.formato }, true);
         });
         extras.filter(f => (f.orden ?? 0) >= 0).forEach(f => {
-            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor });
+            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor, formato: f.formato });
         });
 
         const submitBtn = document.querySelector('#programa-actions button[type="submit"] .btn-text');
@@ -1426,7 +1574,8 @@ function leerFilasEditor() {
         grupo: row.querySelector('.turno-grupo')?.value || '',
         territorio: row.querySelector('.turno-territorio')?.value || '',
         punto_reunion: row.querySelector('.turno-punto')?.value || '',
-        modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO'
+        modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO',
+        formato: leerFormatoFila(row)
     }));
     const extras = [...document.querySelectorAll('#programa-table tbody tr.extra-fila-row')].map(row => ({
         dia: row.dataset.dia,
@@ -1435,7 +1584,8 @@ function leerFilasEditor() {
         territorio: row.querySelector('.extra-fila-territorio')?.value || '',
         punto_reunion: row.querySelector('.extra-fila-punto')?.value || '',
         conductor: row.querySelector('.extra-fila-conductor')?.value || '',
-        orden: row.dataset.antes === 'true' ? -1 : 0
+        orden: row.dataset.antes === 'true' ? -1 : 0,
+        formato: leerFormatoFila(row)
     }));
     return { turnos, extras };
 }
@@ -1464,7 +1614,8 @@ function combinarConPlantilla(actual, plantillaTurnos, plantillaExtras) {
             territorio: gana(t.territorio, p?.territorio),
             punto_reunion: gana(t.punto_reunion, p?.punto_reunion),
             // FISICO es el valor por defecto: solo gana la plantilla si indica otra modalidad
-            modalidad: (t.modalidad && t.modalidad !== 'FISICO') ? t.modalidad : (p?.modalidad || t.modalidad || 'FISICO')
+            modalidad: (t.modalidad && t.modalidad !== 'FISICO') ? t.modalidad : (p?.modalidad || t.modalidad || 'FISICO'),
+            formato: { ...(p?.formato || {}), ...(t.formato || {}) }
         };
     });
 
@@ -1478,7 +1629,8 @@ function combinarConPlantilla(actual, plantillaTurnos, plantillaExtras) {
             grupo: gana(e.grupo, p?.grupo),
             territorio: gana(e.territorio, p?.territorio),
             punto_reunion: gana(e.punto_reunion, p?.punto_reunion),
-            conductor: gana(e.conductor, p?.conductor)
+            conductor: gana(e.conductor, p?.conductor),
+            formato: { ...(p?.formato || {}), ...(e.formato || {}) }
         };
     });
     return { turnos, extras };
