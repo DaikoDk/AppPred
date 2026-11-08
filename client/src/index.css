@@ -218,6 +218,10 @@
 
 /* Foco visible en todo elemento interactivo (accesibilidad) */
 @layer base {
+    /* Reserva el espacio de la barra de desplazamiento desde el inicio: el contenido no cambia de ancho al cargar */
+    html {
+        scrollbar-gutter: stable;
+    }
     :focus-visible {
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
