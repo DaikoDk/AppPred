@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Table, Trash, UserPlus, Users } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import Desplegable from '../../components/ui/Desplegable.jsx';
@@ -29,7 +29,13 @@ import { OPCIONES_GRUPO, claseBadgeGrupo } from './grupos.js';
  * }} props
  */
 export default function ListaConductores({ conductores, error, onDisponibilidad, onDesactivar, onNuevo }) {
+    // El texto se muestra al escribir; el filtro se aplica 1.5 s después de la última tecla (debounce)
     const [texto, setTexto] = useState('');
+    const [filtroNombre, setFiltroNombre] = useState('');
+    useEffect(() => {
+        const espera = setTimeout(() => setFiltroNombre(texto), 1500);
+        return () => clearTimeout(espera);
+    }, [texto]);
     const [grupo, setGrupo] = useState('');
     const [soloPc, setSoloPc] = useState(false);
     const [soloPMov, setSoloPMov] = useState(false);
@@ -37,7 +43,7 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
 
     const visibles = conductores.filter(
         (c) =>
-            c.nombre.toLowerCase().includes(texto.toLowerCase()) &&
+            c.nombre.toLowerCase().includes(filtroNombre.toLowerCase()) &&
             (!grupo || c.grupo === grupo) &&
             (!soloPc || c.tiene_pc) &&
             (!soloPMov || c.poca_movilidad) &&
