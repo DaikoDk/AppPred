@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Table, Trash, Users } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
+import Desplegable from '../../components/ui/Desplegable.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import {
     CAMPO,
@@ -54,14 +55,15 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
                         value={texto}
                         onChange={(e) => setTexto(e.target.value)}
                     />
-                    <select className={CAMPO} value={grupo} onChange={(e) => setGrupo(e.target.value)}>
-                        <option value="">Todos los grupos</option>
-                        {OPCIONES_GRUPO.map((g) => (
-                            <option key={g.valor} value={g.valor}>
-                                {g.texto}
-                            </option>
-                        ))}
-                    </select>
+                    <Desplegable
+                        variante="campo"
+                        rotulo="Grupo"
+                        valor={grupo}
+                        onCambiar={setGrupo}
+                        etiquetaVacio="Todos los grupos"
+                        textoVacioChip="Todos los grupos"
+                        opciones={OPCIONES_GRUPO.map((g) => ({ valor: g.valor, etiqueta: g.texto }))}
+                    />
                 </div>
                 <div className="mb-4 flex flex-wrap gap-x-6 gap-y-3">
                     <label className={CASILLA}>

@@ -3,6 +3,7 @@ import { FloppyDisk, UserPlus } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { CAMPO, CASILLA, CUERPO, ETIQUETA, TARJETA } from '../../components/ui/estilos.js';
+import Desplegable from '../../components/ui/Desplegable.jsx';
 import { OPCIONES_GRUPO } from './grupos.js';
 
 /**
@@ -63,20 +64,13 @@ export default function FormConductor({ onGuardar }) {
                         </div>
                         <div className="min-w-0">
                             <label className={ETIQUETA}>Grupo</label>
-                            <select
-                                className={CAMPO}
-                                required
-                                value={datos.grupo}
-                                onChange={(e) =>
-                                    cambiar({ grupo: /** @type {DatosConductor['grupo']} */ (e.target.value) })
-                                }
-                            >
-                                {OPCIONES_GRUPO.map((g) => (
-                                    <option key={g.valor} value={g.valor}>
-                                        {g.texto}
-                                    </option>
-                                ))}
-                            </select>
+                            <Desplegable
+                                variante="campo"
+                                rotulo="Grupo"
+                                valor={datos.grupo}
+                                onCambiar={(v) => cambiar({ grupo: /** @type {DatosConductor['grupo']} */ (v) })}
+                                opciones={OPCIONES_GRUPO.map((g) => ({ valor: g.valor, etiqueta: g.texto }))}
+                            />
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-x-6 gap-y-3">

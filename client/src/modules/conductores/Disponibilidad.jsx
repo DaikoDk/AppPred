@@ -4,6 +4,7 @@ import { nombreDia } from '../../utils/dias.js';
 import Boton from '../../components/ui/Boton.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import { CAMPO, CASILLA, ETIQUETA, INSIGNIA, RESUMEN } from '../../components/ui/estilos.js';
+import Desplegable from '../../components/ui/Desplegable.jsx';
 import { OPCIONES_GRUPO } from './grupos.js';
 import GrillaDisponibilidad from './GrillaDisponibilidad.jsx';
 
@@ -50,21 +51,26 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
                 : [...lista, { dia, hora, disponible }];
         });
 
-    /** Marcar es directo; quitar pide confirmación, como antes (RN-COND-04). @param {Dia} dia @param {string} hora */
+    /** Marcar o quitar pide confirmación (modal), como el resto de confirmaciones de la app (ADR-016). @param {Dia} dia @param {string} hora */
     const alternar = async (dia, hora) => {
         const activo = slots.some((s) => s.dia === dia && s.hora === hora && s.disponible);
-        if (!activo) {
-            marcar(dia, hora, true);
-            return;
-        }
-        const ok = await confirmar({
-            titulo: '¿Quitar este horario?',
-            mensaje: `${nombreDia(dia)} — ${hora}`,
-            textoConfirmar: 'Quitar',
-            peligro: true,
-            icono: 'fa-trash'
-        });
-        if (ok === true) marcar(dia, hora, false);
+        const ok = await confirmar(
+            activo
+                ? {
+                      titulo: '¿Quitar este horario?',
+                      mensaje: `${nombreDia(dia)} — ${hora}`,
+                      textoConfirmar: 'Quitar',
+                      peligro: true,
+                      icono: 'fa-trash'
+                  }
+                : {
+                      titulo: '¿Agregar este horario?',
+                      mensaje: `${nombreDia(dia)} — ${hora}`,
+                      textoConfirmar: 'Agregar',
+                      icono: 'fa-plus'
+                  }
+        );
+        if (ok === true) marcar(dia, hora, !activo);
     };
 
     const guardar = async () => {
@@ -142,19 +148,13 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
                         <div className="mt-3 grid grid-cols-1 items-end gap-3 sm:grid-cols-2">
                             <div className="min-w-0">
                                 <label className={ETIQUETA}>Grupo</label>
-                                <select
-                                    className={CAMPO}
-                                    value={atributos.grupo}
-                                    onChange={(e) =>
-                                        cambiarAtributo({ grupo: /** @type {Atributos['grupo']} */ (e.target.value) })
-                                    }
-                                >
-                                    {OPCIONES_GRUPO.map((g) => (
-                                        <option key={g.valor} value={g.valor}>
-                                            {g.texto}
-                                        </option>
-                                    ))}
-                                </select>
+                                <Desplegable
+                                    variante="campo"
+                                    rotulo="Grupo"
+                                    valor={atributos.grupo}
+                                    onCambiar={(v) => cambiarAtributo({ grupo: /** @type {Atributos['grupo']} */ (v) })}
+                                    opciones={OPCIONES_GRUPO.map((g) => ({ valor: g.valor, etiqueta: g.texto }))}
+                                />
                             </div>
                             <div className="min-w-0">
                                 <label className={ETIQUETA}>Ubicación Casa (lat,lng)</label>
