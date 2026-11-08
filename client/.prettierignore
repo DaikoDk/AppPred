@@ -1,3 +1,4 @@
 src/styles/
 src/types/models.d.ts
+src/vite-env.d.ts
 dist/

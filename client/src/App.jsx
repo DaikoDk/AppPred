@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/layout/Layout.jsx';
 import { SesionProvider, useSesion } from './hooks/useSesion.jsx';
 import { ToastProvider } from './components/ui/Toast.jsx';
+import { ConfirmarProvider } from './components/ui/Confirmar.jsx';
+import { CargandoProvider } from './components/ui/Cargando.jsx';
 import Login from './pages/Login.jsx';
 
 // Cada módulo se carga bajo demanda (ADR-019)
@@ -13,6 +15,8 @@ const Conductores = lazy(() => import('./modules/conductores/index.jsx'));
 const Puntos = lazy(() => import('./modules/puntos/index.jsx'));
 const Historial = lazy(() => import('./modules/historial/index.jsx'));
 const Admin = lazy(() => import('./modules/admin/index.jsx'));
+// Vitrina de componentes: solo en desarrollo, no entra al build
+const DevComponentes = import.meta.env.DEV ? lazy(() => import('./pages/DevComponentes.jsx')) : null;
 
 // Solo con sesión válida; si no, al login (RN-AUTH-09)
 function RutaPrivada({ children }) {
@@ -33,6 +37,7 @@ function Rutas() {
         <Suspense fallback={null}>
             <Routes>
                 <Route path="/login" element={<Login />} />
+                {DevComponentes && <Route path="/dev/componentes" element={<DevComponentes />} />}
                 <Route
                     element={
                         <RutaPrivada>
@@ -64,9 +69,13 @@ function Rutas() {
 export default function App() {
     return (
         <ToastProvider>
-            <SesionProvider>
-                <Rutas />
-            </SesionProvider>
+            <ConfirmarProvider>
+                <CargandoProvider>
+                    <SesionProvider>
+                        <Rutas />
+                    </SesionProvider>
+                </CargandoProvider>
+            </ConfirmarProvider>
         </ToastProvider>
     );
 }
