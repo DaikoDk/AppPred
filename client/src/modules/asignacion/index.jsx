@@ -12,9 +12,9 @@ import {
     X
 } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
+import Desplegable from '../../components/ui/Desplegable.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import {
-    CAMPO,
     CIFRA,
     CUERPO,
     ETIQUETA,
@@ -307,26 +307,25 @@ export default function Asignacion() {
                                 <CalendarBlank size={16} aria-hidden="true" />
                                 Semana
                             </label>
-                            <select
-                                id="sel-semana"
-                                className={CAMPO}
-                                value={semana}
-                                onChange={(e) => verAsignacion(e.target.value)}
-                            >
-                                {errorLista ? (
-                                    <option value="">Error</option>
-                                ) : (
-                                    <>
-                                        <option value="">Seleccionar semana...</option>
-                                        {(programas || []).map((p) => (
-                                            <option key={p.id} value={p.id}>
-                                                {formatDate(p.semana_inicio)} - {formatDate(p.semana_fin)}
-                                                {(p.asignados || 0) > 0 ? ` ✓ ${p.asignados} asignados` : ''}
-                                            </option>
-                                        ))}
-                                    </>
-                                )}
-                            </select>
+                            <Desplegable
+                                variante="campo"
+                                rotulo="Semana"
+                                valor={semana}
+                                onCambiar={verAsignacion}
+                                etiquetaVacio="Seleccionar semana..."
+                                textoVacioChip={errorLista ? 'Error' : 'Seleccionar semana...'}
+                                opciones={
+                                    errorLista
+                                        ? []
+                                        : [
+                                              { valor: '', etiqueta: 'Seleccionar semana...' },
+                                              ...(programas || []).map((p) => ({
+                                                  valor: p.id,
+                                                  etiqueta: `${formatDate(p.semana_inicio)} - ${formatDate(p.semana_fin)}${(p.asignados || 0) > 0 ? ` ✓ ${p.asignados} asignados` : ''}`
+                                              }))
+                                          ]
+                                }
+                            />
                         </div>
                         <Boton
                             id="btn-ejecutar-asignacion"

@@ -6,12 +6,25 @@ import PanelFlotante from './PanelFlotante.jsx';
  * @typedef {{ valor: string, etiqueta: string }} OpcionDD
  */
 
+const BASE_BOTON =
+    'body-6 flex min-w-0 w-full cursor-pointer items-center justify-between gap-2 rounded-lg border text-left text-ink transition-[border-color,transform] duration-300 ease-skill active:scale-[0.98]';
+
+/** Aspecto de cada variante del disparador. */
+const ESTILO_BOTON = {
+    chip: 'min-h-9 border-transparent bg-(--dia) px-3 py-2 hover:border-ink/20 aria-expanded:border-ink',
+    campo: 'min-h-9 border-line bg-surface px-3 py-2 hover:border-ink/30 focus-visible:border-primary aria-expanded:border-primary',
+    celda: 'min-h-9 border-line bg-surface px-2 py-1 hover:border-ink/30 focus-visible:border-primary aria-expanded:border-primary'
+};
+
 /**
  * Lista desplegable propia (reemplaza al <select> nativo). Con más de 8 opciones agrega un buscador.
  * Teclado: flechas, Inicio, Fin, Enter para elegir y Escape para cerrar devolviendo el foco.
  * El color del chip lo da `--dia`, definida en el contenedor del día.
+ * Variantes:  (el editor, color del día en ),  (formularios, como el campo de fecha) y
+ *  (filas de tabla, más compacta). Las dos últimas resaltan la opción con el color de tinta.
  * @param {{
  *   valor: string,
+ *   variante?: 'chip' | 'campo' | 'celda',
  *   opciones: OpcionDD[],
  *   onCambiar: (valor: string) => void,
  *   rotulo: string,
@@ -30,7 +43,8 @@ export default function Desplegable({
     etiquetaVacio = 'Sin valor',
     textoVacioChip = '—',
     anchoMin = 240,
-    claseTexto = ''
+    claseTexto = '',
+    variante = 'chip'
 }) {
     const id = useId();
     const boton = useRef(/** @type {HTMLButtonElement | null} */ (null));
@@ -65,7 +79,7 @@ export default function Desplegable({
                         setAbierto(true);
                     }
                 }}
-                className="body-6 flex min-h-9 w-full min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg border border-transparent bg-(--dia) px-3 py-2 text-left text-ink transition-[border-color,transform] duration-300 ease-skill hover:border-ink/20 active:scale-[0.98] aria-expanded:border-ink"
+                className={`${BASE_BOTON} ${ESTILO_BOTON[variante]}`}
             >
                 <span className={`truncate ${claseTexto}`}>{textoChip}</span>
                 <CaretDown
@@ -82,6 +96,7 @@ export default function Desplegable({
                     valor={valor}
                     rotulo={rotulo}
                     anchoMin={anchoMin}
+                    colorActivo={variante === 'chip' ? undefined : 'var(--color-tinta)'}
                     onElegir={(v) => {
                         onCambiar(v);
                         cerrar(true);
@@ -96,10 +111,11 @@ export default function Desplegable({
 /**
  * @param {{
  *   id: string, origen: HTMLElement | null, opciones: OpcionDD[], valor: string, rotulo: string, anchoMin: number,
+ *   colorActivo?: string,
  *   onElegir: (valor: string) => void, onCerrar: (devolverFoco: boolean) => void
  * }} props
  */
-function ListaOpciones({ id, origen, opciones, valor, rotulo, anchoMin, onElegir, onCerrar }) {
+function ListaOpciones({ id, origen, opciones, valor, rotulo, anchoMin, colorActivo, onElegir, onCerrar }) {
     const conBuscador = opciones.length > 8;
     const [consulta, setConsulta] = useState('');
     const [activa, setActiva] = useState(() =>
@@ -158,7 +174,13 @@ function ListaOpciones({ id, origen, opciones, valor, rotulo, anchoMin, onElegir
 
     return (
         <PanelFlotante origen={origen} onCerrar={() => onCerrar(false)} anchoMin={anchoMin}>
-            <div onKeyDown={alPulsar} className="flex min-h-0 flex-col">
+            <div
+                onKeyDown={alPulsar}
+                className="flex min-h-0 flex-col"
+                style={
+                    colorActivo ? /** @type {import('react').CSSProperties} */ ({ '--dia': colorActivo }) : undefined
+                }
+            >
                 {conBuscador && (
                     <div className="relative p-1 pb-2">
                         <MagnifyingGlass size={16} aria-hidden="true" className="absolute top-3.5 left-4 text-soft" />

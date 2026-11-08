@@ -1,7 +1,7 @@
 import { CalendarBlank, Clock, MapPin, MapTrifold, UserCheck, UsersThree } from '@phosphor-icons/react';
 import DiaBadge from '../../components/ui/DiaBadge.jsx';
-import SelectRecortable from '../../components/ui/SelectRecortable.jsx';
-import { CAMPO, TABLA, TABLA_CONTENEDOR, TD, TH } from '../../components/ui/estilos.js';
+import Desplegable from '../../components/ui/Desplegable.jsx';
+import { TABLA, TABLA_CONTENEDOR, TD, TH } from '../../components/ui/estilos.js';
 import { fechaDelDia } from '../../utils/fechas.js';
 import { etiquetaGrupo, opcionConductor } from './logica.js';
 
@@ -126,29 +126,25 @@ export default function TablaResultados({
                                 <td className={TD}>{r.territorio || '—'}</td>
                                 <td className={TD}>{r.punto_reunion || '—'}</td>
                                 <td className={TD}>
-                                    <SelectRecortable
-                                        className={`${CAMPO} py-1.5 ${vacio ? 'border-danger text-danger' : ''}`}
-                                        value={valor}
-                                        onChange={(e) => onElegir(r.turno_id, e.target.value)}
-                                    >
-                                        {inicialmenteSinAsignar.has(r.turno_id) && (
-                                            <option value="" className="text-danger">
-                                                SIN ASIGNAR
-                                            </option>
-                                        )}
-                                        {conductores.map((c) => {
-                                            const op = opcionConductor(c, r, cuenta, disponibles);
-                                            return (
-                                                <option
-                                                    key={c.id}
-                                                    value={op.valor}
-                                                    className={op.noDisponible ? 'text-muted' : undefined}
-                                                >
-                                                    {op.texto}
-                                                </option>
-                                            );
-                                        })}
-                                    </SelectRecortable>
+                                    <Desplegable
+                                        variante="celda"
+                                        rotulo={`Conductor del turno ${r.hora || ''} ${r.territorio || ''}`.trim()}
+                                        valor={valor}
+                                        onCambiar={(v) => onElegir(r.turno_id, v)}
+                                        etiquetaVacio="SIN ASIGNAR"
+                                        textoVacioChip="SIN ASIGNAR"
+                                        anchoMin={260}
+                                        claseTexto={vacio ? 'text-danger' : ''}
+                                        opciones={[
+                                            ...(inicialmenteSinAsignar.has(r.turno_id)
+                                                ? [{ valor: '', etiqueta: 'SIN ASIGNAR' }]
+                                                : []),
+                                            ...conductores.map((c) => {
+                                                const op = opcionConductor(c, r, cuenta, disponibles);
+                                                return { valor: op.valor, etiqueta: op.texto };
+                                            })
+                                        ]}
+                                    />
                                 </td>
                             </tr>
                         );
