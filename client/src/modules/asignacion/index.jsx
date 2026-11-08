@@ -1,39 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-    DotsThree,
-    Printer,
-    CalendarBlank,
-    CalendarCheck,
-    Eraser,
-    Eye,
-    FloppyDisk,
-    GoogleLogo,
-    ImageSquare,
-    ListChecks,
-    MagicWand,
-    Stack,
-    X
-} from '@phosphor-icons/react';
+import { CalendarBlank, CalendarCheck, FloppyDisk, ListChecks, MagicWand, Stack, X } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
-import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import ModalImprimir from './ModalImprimir.jsx';
 import Desplegable from '../../components/ui/Desplegable.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
-import {
-    CIFRA,
-    CUERPO,
-    ETIQUETA,
-    RAIZ,
-    RESUMEN,
-    TABLA,
-    TABLA_CONTENEDOR,
-    TARJETA,
-    TD,
-    TH
-} from '../../components/ui/estilos.js';
+import { CIFRA, CUERPO, ETIQUETA, RAIZ, RESUMEN, TARJETA } from '../../components/ui/estilos.js';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import ModalPng from './ModalPng.jsx';
+import TablaProgramas from './TablaProgramas.jsx';
 import { useCargando } from '../../components/ui/Cargando.jsx';
 import { formatDate } from '../../utils/fechas.js';
 import { mensajeError } from '../../utils/errores.js';
@@ -401,142 +376,15 @@ export default function Asignacion() {
             <section className={TARJETA}>
                 <EncabezadoTarjeta icono={Stack} titulo="Programas" subtitulo="Estado de asignación de cada semana" />
                 <div className={CUERPO}>
-                    <div className={TABLA_CONTENEDOR}>
-                        <table className={`${TABLA} max-sm:block`} id="tabla-programas-asignacion">
-                            <thead className="max-sm:hidden">
-                                <tr>
-                                    <th className={`${TH} max-sm:hidden`}>Semana</th>
-                                    <th className={TH}>Inicio - Fin</th>
-                                    <th className={TH}>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-programas-asignacion" className="max-sm:block">
-                                {errorLista && (
-                                    <tr>
-                                        <td colSpan={3} className={`${TD} text-danger`}>
-                                            Error
-                                        </td>
-                                    </tr>
-                                )}
-                                {!errorLista && programas === null && (
-                                    <tr>
-                                        <td colSpan={3} className={`${TD} body-6 text-center text-muted`}>
-                                            Cargando programas…
-                                        </td>
-                                    </tr>
-                                )}
-                                {!errorLista && programas?.length === 0 && (
-                                    <tr>
-                                        <td colSpan={3} className={`${TD} body-6 text-center text-muted`}>
-                                            No hay programas
-                                        </td>
-                                    </tr>
-                                )}
-                                {!errorLista &&
-                                    (programas || []).map((p) => {
-                                        const asignados = p.asignados || 0;
-                                        return (
-                                            <tr key={p.id} className="max-sm:block">
-                                                <td className={`${TD} max-sm:hidden`}>
-                                                    <span className="title-4 text-ink">Semana</span>
-                                                </td>
-                                                <td className={`${TD} max-sm:block max-sm:border-0 max-sm:pb-1`}>
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-fill text-primary">
-                                                            <CalendarBlank size={20} aria-hidden="true" />
-                                                        </span>
-                                                        <span className="min-w-0">
-                                                            <span className="body-5 block text-ink">
-                                                                {formatDate(p.semana_inicio)} —{' '}
-                                                                {formatDate(p.semana_fin)}
-                                                            </span>
-                                                            <small className="caption-2 block text-muted">
-                                                                {p.total_turnos || 0} turnos ·{' '}
-                                                                {asignados > 0 ? (
-                                                                    <span className="text-ok">
-                                                                        ✓ {asignados} asignados
-                                                                    </span>
-                                                                ) : (
-                                                                    <span>sin asignar</span>
-                                                                )}
-                                                            </small>
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className={`${TD} max-sm:block`}>
-                                                    <div className="grid grid-cols-[repeat(3,1fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center">
-                                                        {asignados > 0 && (
-                                                            <>
-                                                                <Boton
-                                                                    variante="primario"
-                                                                    icono={Eye}
-                                                                    compacto
-                                                                    onClick={() => verAsignacion(p.id)}
-                                                                    title="Ver"
-                                                                >
-                                                                    Ver
-                                                                </Boton>
-                                                                <Boton
-                                                                    variante="acento"
-                                                                    icono={ImageSquare}
-                                                                    compacto
-                                                                    onClick={() => setConImagen(p)}
-                                                                    title="Descargar o compartir como imagen PNG"
-                                                                >
-                                                                    PNG
-                                                                </Boton>
-                                                            </>
-                                                        )}
-                                                        <Boton
-                                                            variante="peligro"
-                                                            icono={Eraser}
-                                                            compacto
-                                                            className={asignados > 0 ? '' : 'max-sm:col-span-full'}
-                                                            onClick={() => limpiar(p)}
-                                                            title="Limpiar"
-                                                        >
-                                                            Limpiar
-                                                        </Boton>
-                                                        {asignados > 0 && (
-                                                            <MenuAcciones
-                                                                etiqueta="Más acciones del programa"
-                                                                items={[
-                                                                    {
-                                                                        texto: 'Exportar a Sheets',
-                                                                        icono: GoogleLogo,
-                                                                        onClick: () => exportar(p.id)
-                                                                    },
-                                                                    {
-                                                                        texto: 'Imprimir o guardar en PDF',
-                                                                        icono: Printer,
-                                                                        onClick: () => setImprimiendo(p)
-                                                                    }
-                                                                ]}
-                                                                boton={({ ref, abierto, alternar }) => (
-                                                                    <Boton
-                                                                        ref={ref}
-                                                                        variante="secundario"
-                                                                        icono={DotsThree}
-                                                                        soloIcono
-                                                                        compacto
-                                                                        aria-haspopup="menu"
-                                                                        aria-expanded={abierto}
-                                                                        onClick={alternar}
-                                                                        title="Más acciones"
-                                                                    >
-                                                                        Más acciones
-                                                                    </Boton>
-                                                                )}
-                                                            />
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                            </tbody>
-                        </table>
-                    </div>
+                    <TablaProgramas
+                        programas={programas}
+                        error={errorLista}
+                        onVer={verAsignacion}
+                        onPng={setConImagen}
+                        onLimpiar={limpiar}
+                        onSheets={exportar}
+                        onImprimir={setImprimiendo}
+                    />
                 </div>
             </section>
             {conImagen && <ModalPng programa={conImagen} onCerrar={() => setConImagen(null)} />}
