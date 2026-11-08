@@ -19,7 +19,9 @@ app.use(helmet({
             scriptSrc: ["'self'"],
             connectSrc: ["'self'", "https://xyhdjexiqxromvewpsfc.supabase.co"],
             imgSrc: ["'self'", "data:", "https:"],
-            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"]
+            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
+            // En desarrollo (HTTP, por ejemplo desde el celular en la LAN) no se fuerza HTTPS: los assets quedarían bloqueados
+            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
         }
     }
 }));
