@@ -21,7 +21,11 @@ export default function Pestanas({ items, etiqueta }) {
     );
 
     useEffect(() => {
-        enlaces.current[activa]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        // Se espera al siguiente cuadro (la barra aún está midiendo) y se centra: así la activa no queda cortada
+        const cuadro = requestAnimationFrame(() =>
+            enlaces.current[activa]?.scrollIntoView({ block: 'nearest', inline: 'center' })
+        );
+        return () => cancelAnimationFrame(cuadro);
     }, [activa]);
 
     /** @param {import('react').KeyboardEvent} e */

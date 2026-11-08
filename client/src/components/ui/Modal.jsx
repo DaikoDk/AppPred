@@ -24,7 +24,11 @@ export default function Modal({ titulo, onCerrar, children, pie }) {
 
     useEffect(() => {
         const previo = /** @type {HTMLElement | null} */ (document.activeElement);
-        const overflowPrevio = document.body.style.overflow;
+        // Se bloquea el scroll de la página de atrás (html y body): si sigue desplazándose, el navegador del móvil
+        // esconde y muestra su barra de direcciones y la ventana deja ver la página por los bordes
+        const html = document.documentElement;
+        const overflowPrevio = { html: html.style.overflow, body: document.body.style.overflow };
+        html.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
         const cuadro = requestAnimationFrame(() => panel.current?.focus({ preventScroll: true }));
 
@@ -63,20 +67,21 @@ export default function Modal({ titulo, onCerrar, children, pie }) {
         return () => {
             cancelAnimationFrame(cuadro);
             document.removeEventListener('keydown', teclado);
-            document.body.style.overflow = overflowPrevio;
+            html.style.overflow = overflowPrevio.html;
+            document.body.style.overflow = overflowPrevio.body;
             previo?.focus?.();
         };
     }, []);
 
     return createPortal(
-        <div className="tw fixed inset-0 z-[9000] flex items-end justify-center bg-ink/40 sm:items-center sm:p-4">
+        <div className="tw fixed inset-0 z-[9000] flex items-stretch justify-center overscroll-none bg-ink/40 sm:items-center sm:p-4">
             <div
                 ref={panel}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={id}
                 tabIndex={-1}
-                className="flex h-dvh w-full flex-col bg-surface outline-none sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-3xl sm:border sm:border-line"
+                className="flex h-full w-full max-w-full min-w-0 flex-col bg-surface outline-none sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-3xl sm:border sm:border-line"
             >
                 <header className="flex items-center justify-between gap-3 border-b border-line p-4">
                     <h2 id={id} className="heading-6 text-ink">
@@ -91,7 +96,7 @@ export default function Modal({ titulo, onCerrar, children, pie }) {
                         <X size={20} aria-hidden="true" />
                     </button>
                 </header>
-                <div className="min-h-0 flex-1 overflow-y-auto p-4">{children}</div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">{children}</div>
                 {pie && <footer className="border-t border-line p-4">{pie}</footer>}
             </div>
         </div>,

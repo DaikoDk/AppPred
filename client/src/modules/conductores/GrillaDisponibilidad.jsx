@@ -83,7 +83,7 @@ export default function GrillaDisponibilidad({ slots, editable, onMarcar }) {
     if (!escritorio) {
         return (
             <div className="flex flex-col gap-3">
-                <div role="tablist" aria-label="Día de la semana" className="flex gap-1.5 overflow-x-auto pb-1">
+                <div role="tablist" aria-label="Día de la semana" className="grid grid-cols-7 gap-1.5">
                     {DIAS.map((d) => {
                         const elegido = d === diaMovil;
                         return (
@@ -92,10 +92,11 @@ export default function GrillaDisponibilidad({ slots, editable, onMarcar }) {
                                 type="button"
                                 role="tab"
                                 aria-selected={elegido}
+                                aria-label={nombreDia(d)}
                                 onClick={() => setDiaMovil(d)}
-                                className={`caption-1 min-h-9 shrink-0 cursor-pointer rounded-lg px-3 text-ink transition-[box-shadow,opacity] duration-300 ease-skill ${COLOR_DIA[d]} ${elegido ? 'ring-2 ring-ink' : 'opacity-70'}`}
+                                className={`caption-1 min-h-9 min-w-0 cursor-pointer rounded-lg px-0 text-ink transition-[box-shadow,opacity] duration-300 ease-skill ${COLOR_DIA[d]} ${elegido ? 'ring-2 ring-ink' : 'opacity-70'}`}
                             >
-                                {nombreDia(d)}
+                                {SIGLA[d]}
                             </button>
                         );
                     })}
