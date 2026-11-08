@@ -16,6 +16,8 @@ export default function Configuracion() {
     const toast = useToast();
     const [spreadsheet, setSpreadsheet] = useState('');
     const [spreadsheetUrl, setSpreadsheetUrl] = useState('');
+    // Hasta que llega la configuración no se sabe si hay un spreadsheet: se muestra un bloque animado
+    const [cargando, setCargando] = useState(true);
 
     const cargarConfig = useCallback(async () => {
         try {
@@ -24,6 +26,8 @@ export default function Configuracion() {
             setSpreadsheetUrl(cfg.spreadsheet_url || '');
         } catch {
             // sin permiso: la ruta ya está protegida para super admins
+        } finally {
+            setCargando(false);
         }
     }, []);
 
@@ -58,6 +62,7 @@ export default function Configuracion() {
                         <input
                             id="config-spreadsheet"
                             type="text"
+                            disabled={cargando}
                             placeholder="ID o URL del spreadsheet"
                             value={spreadsheet}
                             onChange={(e) => setSpreadsheet(e.target.value)}
@@ -68,7 +73,13 @@ export default function Configuracion() {
                         </Boton>
                     </div>
                     <div className="body-6 mt-3">
-                        {spreadsheetUrl ? (
+                        {cargando ? (
+                            <span
+                                aria-label="Cargando la configuración"
+                                role="status"
+                                className="block h-5 w-56 max-w-full animate-pulse rounded-lg bg-fill motion-reduce:animate-none"
+                            />
+                        ) : spreadsheetUrl ? (
                             <a
                                 href={spreadsheetUrl}
                                 target="_blank"
