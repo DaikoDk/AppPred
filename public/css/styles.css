@@ -1125,33 +1125,39 @@ body {
     }
 
     /* Nuevo programa: fechas lado a lado, botón a todo el ancho */
-    #form-programa .form-row {
+    #form-programa .form-row,
+    #tab-asignacion .form-row {
         grid-template-columns: 1fr 1fr;
         gap: 0 12px;
     }
 
-    #form-programa .form-group {
+    #form-programa .form-group,
+    #tab-asignacion .form-group {
         margin-bottom: 14px;
         min-width: 0;
     }
 
-    #form-programa .form-group label {
+    #form-programa .form-group label,
+    #tab-asignacion .form-group label {
         font-size: 13px;
         white-space: nowrap;
     }
 
-    #form-programa .form-control {
+    #form-programa .form-control,
+    #tab-asignacion .form-control {
         padding: 10px 10px;
         font-size: 14px;
         min-width: 0;
     }
 
-    #form-programa .form-group-action {
+    #form-programa .form-group-action,
+    #tab-asignacion .form-group-action {
         grid-column: 1 / -1;
         margin-bottom: 0;
     }
 
-    #form-programa .form-group-action .btn {
+    #form-programa .form-group-action .btn,
+    #tab-asignacion .form-group-action .btn {
         width: 100%;
         justify-content: center;
     }
@@ -1786,12 +1792,14 @@ body {
 
 /* Editor de turnos en escritorio: tabla integrada tipo hoja de cálculo */
 @media (min-width: 769px) {
-    #tab-programa {
+    #tab-programa,
+    #tab-asignacion {
         max-width: 1244px;
         margin: 0 auto;
     }
 
-    #tab-programa .card-body {
+    #tab-programa .card-body,
+    #tab-asignacion .card-body {
         padding: 16px;
     }
 
@@ -1891,9 +1899,21 @@ body {
         background: var(--dia-fondo, #fff) !important;
     }
 
-    #programa-table tbody tr[data-dia]:focus-within {
-        outline: 2px solid var(--dia-acento, #2563eb);
-        outline-offset: -2px;
+    /* Fila seleccionada: marco del color del día alrededor de TODA la fila */
+    #programa-table tbody tr[data-dia]:focus-within td {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb) !important;
+    }
+
+    #programa-table tbody tr[data-dia]:focus-within td:first-child {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset 2px 0 0 0 var(--dia-acento, #2563eb) !important;
+    }
+
+    #programa-table tbody tr[data-dia]:focus-within td:last-child {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset -2px 0 0 0 var(--dia-acento, #2563eb) !important;
+    }
+
+    #programa-table tbody tr.extra-fila-row:focus-within td:not(:first-child):not(:last-child) {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset 0 0 0 999px rgba(0, 0, 0, 0.04) !important;
     }
 
     /* Celda del día fusionada */
@@ -1979,12 +1999,6 @@ body {
         color: rgba(100, 116, 139, 0.65);
         font-style: italic;
         font-weight: 400;
-    }
-
-    #programa-table tbody tr[data-dia] td:not(:first-child):focus-within {
-        position: relative;
-        z-index: 2;
-        box-shadow: inset 0 0 0 1.5px #2563eb !important;
     }
 
     #programa-table tbody tr.extra-fila-row td:not(:first-child) {
@@ -2287,9 +2301,21 @@ body {
         background: var(--dia-fondo, #fff) !important;
     }
 
-    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia]:focus-within {
-        outline: 2px solid var(--dia-acento, #2563eb);
-        outline-offset: -2px;
+    /* Fila seleccionada: marco del color del día alrededor de TODA la fila */
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia]:focus-within td {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb) !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia]:focus-within td:first-child {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset 2px 0 0 0 var(--dia-acento, #2563eb) !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia]:focus-within td:last-child {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset -2px 0 0 0 var(--dia-acento, #2563eb) !important;
+    }
+
+    #turnos-container[data-vista="semana"] #programa-table tbody tr.extra-fila-row:focus-within td:not(:first-child):not(:last-child) {
+        box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset 0 0 0 999px rgba(0, 0, 0, 0.04) !important;
     }
 
     /* Celda del día fusionada */
@@ -2375,12 +2401,6 @@ body {
         color: rgba(100, 116, 139, 0.65);
         font-style: italic;
         font-weight: 400;
-    }
-
-    #turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:not(:first-child):focus-within {
-        position: relative;
-        z-index: 2;
-        box-shadow: inset 0 0 0 1.5px #2563eb !important;
     }
 
     #turnos-container[data-vista="semana"] #programa-table tbody tr.extra-fila-row td:not(:first-child) {
@@ -2632,6 +2652,783 @@ body {
 #programa-actions .btn {
     direction: ltr;
     margin: 0 0 8px 8px;
+}
+
+/* ===== Pestaña Asignación: mismo lenguaje visual que Programa ===== */
+.table-asignacion .fecha-texto {
+    display: flex;
+    flex-direction: column;
+}
+
+.table-asignacion .fecha-sub {
+    display: block;
+    font-size: 11px;
+    color: #6b7c93;
+}
+
+.estado-ok {
+    color: #1e8e4d;
+    font-weight: 600;
+}
+
+.estado-pendiente {
+    color: #b45309;
+    font-weight: 600;
+}
+
+/* Tabla de resultados: celdas integradas con el color de cada día */
+#resultados-table tr[data-dia="LUNES"] { --dia-acento: #e59866; --dia-fondo: #fbe4d5; --dia-borde: rgba(229,152,102,.45); }
+#resultados-table tr[data-dia="MARTES"] { --dia-acento: #6fae5c; --dia-fondo: #e2efd9; --dia-borde: rgba(111,174,92,.45); }
+#resultados-table tr[data-dia="MIERCOLES"] { --dia-acento: #5b9bd5; --dia-fondo: #deeaf6; --dia-borde: rgba(91,155,213,.45); }
+#resultados-table tr[data-dia="JUEVES"] { --dia-acento: #e0b400; --dia-fondo: #fff2cc; --dia-borde: rgba(224,180,0,.45); }
+#resultados-table tr[data-dia="VIERNES"] { --dia-acento: #c2739a; --dia-fondo: #ead1dc; --dia-borde: rgba(194,115,154,.45); }
+#resultados-table tr[data-dia="SABADO"] { --dia-acento: #f0953a; --dia-fondo: #ffdfc0; --dia-borde: rgba(240,149,58,.45); }
+#resultados-table tr[data-dia="DOMINGO"] { --dia-acento: #d4a017; --dia-fondo: #ffe599; --dia-borde: rgba(212,160,23,.5); }
+
+#resultados-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    min-width: 1190px;
+    table-layout: fixed;
+    font-size: 0.8125rem;
+}
+
+#resultados-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid rgba(226, 232, 240, 0.8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#resultados-table thead th:last-child {
+    border-right: none;
+}
+
+#resultados-table thead th i {
+    color: #94a3b8;
+    margin-right: 6px;
+    font-size: 0.75rem;
+}
+
+#resultados-table thead th:nth-child(1) { width: 104px; border-left: 5px solid transparent; }
+#resultados-table thead th:nth-child(2) { width: 160px; }
+#resultados-table thead th:nth-child(3) { width: 138px; }
+#resultados-table thead th:nth-child(5) { width: 250px; }
+#resultados-table thead th:nth-child(6) { width: 230px; }
+
+#resultados-table tbody tr[data-dia] {
+    background: var(--dia-fondo, #fff) !important;
+}
+
+#resultados-table tbody tr[data-dia] td {
+    position: relative;
+    height: 28px;
+    padding: 0 0.5rem;
+    color: #1f2937;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-right: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+#resultados-table tbody tr[data-dia] td:last-child {
+    padding: 0;
+    border-right: none;
+}
+
+#resultados-table tbody tr[data-dia-label]:not(:first-child) td {
+    border-top: 2px solid var(--dia-borde, #ddd);
+}
+
+#resultados-table tbody tr[data-dia-fin] td {
+    border-bottom: none;
+}
+
+#resultados-table tbody tr[data-dia] td.dia-cell {
+    overflow: visible;
+    min-width: 104px;
+    vertical-align: top;
+    border-left: 5px solid var(--dia-acento, transparent);
+    border-bottom-color: transparent;
+}
+
+#resultados-table .dia-badge {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    right: 6px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+#resultados-table tbody tr[data-dia-label][data-dia-fin] .dia-badge {
+    top: 1px;
+}
+
+#resultados-table .dia-badge strong {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.2;
+}
+
+#resultados-table .dia-fecha {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--dia-acento);
+    filter: brightness(0.8);
+}
+
+#resultados-table tbody tr.sin-asignar td {
+    color: #dc2626;
+}
+
+/* "SIN ASIGNAR" resaltado solo en la celda; la lista desplegable no hereda negrita ni color */
+#resultados-table select.cond-select.cond-vacio > button,
+#resultados-table select.cond-select.cond-vacio selectedcontent {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+@supports not (appearance: base-select) {
+    #resultados-table select.cond-select.cond-vacio {
+        color: #dc2626;
+        font-weight: 700;
+    }
+}
+
+#resultados-table select.cond-select option {
+    font-weight: 500;
+}
+
+#resultados-table select.cond-select option.op-vacio {
+    color: #dc2626;
+}
+
+#resultados-table select.cond-select {
+    width: 100%;
+    height: 28px;
+    padding: 0 1.6rem 0 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #1f2937;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: transparent;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.35rem center;
+    background-size: 1.1em 1.1em;
+    border: 0;
+    border-radius: 0;
+    outline: none;
+    box-shadow: none;
+    text-overflow: ellipsis;
+}
+
+/* Fila seleccionada: marco del color del día alrededor de toda la fila */
+#resultados-table tbody tr[data-dia]:focus-within td {
+    box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb);
+}
+
+#resultados-table tbody tr[data-dia]:focus-within td:first-child {
+    box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset 2px 0 0 0 var(--dia-acento, #2563eb);
+}
+
+#resultados-table tbody tr[data-dia]:focus-within td:last-child {
+    box-shadow: inset 0 2px 0 0 var(--dia-acento, #2563eb), inset 0 -2px 0 0 var(--dia-acento, #2563eb), inset -2px 0 0 0 var(--dia-acento, #2563eb);
+}
+
+@media (min-width: 769px) {
+    #resultados-table {
+        max-width: 1212px;
+    }
+
+    #resultados-table thead th:first-child { border-top-left-radius: 11px; }
+    #resultados-table thead th:last-child { border-top-right-radius: 11px; }
+    #resultados-table tbody tr:last-child td:first-child { border-bottom-left-radius: 11px; }
+    #resultados-table tbody tr:last-child td:last-child { border-bottom-right-radius: 11px; }
+}
+
+#resultados-day-groups .table-container {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+@media (max-width: 768px) {
+    #card-resultados .card-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    #card-resultados .card-header .btn-group {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    #card-resultados .card-header .btn-group .btn {
+        flex: 1;
+        width: auto;
+    }
+
+    #tab-asignacion .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Guardar / Cancelar de los resultados: a la derecha, con el botón principal en el extremo */
+#resultados-actions {
+    direction: rtl;
+}
+
+#resultados-actions .btn {
+    direction: ltr;
+    margin: 0 0 8px 8px !important;
+}
+
+/* Filas extra de la plantilla (p. ej. "Predicación por cada grupo presencial"): informativas, no se asignan */
+#resultados-table tbody tr.fila-extra-res td {
+    font-weight: 700;
+    color: #1f2937;
+    box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.04);
+}
+
+/* Turnos sin asignar: se conserva el color del día y se marca con un velo rojo */
+#resultados-table tbody tr.sin-asignar {
+    opacity: 1;
+}
+
+#resultados-table tbody tr.sin-asignar td {
+    background: transparent;
+    box-shadow: inset 0 0 0 999px rgba(220, 38, 38, 0.07);
+}
+
+/* Menú flotante del editor de programa (⋯) */
+.menu-flotante-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-flotante {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    min-width: 260px;
+    z-index: 60;
+    direction: ltr;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+}
+
+.menu-flotante[hidden] {
+    display: none;
+}
+
+.menu-flotante button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 12px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    text-align: left;
+    cursor: pointer;
+}
+
+.menu-flotante button:hover {
+    background: #f1f5f9;
+}
+
+.menu-flotante i {
+    color: #64748b;
+}
+
+/* Pantalla de carga que bloquea la interfaz */
+.cargando-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    color: #fff;
+    cursor: wait;
+    animation: fadeIn 0.2s ease;
+}
+
+.cargando-spinner {
+    width: 56px;
+    height: 56px;
+    border: 5px solid rgba(255, 255, 255, 0.28);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.cargando-texto {
+    padding: 0 24px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+/* Modal de confirmación: variante de éxito y botón de cerrar */
+.modal-confirm {
+    position: relative;
+}
+
+.modal-confirm-icon.exito {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.modal-cerrar {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modal-cerrar:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Lista de conductores de Resultados: mismo desplegable estilizado que el editor */
+@supports (appearance: base-select) {
+    #resultados-table select.cond-select,
+    #resultados-table select.cond-select::picker(select) {
+        appearance: base-select;
+    }
+
+    #resultados-table select.cond-select {
+        display: flex;
+        align-items: center;
+        background-image: none;
+        padding-right: 0.5rem;
+    }
+
+    #resultados-table select.cond-select > button {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        background: none;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: inherit;
+        appearance: none;
+    }
+
+    #resultados-table select.cond-select selectedcontent {
+        display: block;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #resultados-table select.cond-select::picker-icon {
+        content: "";
+        flex-shrink: 0;
+        width: 1.1em;
+        height: 1.1em;
+        margin-left: auto;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%234b5563' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") no-repeat center / contain;
+        transition: transform 0.2s;
+    }
+
+    #resultados-table select.cond-select:open::picker-icon {
+        transform: rotate(180deg);
+    }
+
+    #resultados-table select.cond-select::picker(select) {
+        max-height: 340px;
+        overflow-y: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 4px;
+        background: #fff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+        margin-top: 4px;
+        scrollbar-width: thin;
+    }
+
+    #resultados-table select.cond-select option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 0.8125rem;
+        color: #1e293b;
+        cursor: pointer;
+    }
+
+    #resultados-table select.cond-select option:hover {
+        background: #f1f5f9;
+    }
+
+    #resultados-table select.cond-select option:checked {
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-weight: 500;
+    }
+
+    #resultados-table select.cond-select option.op-no-disp {
+        color: #b45309;
+    }
+
+    #resultados-table select.cond-select option::checkmark {
+        order: 1;
+        margin-left: auto;
+        color: #2563eb;
+    }
+}
+
+/* Aviso dentro del modal de confirmación (lista de turnos con datos vacíos) */
+.modal-aviso {
+    margin-top: 14px;
+    padding: 10px 12px;
+    text-align: left;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #92400e;
+}
+
+.modal-aviso[hidden] {
+    display: none;
+}
+
+.modal-aviso ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    max-height: 150px;
+    overflow-y: auto;
+    color: #78350f;
+}
+
+.modal-aviso li {
+    margin: 2px 0;
+}
+
+/* ===== Formato por celda ===== */
+.fmt-btn {
+    display: none;
+}
+
+/* Opción "Formato de celdas" dentro del menú ⋯ (escritorio) */
+#programa-table tbody tr[data-dia] td:last-child .fmt-btn,
+#turnos-container[data-vista="semana"] #programa-table tbody tr[data-dia] td:last-child .fmt-btn {
+    display: none !important;
+}
+
+@media (min-width: 769px) {
+    #programa-table tbody tr[data-dia] td.abierto .fmt-btn {
+        display: flex !important;
+        align-items: center;
+        position: absolute;
+        right: 6px;
+        z-index: 40;
+        width: 224px;
+        height: 34px;
+        padding: 0 12px !important;
+        justify-content: flex-start;
+        gap: 10px;
+        text-align: left;
+        white-space: nowrap;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        background: #fff !important;
+        color: #334155 !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.14);
+        top: calc(100% + 64px);
+        border-top: none !important;
+        border-radius: 0 0 8px 8px;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .add-btn-extra[title*="abajo"] {
+        border-radius: 0;
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .fmt-btn::after {
+        content: "Formato de celdas";
+    }
+
+    #programa-table tbody tr[data-dia] td.abierto .fmt-btn:hover {
+        background: #f1f5f9 !important;
+    }
+}
+
+/* Opción "Formato de celdas" en el menú flotante de las tarjetas (móvil) */
+@media (max-width: 768px) {
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7) .fmt-btn {
+        display: none !important;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .fmt-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        position: absolute;
+        right: 0;
+        z-index: 30;
+        width: 236px;
+        height: 42px;
+        padding: 0 14px;
+        overflow: visible;
+        top: calc(100% + 88px);
+        font-size: 13px;
+        font-weight: 500;
+        color: #334155;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .fmt-btn i {
+        color: #64748b;
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .fmt-btn::after {
+        content: "Formato de celdas";
+    }
+
+    #turnos-container[data-vista="dia"] #programa-table td:nth-child(7).abierto .add-btn-extra[title*="abajo"] {
+        border-radius: 0;
+    }
+}
+
+/* Indicador: la fila tiene formato propio (punto en el ⋯) */
+#programa-table tr.con-formato .mas-btn {
+    position: relative;
+}
+
+#programa-table tr.con-formato .mas-btn::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2563eb;
+}
+
+/* Vista previa del formato en el editor */
+#programa-table td.fmt-h-left input, #programa-table td.fmt-h-left select { text-align: left !important; text-align-last: left; }
+#programa-table td.fmt-h-center input, #programa-table td.fmt-h-center select { text-align: center !important; text-align-last: center; }
+#programa-table td.fmt-h-right input, #programa-table td.fmt-h-right select { text-align: right !important; text-align-last: right; }
+#programa-table td.fmt-h-left selectedcontent { text-align: left; }
+#programa-table td.fmt-h-center selectedcontent { text-align: center; }
+#programa-table td.fmt-h-right selectedcontent { text-align: right; }
+#programa-table td.fmt-b input, #programa-table td.fmt-b select { font-weight: 700 !important; }
+#programa-table td.fmt-i input, #programa-table td.fmt-i select { font-style: italic !important; }
+#programa-table td.fmt-s input, #programa-table td.fmt-s select { text-decoration: line-through !important; }
+
+/* Modal de formato */
+.modal-formato {
+    width: 600px;
+}
+
+.modal-formato .fmt-fila {
+    margin-top: 2px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.fmt-celdas {
+    display: flex;
+    margin: 16px 0 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.fmt-celdas::-webkit-scrollbar {
+    display: none;
+}
+
+.fmt-celdas button {
+    position: relative;
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border: none;
+    border-right: 1px solid rgba(226, 232, 240, 0.9);
+    background: transparent;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #475569;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.fmt-celdas button:last-child {
+    border-right: none;
+}
+
+.fmt-celdas button i {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.fmt-celdas button:hover {
+    background: #eef2f7;
+}
+
+.fmt-celdas button.activo {
+    background: #dbeafe;
+    color: #1d4ed8;
+    box-shadow: inset 0 -2px 0 #2563eb;
+}
+
+.fmt-celdas button.activo i {
+    color: #2563eb;
+}
+
+.fmt-celdas button.con-formato::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f59e0b;
+}
+
+@media (max-width: 480px) {
+    .fmt-celdas button {
+        padding: 10px 4px;
+        font-size: 0.625rem;
+        letter-spacing: 0.01em;
+    }
+
+    .fmt-celdas button i {
+        display: none;
+    }
+}
+
+.fmt-controles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.fmt-grupo {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 10px;
+    background: #f1f5f9;
+}
+
+.fmt-grupo button {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #475569;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.fmt-grupo button:hover {
+    background: #e2e8f0;
+}
+
+.fmt-grupo button.activo {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.fmt-reset {
+    margin-top: 14px;
+    border: none;
+    background: none;
+    font-size: 12.5px;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.fmt-reset:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.fmt-nota {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.fmt-nota[hidden] {
+    display: none;
 }
 
 /* Print styles */

@@ -78,6 +78,12 @@
                                 <div id="programa-actions" style="display:none;margin-top:20px">
                                     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <span class="btn-text">Guardar Programa</span></button>
                                     <button type="button" id="btn-cancelar-edicion" class="btn btn-secondary" onclick="cancelarEdicionPrograma()" style="display:none"><i class="fas fa-times"></i> Cancelar Edición</button>
+                                    <span id="menu-programa-wrap" class="menu-flotante-wrap" style="display:none">
+                                        <button type="button" class="btn btn-secondary" onclick="toggleMenuPrograma(event)" title="Más acciones" aria-label="Más acciones"><i class="fas fa-ellipsis-h"></i></button>
+                                        <div id="menu-programa" class="menu-flotante" hidden>
+                                            <button type="button" onclick="actualizarConPlantilla()"><i class="fas fa-file-import"></i> Actualizar con la plantilla</button>
+                                        </div>
+                                    </span>
                                     <button type="button" id="btn-restablecer-plantilla" class="btn btn-warning" onclick="restablecerPlantilla()" style="display:none"><i class="fas fa-undo"></i> Restablecer Plantilla</button>
                                 </div>
                             </form>
@@ -104,14 +110,19 @@
                 <!-- TAB: ASIGNACIÓN -->
                 <div id="tab-asignacion" class="tab-content">
                     <div class="card">
-                        <div class="card-header"><h3><i class="fas fa-calendar-check"></i> Ejecutar Asignación</h3></div>
+                        <div class="card-header">
+                            <div class="card-title-rich">
+                                <span class="title-icon"><i class="fas fa-calendar-check"></i></span>
+                                <div><h3>Ejecutar Asignación</h3><p class="card-subtitle">Elige una semana y genera las asignaciones automáticamente</p></div>
+                            </div>
+                        </div>
                         <div class="card-body">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Semana</label>
+                                    <label><i class="far fa-calendar"></i> Semana</label>
                                     <select id="sel-semana" class="form-control"><option value="">Seleccionar semana...</option></select>
                                 </div>
-                                <div class="form-group" style="align-self:end">
+                                <div class="form-group form-group-action" style="align-self:end">
                                     <button id="btn-ejecutar-asignacion" class="btn btn-primary btn-block">
                                         <i class="fas fa-magic"></i> <span class="btn-text">Ejecutar Algoritmo</span>
                                         <span class="btn-loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
@@ -122,10 +133,9 @@
                     </div>
                     <div class="card" style="display:none;" id="card-resultados">
                         <div class="card-header">
-                            <h3><i class="fas fa-list-check"></i> Resultados</h3>
-                            <div class="btn-group">
-                                <button id="btn-exportar-excel" class="btn btn-success"><i class="fas fa-file-excel"></i> Excel</button>
-                                <button id="btn-exportar-sheets" class="btn btn-google"><i class="fab fa-google"></i> Sheets</button>
+                            <div class="card-title-rich">
+                                <span class="title-icon"><i class="fas fa-list-check"></i></span>
+                                <div><h3>Resultados</h3><p class="card-subtitle">Revisa y ajusta los conductores antes de guardar</p></div>
                             </div>
                         </div>
                         <div class="card-body">
@@ -143,19 +153,17 @@
                         </div>
                     </div>
                     <div class="card">
-                        <div class="card-header"><h3><i class="fas fa-list"></i> Programas</h3></div>
+                        <div class="card-header">
+                            <div class="card-title-rich">
+                                <span class="title-icon plain"><i class="fas fa-layer-group"></i></span>
+                                <div><h3>Programas</h3><p class="card-subtitle">Estado de asignación de cada semana</p></div>
+                            </div>
+                        </div>
                         <div class="card-body">
                             <div class="table-container">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Semana</th>
-                                            <th>Turnos</th>
-                                            <th>Asignados</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tbody-programas-asignacion"></tbody>
+                                <table class="table table-programas table-asignacion">
+                                    <thead><tr><th class="col-semana">Semana</th><th class="col-fechas">Inicio - Fin</th><th class="col-acciones">Acciones</th></tr></thead>
+                                    <tbody id="tbody-programas-asignacion"><tr class="fila-estado"><td colspan="3"><i class="fas fa-circle-notch fa-spin"></i> Cargando programas…</td></tr></tbody>
                                 </table>
                             </div>
                         </div>

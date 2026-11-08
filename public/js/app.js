@@ -169,30 +169,37 @@ async function loadSemanas() {
 async function listarProgramasAsignacion() {
     const tbody = document.getElementById('tbody-programas-asignacion');
     if (!tbody) return;
+    tbody.innerHTML = '<tr class="fila-estado"><td colspan="3"><i class="fas fa-circle-notch fa-spin"></i> Cargando programas…</td></tr>';
     try {
         const d = await apiFetch('/api/programa-semanal/con-estado');
         window.__semanaData = {};
         tbody.innerHTML = '';
         if (!d.programas || d.programas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#999">No hay programas</td></tr>';
+            tbody.innerHTML = '<tr class="fila-estado"><td colspan="3">No hay programas</td></tr>';
             return;
         }
         d.programas.forEach(p => {
             window.__semanaData[p.id] = { inicio: p.semana_inicio, fin: p.semana_fin, asignados: p.asignados || 0, total: p.total_turnos || 0 };
-            const badge = (p.asignados || 0) > 0 ? `<span style="color:#28a745">✓ ${p.asignados}</span>` : '<span style="color:#999">0</span>';
-            const hasAsignados = (p.asignados || 0) > 0;
+            const asignados = p.asignados || 0;
+            const total = p.total_turnos || 0;
+            const estado = asignados > 0
+                ? `${total} turnos · <span class="estado-ok">✓ ${asignados} asignados</span>`
+                : `${total} turnos · <span class="estado-pendiente">sin asignar</span>`;
+            const rango = `${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}`;
             tbody.innerHTML += `<tr>
-                <td>${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}</td>
-                <td>${p.total_turnos || 0}</td>
-                <td>${badge}</td>
-                <td style="white-space:nowrap">
-                    ${hasAsignados ? `<button class="btn btn-sm btn-info" onclick="verAsignacion('${p.id}')"><i class="fas fa-eye"></i> Ver</button>
-                    <button class="btn btn-sm btn-success" onclick="exportarResultadosSheets('${p.id}')"><i class="fab fa-google"></i></button>` : ''}
-                    <button class="btn btn-sm btn-warning" onclick="borrarAsignaciones('${p.id}')"><i class="fas fa-eraser"></i> Limpiar</button>
+                <td class="col-semana"><strong>Semana</strong></td>
+                <td class="col-fechas">
+                    <span class="fecha-icon"><i class="far fa-calendar"></i></span>
+                    <span class="fecha-texto"><span class="fecha-rango">${rango}</span><small class="fecha-sub">${estado}</small></span>
+                </td>
+                <td class="col-acciones">
+                    ${asignados > 0 ? `<button class="btn btn-sm btn-primary" onclick="verAsignacion('${p.id}')" title="Ver"><i class="fas fa-eye"></i><span class="btn-label">Ver</span></button>
+                    <button class="btn btn-sm btn-success" onclick="exportarResultadosSheets('${p.id}')" title="Exportar a Sheets"><i class="fab fa-google"></i><span class="btn-label">Sheets</span></button>` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="borrarAsignaciones('${p.id}')" title="Limpiar"><i class="fas fa-eraser"></i><span class="btn-label">Limpiar</span></button>
                 </td>
             </tr>`;
         });
-    } catch { tbody.innerHTML = '<tr><td colspan="4">Error</td></tr>'; }
+    } catch { tbody.innerHTML = '<tr class="fila-estado"><td colspan="3">Error</td></tr>'; }
 }
 
 async function verAsignacion(semanaId) {
@@ -328,12 +335,13 @@ function mostrarResultados(data, semanaId) {
         }
     });
 
-    // Get all active conductors for the dropdowns
-    apiFetch('/api/conductores').then(cd => {
+    // Conductores para las listas y filas extra del programa (como en la plantilla)
+    Promise.all([
+        apiFetch('/api/conductores').catch(() => ({ conductores: [] })),
+        apiFetch(`/api/programa-semanal/${semanaId}/extras`).catch(() => ({ filas: [] }))
+    ]).then(([cd, ex]) => {
         window.__todosConductores = cd.conductores || [];
-        renderResultadosTable(data, inicio, getDateStr, dispMap, asignCount);
-    }).catch(() => {
-        window.__todosConductores = [];
+        window.__extrasResultados = normalizarExtras(ex.filas || []);
         renderResultadosTable(data, inicio, getDateStr, dispMap, asignCount);
     });
 }
@@ -342,7 +350,8 @@ function renderResultadosTable(data, inicio, getDateStr, dispMap, asignCount) {
     const container = document.getElementById('resultados-day-groups');
     if (!container) return;
     const grupos = {};
-    const FRANJA_ORDER = { 'Madrugada (6:30 AM)': 0, 'Mañana (8:20 AM)': 1, 'Tarde (6:20 PM)': 2, 'Domingo (10:20 AM)': 3 };
+    const FRANJA_ORDER = { 'Madrugada (6:30 AM)': 0, 'Mañana (8:20 AM)': 1, 'Mañana (8:50 AM)': 2, 'Tarde (6:20 PM)': 3, 'Domingo (10:20 AM)': 4 };
+    const extras = window.__extrasResultados || [];
     (data.resultados || []).forEach(r => {
         const d = r.dia || 'OTRO';
         if (!grupos[d]) grupos[d] = [];
@@ -351,19 +360,37 @@ function renderResultadosTable(data, inicio, getDateStr, dispMap, asignCount) {
     Object.values(grupos).forEach(arr => arr.sort((a, b) => (FRANJA_ORDER[a.hora] ?? 99) - (FRANJA_ORDER[b.hora] ?? 99)));
     const todosCond = window.__todosConductores || [];
 
-    let html = '<div class="table-container"><table class="table" style="font-size:0.75rem"><thead><tr><th style="padding:3px 6px;font-size:0.65rem">Día</th><th style="padding:3px 6px;font-size:0.65rem">Hora</th><th style="padding:3px 6px;font-size:0.65rem">Grupo</th><th style="padding:3px 6px;font-size:0.65rem">Territorio</th><th style="padding:3px 6px;font-size:0.65rem">P. Reunión</th><th style="padding:3px 6px;font-size:0.65rem">Conductor</th></tr></thead><tbody>';
+    let html = '<div class="table-container"><table class="table" id="resultados-table"><thead><tr>' +
+        '<th><i class="fa-regular fa-calendar"></i> Día</th>' +
+        '<th><i class="fa-regular fa-clock"></i> Hora</th>' +
+        '<th><i class="fa-solid fa-users"></i> Grupo</th>' +
+        '<th><i class="fa-solid fa-map-location-dot"></i> Territorio</th>' +
+        '<th><i class="fa-solid fa-location-dot"></i> P. Reunión</th>' +
+        '<th><i class="fa-solid fa-user-check"></i> Conductor</th>' +
+        '</tr></thead><tbody>';
     DIAS_ORDEN.forEach(dia => {
-        const items = grupos[dia] || grupos[dia.toUpperCase()] || [];
+        const turnosDia = grupos[dia] || grupos[dia.toUpperCase()] || [];
+        const extrasDia = extras.filter(e => e.dia === dia).sort((a, b) => (a.orden || 0) - (b.orden || 0));
+        const items = [
+            ...extrasDia.filter(e => (e.orden || 0) < 0).map(e => ({ extra: e })),
+            ...turnosDia,
+            ...extrasDia.filter(e => (e.orden || 0) >= 0).map(e => ({ extra: e }))
+        ];
         if (items.length === 0) return;
         items.forEach((r, i) => {
-            const color = DAY_COLORS[dia] || '#fff';
-            let diaCell = '';
-            if (items.length === 1) {
-                diaCell = `${capitalize(dia)} ${getDateStr(dia)}`;
-            } else if (i === 0) {
-                diaCell = capitalize(dia);
-            } else if (i === 1) {
-                diaCell = getDateStr(dia);
+            const diaCell = i === 0 ? diaBadgeHTML(dia, getDateStr(dia)) : '';
+            if (r.extra) {
+                // Fila informativa de la plantilla: no se asigna, se muestra igual que en el editor
+                const e = r.extra;
+                html += `<tr class="fila-extra-res" data-dia="${dia}">
+                <td class="dia-cell">${diaCell}</td>
+                <td>${e.hora || ''}</td>
+                <td>${GRUPO_LABEL[e.grupo] || e.grupo || ''}</td>
+                <td>${(e.territorio || '').trim()}</td>
+                <td>${(e.punto_reunion || '').trim()}</td>
+                <td>${(e.conductor || '').trim()}</td>
+            </tr>`;
+                return;
             }
             const selectedId = r.conductor_asignado?.id || '';
             const turnoDia = r.dia;
@@ -376,20 +403,80 @@ function renderResultadosTable(data, inicio, getDateStr, dispMap, asignCount) {
                 if (count > 0) label += ` (${count})`;
                 else if (!isDisp) label += ' (-99)';
                 const disabled = '';
-                return `<option value="${c.id}|${c.nombre}" ${sel} ${disabled}>${label}</option>`;
+                const clase = (count === 0 && !isDisp) ? ' class="op-no-disp"' : '';
+                return `<option value="${c.id}|${c.nombre}"${clase} ${sel} ${disabled}>${label}</option>`;
             }).join('');
-            html += `<tr class="${r.asignado ? '' : 'sin-asignar'}" style="background:${color}" data-turno-id="${r.turno_id}">
-                <td style="padding:1px 4px;border-bottom:1px solid #ddd;font-weight:${i <= 1 ? '600' : '400'}">${diaCell}</td>
-                <td style="padding:1px 4px;border-bottom:1px solid #ddd">${r.hora || ''}</td>
-                <td style="padding:1px 4px;border-bottom:1px solid #ddd">${r.grupo || ''}</td>
-                <td style="padding:1px 4px;border-bottom:1px solid #ddd">${r.territorio || '—'}</td>
-                <td style="padding:1px 4px;border-bottom:1px solid #ddd">${r.punto_reunion || '—'}</td>
-                <td style="padding:1px 4px;border-bottom:1px solid #ddd">${r.asignado ? `<select class="form-control cond-select" style="font-size:0.7rem;padding:2px 4px;height:auto;width:100%">${opts}</select>` : '<span class="text-danger">SIN ASIGNAR</span>'}</td>
+            html += `<tr class="${r.asignado ? '' : 'sin-asignar'}" data-dia="${dia}" data-turno-id="${r.turno_id}">
+                <td class="dia-cell">${diaCell}</td>
+                <td>${r.hora || ''}</td>
+                <td>${GRUPO_LABEL[r.grupo] || r.grupo || ''}</td>
+                <td>${r.territorio || '—'}</td>
+                <td>${r.punto_reunion || '—'}</td>
+                <td>${r.asignado
+                    ? `<select class="form-control cond-select">${opts}</select>`
+                    : `<select class="form-control cond-select cond-vacio"><option value="" class="op-vacio" selected>SIN ASIGNAR</option>${opts}</select>`}</td>
             </tr>`;
         });
     });
     html += '</tbody></table></div>';
     container.innerHTML = html;
+    marcarDiasResultados();
+    const cuerpo = container.querySelector('#resultados-table tbody');
+    if (cuerpo) prepararSelects(cuerpo);
+    if (!container.dataset.escuchaConductor) {
+        container.dataset.escuchaConductor = '1';
+        container.addEventListener('change', e => {
+            if (e.target.classList.contains('cond-select')) actualizarFilaConductor(e.target);
+        });
+    }
+}
+
+// Al elegir (o quitar) un conductor a mano: la fila deja de verse "sin asignar" y se recalculan los contadores
+function actualizarFilaConductor(select) {
+    const tr = select.closest('tr');
+    const vacio = !select.value;
+    tr?.classList.toggle('sin-asignar', vacio);
+    select.classList.toggle('cond-vacio', vacio);
+    const filas = [...document.querySelectorAll('#resultados-table tbody tr[data-turno-id]')];
+    const elegidos = filas.map(f => f.querySelector('.cond-select')?.value).filter(Boolean);
+    document.getElementById('stat-asignados').textContent = elegidos.length;
+    document.getElementById('stat-sin-asignar').textContent = filas.length - elegidos.length;
+    document.getElementById('stat-conductores').textContent = new Set(elegidos.map(v => v.split('|')[0])).size;
+}
+
+// Primera y última fila de cada día (barra de color y esquinas de la celda del día)
+function marcarDiasResultados() {
+    const vistos = new Set();
+    const ultima = {};
+    const filas = [...document.querySelectorAll('#resultados-table tbody tr[data-dia]')];
+    filas.forEach(tr => { ultima[tr.dataset.dia] = tr; });
+    filas.forEach(tr => {
+        if (!vistos.has(tr.dataset.dia)) { vistos.add(tr.dataset.dia); tr.dataset.diaLabel = '1'; }
+        if (ultima[tr.dataset.dia] === tr) tr.dataset.diaFin = 'true';
+    });
+}
+
+// Turnos con la celda libre (Territorio, texto libre) vacía. Las listas desplegables como P. Reunión no cuentan
+// y las filas extra tampoco: sus celdas vacías son a propósito.
+function turnosSinTerritorio() {
+    const inicio = parseLocalDate(window.__semanaData?.[window.__semanaActual]?.inicio);
+    const offsets = { LUNES: 0, MARTES: 1, MIERCOLES: 2, JUEVES: 3, VIERNES: 4, SABADO: 5, DOMINGO: 6 };
+    const vacio = t => { const v = (t || '').trim(); return v === '' || v === '—'; };
+    const filas = [];
+    document.querySelectorAll('#resultados-table tbody tr[data-turno-id]').forEach(tr => {
+        const celdas = tr.querySelectorAll('td');
+        if (!vacio(celdas[3]?.textContent)) return;
+        const dia = tr.dataset.dia;
+        let fecha = '';
+        if (inicio) {
+            const d = new Date(inicio);
+            d.setDate(d.getDate() + (offsets[dia] || 0));
+            fecha = ' ' + d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }).replace('.', '');
+        }
+        const grupo = celdas[2]?.textContent.trim();
+        filas.push(`${nombreDia(dia)}${fecha} · ${celdas[1]?.textContent.trim()}${grupo ? ' · ' + grupo : ''}`);
+    });
+    return filas;
 }
 
 async function confirmarAsignaciones() {
@@ -413,49 +500,60 @@ async function confirmarAsignaciones() {
     });
     if (asignaciones.length === 0) { showToast('No hay asignaciones para guardar', 'warning'); return; }
     asignaciones.forEach(a => { a.cantidad_semanal = condCount[a.conductor_id]; });
-    if (!confirm(`¿Guardar ${asignaciones.length} asignaciones?`)) return;
+    const ok = await confirmarModal({
+        titulo: '¿Guardar la asignación?',
+        mensaje: `Se guardarán ${asignaciones.length} asignaciones y la semana se exportará a Google Sheets en una hoja nueva.`,
+        textoConfirmar: 'Guardar y exportar',
+        icono: 'fa-floppy-disk',
+        advertencia: (() => {
+            const vacios = turnosSinTerritorio();
+            return vacios.length ? { titulo: `${vacios.length} ${vacios.length === 1 ? 'turno tiene' : 'turnos tienen'} el Territorio vacío:`, items: vacios } : null;
+        })()
+    });
+    if (!ok) return;
+
+    mostrarCargando('Guardando asignación…');
+    let exportacion = null;
+    let errorExportar = null;
     try {
         await apiFetch('/api/asignacion/confirmar', {
             method: 'POST',
             body: JSON.stringify({ semana_id: semanaId, asignaciones })
         });
-        showToast(`${asignaciones.length} asignaciones guardadas`, 'success');
         document.getElementById('card-resultados').style.display = 'none';
-        if (window.__editandoAsignacion) {
-            cargarAsignacionesExistentes(semanaId);
-        }
-        listarProgramasAsignacion();
-        loadSemanas();
-    } catch (err) { showToast(err.message || 'Error al guardar', 'error'); }
-}
-
-function exportarResultadosExcel() {
-    const data = window.__lastResultados;
-    if (!data) { showToast('Ejecuta una asignación primero', 'warning'); return; }
-    const rows = [['Día', 'Hora', 'Grupo', 'Territorio', 'Punto Reunión', 'Conductor']];
-    (data.resultados || []).forEach(r => {
-        rows.push([r.dia || '', r.hora || '', r.grupo || '', r.territorio || '', r.punto_reunion || '', r.asignado ? (r.conductor_asignado?.nombre || '') : 'SIN ASIGNAR']);
-    });
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'Asignacion');
-    XLSX.writeFile(wb, 'asignacion.xlsx');
-    showToast('Excel descargado', 'success');
+        mostrarCargando('Exportando a Google Sheets…');
+        try {
+            exportacion = await apiFetch('/api/asignacion/exportar-sheets', {
+                method: 'POST',
+                body: JSON.stringify({ semana_id: semanaId })
+            });
+        } catch (err) { errorExportar = err; }
+        if (window.__editandoAsignacion) await cargarAsignacionesExistentes(semanaId);
+        await Promise.all([listarProgramasAsignacion(), loadSemanas()]);
+    } catch (err) {
+        ocultarCargando();
+        showToast(err.message || 'Error al guardar', 'error');
+        return;
+    }
+    ocultarCargando();
+    showToast(`${asignaciones.length} asignaciones guardadas`, 'success');
+    if (exportacion) await mostrarModalSheet(exportacion, 'Asignación guardada');
+    else showToast(`Se guardó, pero no se pudo exportar a Google Sheets: ${errorExportar?.message || 'error desconocido'}`, 'error', 8000);
 }
 
 async function exportarResultadosSheets(semanaId) {
     if (!semanaId) semanaId = window.__semanaActual;
     if (!semanaId) { showToast('Selecciona una semana primero', 'warning'); return; }
+    mostrarCargando('Exportando a Google Sheets…');
     try {
         const res = await apiFetch('/api/asignacion/exportar-sheets', {
             method: 'POST',
             body: JSON.stringify({ semana_id: semanaId })
         });
-        showToast(`${res.mensaje} — ${res.url}`, 'success', 8000);
-        if (confirm(`¿Abrir "${res.sheetName}" en el navegador?`)) {
-            window.open(res.url, '_blank');
-        }
+        ocultarCargando();
+        await mostrarModalSheet(res, 'Exportación lista');
     } catch (err) {
+        ocultarCargando();
         showToast(err.message || 'Error al exportar', 'error');
     }
 }
@@ -568,7 +666,150 @@ const DAY_COLORS = {
     LUNES: '#fbe4d5', MARTES: '#e2efd9', MIERCOLES: '#deeaf6',
     JUEVES: '#fff2cc', VIERNES: '#ead1dc', SABADO: '#ffdfc0', DOMINGO: '#ffe599'
 };
-const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>';
+const MAS_BTN = '<button type="button" class="mas-btn" onclick="toggleMasAcciones(this)" title="Más acciones"><i class="fas fa-ellipsis-h"></i></button>'
+    + '<button type="button" class="fmt-btn" onclick="abrirFormatoFila(this)" title="Formato de celdas"><i class="fas fa-paintbrush"></i></button>';
+
+// ---- Formato por celda (alineación, negrita/cursiva/tachado, alineación vertical) ----
+// Se guarda en cada fila como { campo: { h, v, b, i, s } } y la exportación a Sheets lo respeta.
+const CAMPOS_FORMATO = [
+    { campo: 'hora', etiqueta: 'Hora', icono: 'fa-regular fa-clock' },
+    { campo: 'grupo', etiqueta: 'Grupo', icono: 'fa-solid fa-users' },
+    { campo: 'territorio', etiqueta: 'Territorio', icono: 'fa-solid fa-map-location-dot' },
+    { campo: 'punto_reunion', etiqueta: 'P. Reunión', icono: 'fa-solid fa-location-dot' },
+    { campo: 'conductor', etiqueta: 'Conductor', icono: 'fa-solid fa-user-check' }
+];
+const FORMATO_DEFECTO = { h: 'center', v: 'middle' }; // igual que la exportación actual
+
+function fmtAttr(formato) {
+    return encodeURIComponent(JSON.stringify(formato || {}));
+}
+
+function leerFormatoFila(tr) {
+    try { return JSON.parse(decodeURIComponent(tr?.dataset.formato || '%7B%7D')) || {}; } catch { return {}; }
+}
+
+// Quita lo que coincide con el formato por defecto para no guardar ruido
+function limpiarFormato(formato) {
+    const limpio = {};
+    Object.entries(formato || {}).forEach(([campo, f]) => {
+        const c = {};
+        if (f.h && f.h !== FORMATO_DEFECTO.h) c.h = f.h;
+        if (f.v && f.v !== FORMATO_DEFECTO.v) c.v = f.v;
+        ['b', 'i', 's'].forEach(k => { if (f[k]) c[k] = true; });
+        if (Object.keys(c).length) limpio[campo] = c;
+    });
+    return limpio;
+}
+
+// Vista previa en el editor (la celda Conductor solo existe en las filas libres)
+function aplicarFormatoFila(tr) {
+    const formato = leerFormatoFila(tr);
+    const celdas = tr.children;
+    const indice = { hora: 1, grupo: 2, territorio: 3, punto_reunion: 4, conductor: tr.classList.contains('extra-fila-row') ? 5 : -1 };
+    Object.entries(indice).forEach(([campo, i]) => {
+        const td = celdas[i];
+        if (!td || i < 0) return;
+        td.classList.remove('fmt-h-left', 'fmt-h-center', 'fmt-h-right', 'fmt-b', 'fmt-i', 'fmt-s');
+        const f = formato[campo];
+        if (!f) return;
+        if (f.h) td.classList.add(`fmt-h-${f.h}`);
+        ['b', 'i', 's'].forEach(k => { if (f[k]) td.classList.add(`fmt-${k}`); });
+    });
+    tr.classList.toggle('con-formato', Object.keys(formato).length > 0);
+}
+
+const ICONO_V = {
+    top: '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 3h12M10 17V7M6.5 10.5 10 7l3.5 3.5"/></svg>',
+    middle: '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 10h12M10 2v5M7.5 4.5 10 7l2.5-2.5M10 18v-5M7.5 15.5 10 13l2.5 2.5"/></svg>',
+    bottom: '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 17h12M10 3v10M6.5 9.5 10 13l3.5-3.5"/></svg>'
+};
+
+function abrirFormatoFila(btn) {
+    const tr = btn.closest('tr');
+    if (!tr) return;
+    tr.querySelector('td.abierto')?.classList.remove('abierto');
+    const borrador = JSON.parse(JSON.stringify(leerFormatoFila(tr)));
+    const esLibre = tr.classList.contains('extra-fila-row');
+    const hora = tr.querySelector('.turno-hora, .extra-fila-hora')?.value || '';
+    const grupoSel = tr.querySelector('.turno-grupo');
+    const grupo = grupoSel ? (GRUPO_LABEL[grupoSel.value] || grupoSel.value) : (tr.querySelector('.extra-fila-grupo')?.value || '');
+    let celda = 'territorio';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+        <div class="modal-content modal-confirm modal-formato" role="dialog" aria-modal="true">
+            <button type="button" class="modal-cerrar" data-accion="cancelar" aria-label="Cerrar">&times;</button>
+            <div class="modal-confirm-body">
+                <div class="modal-confirm-icon"><i class="fas fa-paintbrush"></i></div>
+                <h3>Formato de celdas</h3>
+                <p class="fmt-fila"></p>
+                <div class="fmt-celdas">${CAMPOS_FORMATO.map(c => `<button type="button" data-celda="${c.campo}"><i class="${c.icono}"></i><span>${c.etiqueta}</span></button>`).join('')}</div>
+                <div class="fmt-controles">
+                    <div class="fmt-grupo" title="Alineación horizontal">
+                        <button type="button" data-h="left" title="Izquierda"><i class="fas fa-align-left"></i></button>
+                        <button type="button" data-h="center" title="Centro"><i class="fas fa-align-center"></i></button>
+                        <button type="button" data-h="right" title="Derecha"><i class="fas fa-align-right"></i></button>
+                    </div>
+                    <div class="fmt-grupo" title="Estilo">
+                        <button type="button" data-t="b" title="Negrita"><i class="fas fa-bold"></i></button>
+                        <button type="button" data-t="i" title="Cursiva"><i class="fas fa-italic"></i></button>
+                        <button type="button" data-t="s" title="Tachado"><i class="fas fa-strikethrough"></i></button>
+                    </div>
+                    <div class="fmt-grupo" title="Alineación vertical">
+                        <button type="button" data-v="top" title="Arriba">${ICONO_V.top}</button>
+                        <button type="button" data-v="middle" title="Centro">${ICONO_V.middle}</button>
+                        <button type="button" data-v="bottom" title="Abajo">${ICONO_V.bottom}</button>
+                    </div>
+                </div>
+                <button type="button" class="fmt-reset" data-accion="reset"><i class="fas fa-rotate-left"></i> Formato por defecto en esta celda</button>
+                <p class="fmt-nota" hidden></p>
+            </div>
+            <div class="modal-confirm-actions">
+                <button type="button" class="btn btn-primary" data-accion="aplicar">Aplicar</button>
+                <button type="button" class="btn btn-secondary" data-accion="cancelar">Cancelar</button>
+            </div>
+        </div>`;
+    overlay.querySelector('.fmt-fila').textContent = [nombreDia(tr.dataset.dia), hora, grupo].filter(Boolean).join(' · ');
+
+    const pintar = () => {
+        const f = { ...FORMATO_DEFECTO, ...(borrador[celda] || {}) };
+        overlay.querySelectorAll('[data-celda]').forEach(b => {
+            b.classList.toggle('activo', b.dataset.celda === celda);
+            b.classList.toggle('con-formato', Object.keys(limpiarFormato({ [b.dataset.celda]: borrador[b.dataset.celda] || {} })).length > 0);
+        });
+        overlay.querySelectorAll('[data-h]').forEach(b => b.classList.toggle('activo', b.dataset.h === f.h));
+        overlay.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('activo', b.dataset.v === f.v));
+        overlay.querySelectorAll('[data-t]').forEach(b => b.classList.toggle('activo', !!f[b.dataset.t]));
+        const nota = overlay.querySelector('.fmt-nota');
+        nota.hidden = !(celda === 'conductor' && !esLibre);
+        nota.textContent = 'En este turno la celda Conductor es el nombre asignado; el formato se aplica al exportar.';
+    };
+    const editar = cambio => { borrador[celda] = { ...(borrador[celda] || {}), ...cambio }; pintar(); };
+
+    const cerrar = () => { document.removeEventListener('keydown', onKey); overlay.remove(); };
+    const onKey = e => { if (e.key === 'Escape') cerrar(); };
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) return cerrar();
+        const b = e.target.closest('button');
+        if (!b) return;
+        if (b.dataset.celda) { celda = b.dataset.celda; pintar(); }
+        else if (b.dataset.h) editar({ h: b.dataset.h });
+        else if (b.dataset.v) editar({ v: b.dataset.v });
+        else if (b.dataset.t) editar({ [b.dataset.t]: !(borrador[celda] || {})[b.dataset.t] });
+        else if (b.dataset.accion === 'reset') { delete borrador[celda]; pintar(); }
+        else if (b.dataset.accion === 'cancelar') cerrar();
+        else if (b.dataset.accion === 'aplicar') {
+            tr.dataset.formato = fmtAttr(limpiarFormato(borrador));
+            aplicarFormatoFila(tr);
+            cerrar();
+            showToast('Formato aplicado. Se guarda al guardar el programa.', 'success');
+        }
+    });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(overlay);
+    pintar();
+}
 
 // El turno "Domingo (10:20 AM)" solo existe en domingo, aunque se haya guardado en otro día
 // La fila extra "REUNION DE / FIN DE SEMANA" (8:30AM) abre el domingo, antes del turno de las 10:20
@@ -706,7 +947,7 @@ function renderTurnosDesdeDatos(turnos, extras) {
                 const optsP = opcionesPuntos().replace(`value="${t.punto_reunion || ''}"`, `value="${t.punto_reunion || ''}" selected`);
                 const optsM = MODALIDAD_OPTIONS.map(m => `<option value="${m}" ${t.modalidad === m ? 'selected' : ''}>${m}</option>`).join('');
                 const CELL = 'padding:1px 2px;border-bottom:1px solid #ddd';
-                html += `<tr class="programa-row" data-dia="${dia}" style="background:${color}">
+                html += `<tr class="programa-row" data-dia="${dia}" data-formato="${fmtAttr(t.formato)}" style="background:${color}">
                     <td class="dia-cell" style="${CELL};font-weight:600;font-size:0.7rem">${diaCell}</td>
                     <td style="${CELL}"><select class="form-control turno-hora" style="${COMPACT_STYLE}">${optsH}</select></td>
                     <td style="${CELL}"><select class="form-control turno-grupo" style="${COMPACT_STYLE}">${optsG}</select></td>
@@ -723,7 +964,7 @@ function renderTurnosDesdeDatos(turnos, extras) {
             } else {
                 const e = item.datos;
                 const inp = (val, cls, ph, w) => `<input type="text" class="${cls}" placeholder="${ph}" style="width:${w};border:1px solid #ddd;border-radius:3px;padding:2px 4px;font-size:0.7rem" value="${val || ''}">`;
-                html += `<tr class="extra-fila-row" data-dia="${dia}" data-antes="${(e.orden || 0) < 0 ? 'true' : 'false'}" style="background:${color}">
+                html += `<tr class="extra-fila-row" data-dia="${dia}" data-antes="${(e.orden || 0) < 0 ? 'true' : 'false'}" data-formato="${fmtAttr(e.formato)}" style="background:${color}">
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc"></td>
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(e.hora, 'extra-fila-hora', 'Hora', '70px')}</td>
                     <td style="padding:2px 6px;border-bottom:1px dashed #ccc">${inp(e.grupo, 'extra-fila-grupo', 'Grupo', '100%')}</td>
@@ -760,6 +1001,7 @@ function agregarFilaTurno(dia, datos, refRow) {
 
     const tr = document.createElement('tr');
     tr.className = 'programa-row';
+    tr.dataset.formato = fmtAttr(d.formato);
     tr.dataset.dia = dia;
     tr.style.background = color;
     tr.innerHTML = `
@@ -791,6 +1033,7 @@ function agregarFilaExtra(dia, datos, alInicio, refRow) {
     const esBefore = alInicio === true || alInicio === 'before';
     const tr = document.createElement('tr');
     tr.className = 'extra-fila-row';
+    tr.dataset.formato = fmtAttr(d.formato);
     tr.dataset.dia = dia;
     tr.dataset.antes = esBefore ? 'true' : 'false';
     tr.style.background = color;
@@ -915,6 +1158,7 @@ function refrescarVistaTurnos() {
     const tbody = document.querySelector('#programa-table tbody');
     if (!container || !tbody) return;
     prepararSelects(tbody);
+    tbody.querySelectorAll('tr[data-dia]').forEach(aplicarFormatoFila);
     container.dataset.vista = vistaTurnos;
 
     const inicio = parseLocalDate(document.getElementById('prog-semana-inicio')?.value);
@@ -994,7 +1238,8 @@ async function guardarPrograma(e) {
                 grupo,
                 territorio: row.querySelector('.turno-territorio')?.value || null,
                 punto_reunion: row.querySelector('.turno-punto')?.value || null,
-                modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO'
+                modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO',
+                formato: leerFormatoFila(row)
             });
         });
         if (turnos.length === 0) { showToast('Completa al menos un turno (selecciona grupo)', 'warning'); return; }
@@ -1008,7 +1253,8 @@ async function guardarPrograma(e) {
                 territorio: row.querySelector('.extra-fila-territorio')?.value || '',
                 punto_reunion: row.querySelector('.extra-fila-punto')?.value || '',
                 conductor: row.querySelector('.extra-fila-conductor')?.value || '',
-                orden: row.dataset.antes === 'true' ? -1 : 0
+                orden: row.dataset.antes === 'true' ? -1 : 0,
+                formato: leerFormatoFila(row)
             });
         });
 
@@ -1090,6 +1336,8 @@ async function loadPlantilla() {
     document.getElementById('edit-banner').style.display = 'none';
     const cancelBtn = document.getElementById('btn-cancelar-edicion');
     if (cancelBtn) cancelBtn.style.display = 'none';
+    const menuWrap = document.getElementById('menu-programa-wrap');
+    if (menuWrap) menuWrap.style.display = 'none';
     const rstBtn = document.getElementById('btn-restablecer-plantilla');
     if (rstBtn) rstBtn.style.display = 'none';
 
@@ -1128,25 +1376,72 @@ async function restablecerPlantilla() {
     } catch (err) { showToast(err.message || 'Error', 'error'); }
 }
 
-function confirmarModal({ titulo, mensaje, textoConfirmar = 'Confirmar', peligro = false, icono = 'fa-question-circle', espera = 0, alternativa = null }) {
+// Pantalla de carga que cubre todo y no deja tocar nada hasta que termina
+function mostrarCargando(texto) {
+    let el = document.getElementById('cargando-overlay');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'cargando-overlay';
+        el.className = 'cargando-overlay';
+        el.setAttribute('role', 'alert');
+        el.setAttribute('aria-busy', 'true');
+        el.innerHTML = '<div class="cargando-spinner"></div><div class="cargando-texto"></div>';
+        document.body.appendChild(el);
+    }
+    el.querySelector('.cargando-texto').textContent = texto || 'Cargando…';
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+
+function ocultarCargando() {
+    document.getElementById('cargando-overlay')?.remove();
+}
+
+// Modal con enlaces directos al Sheet y a la hoja recién creada
+async function mostrarModalSheet(res, titulo) {
+    const eleccion = await confirmarModal({
+        titulo,
+        mensaje: `Se creó la hoja "${res.sheetName}" en Google Sheets.`,
+        textoConfirmar: 'Ir a la hoja',
+        icono: 'fa-table',
+        exito: true,
+        cerrable: true,
+        alternativa: { texto: 'Ir al Sheet', icono: 'fa-arrow-up-right-from-square', secundario: true }
+    });
+    if (eleccion === true) window.open(res.urlHoja || res.url, '_blank');
+    else if (eleccion === 'alternativa') window.open(res.url, '_blank');
+}
+
+function confirmarModal({ titulo, mensaje, textoConfirmar = 'Confirmar', peligro = false, icono = 'fa-question-circle', espera = 0, alternativa = null, exito = false, cerrable = false, advertencia = null }) {
     // Resuelve true (confirmar), 'alternativa' o false (cancelar)
     return new Promise(resolve => {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
         overlay.innerHTML = `
             <div class="modal-content modal-confirm" role="dialog" aria-modal="true">
+                ${cerrable ? '<button type="button" class="modal-cerrar" data-accion="cancelar" aria-label="Cerrar">&times;</button>' : ''}
                 <div class="modal-confirm-body">
-                    <div class="modal-confirm-icon ${peligro ? 'peligro' : ''}"><i class="fas ${icono}"></i></div>
+                    <div class="modal-confirm-icon ${peligro ? 'peligro' : ''} ${exito ? 'exito' : ''}"><i class="fas ${icono}"></i></div>
                     <h3></h3>
                     <p></p>
+                    <div class="modal-aviso" hidden><strong></strong><ul></ul></div>
                 </div>
                 <div class="modal-confirm-actions">
                     <button type="button" class="btn ${peligro ? 'btn-danger' : 'btn-primary'}" data-accion="confirmar"></button>
-                    <button type="button" class="btn ${alternativa ? 'btn-primary' : 'btn-secondary'}" data-accion="${alternativa ? 'alternativa' : 'cancelar'}"></button>
+                    <button type="button" class="btn ${alternativa && !alternativa.secundario ? 'btn-primary' : 'btn-secondary'}" data-accion="${alternativa ? 'alternativa' : 'cancelar'}"></button>
                 </div>
             </div>`;
         overlay.querySelector('h3').textContent = titulo;
         overlay.querySelector('p').textContent = mensaje;
+        if (advertencia && (advertencia.items || []).length) {
+            const aviso = overlay.querySelector('.modal-aviso');
+            aviso.hidden = false;
+            aviso.querySelector('strong').textContent = advertencia.titulo;
+            advertencia.items.forEach(t => {
+                const li = document.createElement('li');
+                li.textContent = t;
+                aviso.querySelector('ul').appendChild(li);
+            });
+        }
         const btnConfirmar = overlay.querySelector('[data-accion="confirmar"]');
         const btnOtro = overlay.querySelector('.modal-confirm-actions .btn:last-child');
         btnOtro.innerHTML = alternativa ? `<i class="fas ${alternativa.icono || 'fa-edit'}"></i> ` : '';
@@ -1252,24 +1547,144 @@ async function editarPrograma(id) {
                 grupo: t.grupo,
                 territorio: t.territorio,
                 punto_reunion: t.punto_reunion,
-                modalidad: t.modalidad
+                modalidad: t.modalidad,
+                formato: t.formato
             });
         });
 
         const extras = normalizarExtras(prog.filas_extra);
         extras.filter(f => (f.orden ?? 0) < 0).forEach(f => {
-            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor }, true);
+            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor, formato: f.formato }, true);
         });
         extras.filter(f => (f.orden ?? 0) >= 0).forEach(f => {
-            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor });
+            agregarFilaExtra(f.dia, { hora: f.hora, grupo: f.grupo, territorio: f.territorio, punto_reunion: f.punto_reunion, conductor: f.conductor, formato: f.formato });
         });
 
         const submitBtn = document.querySelector('#programa-actions button[type="submit"] .btn-text');
         if (submitBtn) submitBtn.textContent = 'Actualizar Programa';
         const cancelBtn = document.getElementById('btn-cancelar-edicion');
         if (cancelBtn) cancelBtn.style.display = 'inline-block';
+        const menuWrap = document.getElementById('menu-programa-wrap');
+        if (menuWrap) menuWrap.style.display = 'inline-block';
         showToast('Editando programa — modifica los turnos y guarda', 'info');
     } catch (err) { showToast(err.message || 'Error al cargar programa', 'error'); }
+}
+
+function toggleMenuPrograma(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('menu-programa');
+    if (!menu) return;
+    menu.hidden = !menu.hidden;
+    if (menu.hidden) return;
+    // se ancla al lado que tenga espacio para no salirse de la pantalla
+    menu.style.left = 'auto';
+    menu.style.right = '0';
+    if (menu.getBoundingClientRect().left < 8) { menu.style.left = '0'; menu.style.right = 'auto'; }
+}
+
+document.addEventListener('click', () => {
+    const menu = document.getElementById('menu-programa');
+    if (menu) menu.hidden = true;
+});
+
+// Filas del editor tal como están ahora en pantalla
+function leerFilasEditor() {
+    const turnos = [...document.querySelectorAll('#programa-table tbody tr.programa-row[data-dia]')].map(row => ({
+        dia: row.dataset.dia,
+        hora: row.querySelector('.turno-hora')?.value || '',
+        grupo: row.querySelector('.turno-grupo')?.value || '',
+        territorio: row.querySelector('.turno-territorio')?.value || '',
+        punto_reunion: row.querySelector('.turno-punto')?.value || '',
+        modalidad: row.querySelector('.turno-modalidad')?.value || 'FISICO',
+        formato: leerFormatoFila(row)
+    }));
+    const extras = [...document.querySelectorAll('#programa-table tbody tr.extra-fila-row')].map(row => ({
+        dia: row.dataset.dia,
+        hora: row.querySelector('.extra-fila-hora')?.value || '',
+        grupo: row.querySelector('.extra-fila-grupo')?.value || '',
+        territorio: row.querySelector('.extra-fila-territorio')?.value || '',
+        punto_reunion: row.querySelector('.extra-fila-punto')?.value || '',
+        conductor: row.querySelector('.extra-fila-conductor')?.value || '',
+        orden: row.dataset.antes === 'true' ? -1 : 0,
+        formato: leerFormatoFila(row)
+    }));
+    return { turnos, extras };
+}
+
+// Estructura de la plantilla; en cada celda gana la plantilla si tiene información y,
+// si está vacía, se conserva lo que ya tenía el programa en esa misma fila.
+function combinarConPlantilla(actual, plantillaTurnos, plantillaExtras) {
+    const vacio = v => v == null || String(v).trim() === '';
+    const gana = (tpl, prog) => (vacio(tpl) ? (prog ?? tpl) : tpl);
+    const usados = {};
+    const siguiente = (mapa, clave) => {
+        const lista = mapa[clave] || [];
+        const n = usados[clave] || 0;
+        usados[clave] = n + 1;
+        return lista[n];
+    };
+    const indexar = (filas, clave) => filas.reduce((m, f) => { (m[clave(f)] = m[clave(f)] || []).push(f); return m; }, {});
+
+    const progTurnos = indexar(actual.turnos, t => `T|${t.dia}|${t.hora}|${t.grupo}`);
+    const turnos = plantillaTurnos.map(t => {
+        const dia = diaDeTurno(t);
+        const p = siguiente(progTurnos, `T|${dia}|${t.hora}|${t.grupo}`);
+        return {
+            ...t,
+            dia,
+            territorio: gana(t.territorio, p?.territorio),
+            punto_reunion: gana(t.punto_reunion, p?.punto_reunion),
+            // FISICO es el valor por defecto: solo gana la plantilla si indica otra modalidad
+            modalidad: (t.modalidad && t.modalidad !== 'FISICO') ? t.modalidad : (p?.modalidad || t.modalidad || 'FISICO'),
+            formato: { ...(p?.formato || {}), ...(t.formato || {}) }
+        };
+    });
+
+    const lado = e => ((e.orden || 0) < 0 ? 'antes' : 'despues');
+    const progExtras = indexar(actual.extras, e => `E|${e.dia}|${lado(e)}`);
+    const extras = normalizarExtras(plantillaExtras).map(e => {
+        const p = siguiente(progExtras, `E|${e.dia}|${lado(e)}`);
+        return {
+            ...e,
+            hora: gana(e.hora, p?.hora),
+            grupo: gana(e.grupo, p?.grupo),
+            territorio: gana(e.territorio, p?.territorio),
+            punto_reunion: gana(e.punto_reunion, p?.punto_reunion),
+            conductor: gana(e.conductor, p?.conductor),
+            formato: { ...(p?.formato || {}), ...(e.formato || {}) }
+        };
+    });
+    return { turnos, extras };
+}
+
+async function actualizarConPlantilla() {
+    const menu = document.getElementById('menu-programa');
+    if (menu) menu.hidden = true;
+    if (!editandoProgramaId || modoPlantilla) return;
+    const ok = await confirmarModal({
+        titulo: '¿Actualizar con la plantilla?',
+        mensaje: 'Las filas del programa se ajustan a las de la plantilla actual: las filas que la plantilla no tiene se quitan y las nuevas se agregan. '
+            + 'En cada celda gana la plantilla si tiene información; si está vacía en la plantilla, se conserva lo que ya tiene el programa. '
+            + 'El cambio se aplica al tocar Actualizar Programa y, como al guardar cualquier edición, habrá que volver a ejecutar la asignación de conductores de esta semana.',
+        textoConfirmar: 'Actualizar filas',
+        peligro: true,
+        icono: 'fa-file-import'
+    });
+    if (!ok) return;
+    try {
+        const d = await apiFetch('/api/programa-semanal/plantilla');
+        const prog = d.programa;
+        if (prog && (prog.programa_semanal_turnos || []).length > 0) {
+            const { turnos, extras } = combinarConPlantilla(leerFilasEditor(), prog.programa_semanal_turnos, prog.filas_extra || []);
+            renderTurnosDesdeDatos(turnos, extras);
+        } else {
+            showToast('La plantilla no tiene filas; no se cambió nada', 'warning');
+            return;
+        }
+        showToast('Filas actualizadas con la plantilla. Toca Actualizar Programa para guardar.', 'success');
+    } catch (err) {
+        showToast(err.message || 'No se pudo cargar la plantilla', 'error');
+    }
 }
 
 function cancelarEdicionPrograma() {
@@ -1286,6 +1701,8 @@ function cancelarEdicionPrograma() {
     if (submitText) submitText.textContent = 'Guardar Programa';
     const cancelBtn = document.getElementById('btn-cancelar-edicion');
     if (cancelBtn) cancelBtn.style.display = 'none';
+    const menuWrap = document.getElementById('menu-programa-wrap');
+    if (menuWrap) menuWrap.style.display = 'none';
     const resetBtn = document.getElementById('btn-restablecer-plantilla');
     if (resetBtn) resetBtn.style.display = 'none';
     const progCards = document.querySelectorAll('#tab-programa > .card');
@@ -1965,10 +2382,6 @@ function bindFormEvents() {
     if (btnEjecutar) btnEjecutar.addEventListener('click', ejecutarAsignacion);
     const selSemana = document.getElementById('sel-semana');
     if (selSemana) selSemana.addEventListener('change', () => verAsignacion(selSemana.value));
-    const btnExcel = document.getElementById('btn-exportar-excel');
-    if (btnExcel) btnExcel.addEventListener('click', exportarResultadosExcel);
-    const btnSheets = document.getElementById('btn-exportar-sheets');
-    if (btnSheets) btnSheets.addEventListener('click', () => exportarResultadosSheets(window.__semanaActual));
     const formProg = document.getElementById('form-programa');
     if (formProg) formProg.addEventListener('submit', guardarPrograma);
     const formCond = document.getElementById('form-conductor');
