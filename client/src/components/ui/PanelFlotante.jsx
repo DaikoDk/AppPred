@@ -65,13 +65,13 @@ export default function PanelFlotante({
 
     return createPortal(
         <>
-            <div className="fixed inset-0 z-40" onMouseDown={onCerrar} />
+            <div className="fixed inset-0 z-[9090]" onMouseDown={onCerrar} />
             <div
                 ref={panel}
                 role={rol}
                 aria-label={etiqueta}
                 style={estilo}
-                className={`tw fixed z-50 flex animate-sube flex-col rounded-xl border border-line bg-surface p-1 shadow-[0_16px_40px_rgba(24,24,24,0.16)] ${className}`}
+                className={`tw fixed z-[9100] flex animate-sube flex-col rounded-xl border border-line bg-surface p-1 shadow-[0_16px_40px_rgba(24,24,24,0.16)] ${className}`}
             >
                 {children}
             </div>
