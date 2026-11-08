@@ -13,6 +13,7 @@ import {
     X
 } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
+import CampoFecha from '../../components/ui/CampoFecha.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { finDeSemana, formatDate } from '../../utils/fechas.js';
@@ -51,15 +52,6 @@ async function filasDeLaPlantilla() {
     }
     return filasPorDefecto();
 }
-
-/** Abre el calendario al tocar el campo de fecha, como en la app anterior. @param {import('react').MouseEvent<HTMLInputElement>} e */
-const abrirCalendario = (e) => {
-    try {
-        e.currentTarget.showPicker();
-    } catch {
-        // navegador sin showPicker
-    }
-};
 
 /**
  * Pestañas Programa y Plantilla: comparten formulario y editor, como en la app anterior.
@@ -240,6 +232,10 @@ export default function PaginaPrograma({ modo }) {
     /** @param {import('react').FormEvent} e */
     const guardar = async (e) => {
         e.preventDefault();
+        if (!inicio || !fin) {
+            toast('Elige la semana de inicio y la de fin', 'warning');
+            return;
+        }
         const cuerpo = cuerpoParaGuardar(filas);
         if (cuerpo.turnos.length === 0) {
             toast('Completa al menos un turno (selecciona grupo)', 'warning');
@@ -291,9 +287,6 @@ export default function PaginaPrograma({ modo }) {
     ) : (
         'Nuevo Programa Semanal'
     );
-    // Calendario nativo con ícono atenuado y cifras tabulares; el borde reacciona al pasar el cursor y al enfocar
-    const CAMPO_FECHA =
-        'body-6 w-full cursor-pointer rounded-lg border border-line bg-surface px-3 py-2 text-ink tabular-nums outline-none transition-[border-color] duration-300 ease-skill hover:border-ink/30 focus-visible:border-primary [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-calendar-picker-indicator]:transition-opacity [&::-webkit-calendar-picker-indicator]:duration-300 hover:[&::-webkit-calendar-picker-indicator]:opacity-100';
     const ETIQUETA_FECHA = 'title-4 mb-1 flex items-center gap-1 text-ink';
 
     return (
@@ -308,36 +301,25 @@ export default function PaginaPrograma({ modo }) {
                 <div className="p-4">
                     <form id="form-programa" onSubmit={guardar}>
                         <div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
-                            <label className="block">
+                            <div className="block min-w-0">
                                 <span className={ETIQUETA_FECHA}>
                                     <CalendarBlank size={16} aria-hidden="true" />
                                     Semana Inicio
                                 </span>
-                                <input
-                                    type="date"
+                                <CampoFecha
                                     id="prog-semana-inicio"
-                                    className={CAMPO_FECHA}
-                                    required
-                                    value={inicio}
-                                    onClick={abrirCalendario}
-                                    onChange={(e) => cambiarInicio(e.target.value)}
+                                    rotulo="Semana Inicio"
+                                    valor={inicio}
+                                    onCambiar={cambiarInicio}
                                 />
-                            </label>
-                            <label className="block">
+                            </div>
+                            <div className="block min-w-0">
                                 <span className={ETIQUETA_FECHA}>
                                     <CalendarBlank size={16} aria-hidden="true" />
                                     Semana Fin
                                 </span>
-                                <input
-                                    type="date"
-                                    id="prog-semana-fin"
-                                    className={CAMPO_FECHA}
-                                    required
-                                    value={fin}
-                                    onClick={abrirCalendario}
-                                    onChange={(e) => setFin(e.target.value)}
-                                />
-                            </label>
+                                <CampoFecha id="prog-semana-fin" rotulo="Semana Fin" valor={fin} onCambiar={setFin} />
+                            </div>
                             <Boton
                                 id="btn-empezar-programa"
                                 variante="exito"
