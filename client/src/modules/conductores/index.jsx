@@ -114,7 +114,8 @@ export default function Conductores() {
         <div className={RAIZ}>
             <FormConductor onGuardar={crear} />
 
-            <section className={enEdicion ? `${TARJETA} border-editando` : TARJETA}>
+            {/* En edición el borde cambia de color: no se combina con border-line (ambas fijan el color del borde) */}
+            <section className={enEdicion ? 'rounded-3xl border border-editando bg-surface' : TARJETA}>
                 <EncabezadoTarjeta
                     icono={Table}
                     titulo={
