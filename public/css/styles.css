@@ -1242,9 +1242,6 @@ body {
         font-size: 10px;
     }
 
-    .table-programas .col-turnos {
-        flex-shrink: 0;
-    }
 
     .table-programas .col-acciones {
         flex-shrink: 0;
