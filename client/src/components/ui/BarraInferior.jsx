@@ -13,7 +13,7 @@ import PanelFlotante from './PanelFlotante.jsx';
  * }} Seccion
  */
 
-// La barra se ancla con svh (alto visible sin la barra del navegador): con bottom-0 quedaba detrás de la de Brave en Android
+// La barra se ancla con dvh (alto visible que cambia cuando el navegador muestra u oculta su barra): con bottom-0 quedaba detrás de la de Brave en Android
 // Cada celda ocupa lo mismo; el texto corto cabe en 390 px con cuatro secciones y "Más"
 const CELDA =
     'no-underline flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg py-2 outline-none transition-[color] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary';
@@ -32,7 +32,7 @@ export default function BarraInferior({ barra, mas }) {
     return (
         <nav
             aria-label="Secciones de Hoja de Predicación"
-            className="tw fixed inset-x-0 top-[calc(100svh-4rem)] z-30 flex h-16 gap-1 border-t border-primary-dark bg-primary px-2 py-1 sm:hidden"
+            className="tw fixed inset-x-0 top-[calc(100dvh-4rem)] z-30 flex h-16 gap-1 border-t border-primary-dark bg-primary px-2 py-1 sm:hidden"
         >
             {barra.map((s) => {
                 const Icono = s.icono;
