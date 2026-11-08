@@ -1787,7 +1787,7 @@ body {
 /* Editor de turnos en escritorio: tabla integrada tipo hoja de cálculo */
 @media (min-width: 769px) {
     #tab-programa {
-        max-width: 1560px;
+        max-width: 1244px;
         margin: 0 auto;
     }
 
