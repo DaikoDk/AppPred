@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Table } from '@phosphor-icons/react';
+import Modal from '../../components/ui/Modal.jsx';
+import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { CUERPO, RAIZ, TARJETA } from '../../components/ui/estilos.js';
 import { useToast } from '../../components/ui/Toast.jsx';
@@ -30,6 +32,8 @@ export default function Conductores() {
     // Panel de disponibilidad abierto; `version` fuerza a recargar el panel desde el servidor
     const [enEdicion, setEnEdicion] = useState(false);
     const [nuevoAbierto, setNuevoAbierto] = useState(false);
+    // En escritorio la disponibilidad va en una tarjeta; en móvil, en una ventana al tocar "Disponibilidad"
+    const escritorio = useMediaQuery('(min-width: 640px)');
     const [panel, setPanel] = useState(
         /** @type {{ conductor: Conductor, slots: DisponibilidadSlot[], version: number } | null} */ (null)
     );
@@ -100,37 +104,39 @@ export default function Conductores() {
     return (
         <div className={RAIZ}>
             {/* En edición el borde cambia de color: no se combina con border-line (ambas fijan el color del borde) */}
-            <section className={enEdicion ? 'rounded-3xl border border-editando bg-surface' : TARJETA}>
-                <EncabezadoTarjeta
-                    icono={Table}
-                    titulo={
-                        enEdicion ? (
-                            <>
-                                Disponibilidad por Conductor <span className="text-warn">| Editando</span>
-                            </>
+            {escritorio && (
+                <section className={enEdicion ? 'rounded-3xl border border-editando bg-surface' : TARJETA}>
+                    <EncabezadoTarjeta
+                        icono={Table}
+                        titulo={
+                            enEdicion ? (
+                                <>
+                                    Disponibilidad por Conductor <span className="text-warn">| Editando</span>
+                                </>
+                            ) : (
+                                'Disponibilidad por Conductor'
+                            )
+                        }
+                    />
+                    <div className={CUERPO}>
+                        {panel ? (
+                            <Disponibilidad
+                                key={`${panel.conductor.id}-${panel.version}`}
+                                conductor={panel.conductor}
+                                inicial={panel.slots}
+                                onGuardar={guardarPanel}
+                                onCancelarEdicion={() => abrirDisponibilidad(panel.conductor.id)}
+                                onCerrar={() => setPanel(null)}
+                                onEditando={setEnEdicion}
+                            />
                         ) : (
-                            'Disponibilidad por Conductor'
-                        )
-                    }
-                />
-                <div className={CUERPO}>
-                    {panel ? (
-                        <Disponibilidad
-                            key={`${panel.conductor.id}-${panel.version}`}
-                            conductor={panel.conductor}
-                            inicial={panel.slots}
-                            onGuardar={guardarPanel}
-                            onCancelarEdicion={() => abrirDisponibilidad(panel.conductor.id)}
-                            onCerrar={() => setPanel(null)}
-                            onEditando={setEnEdicion}
-                        />
-                    ) : (
-                        <p className="body-6 text-muted">
-                            Selecciona un conductor y haz clic en &quot;Disponibilidad&quot; para editar sus slots.
-                        </p>
-                    )}
-                </div>
-            </section>
+                            <p className="body-6 text-muted">
+                                Selecciona un conductor y haz clic en &quot;Disponibilidad&quot; para editar sus slots.
+                            </p>
+                        )}
+                    </div>
+                </section>
+            )}
 
             <ListaConductores
                 conductores={conductores}
@@ -139,6 +145,23 @@ export default function Conductores() {
                 onDesactivar={desactivar}
                 onNuevo={() => setNuevoAbierto(true)}
             />
+
+            {!escritorio && panel && (
+                <Modal
+                    titulo={enEdicion ? 'Disponibilidad · Editando' : 'Disponibilidad por Conductor'}
+                    onCerrar={() => setPanel(null)}
+                >
+                    <Disponibilidad
+                        key={`${panel.conductor.id}-${panel.version}`}
+                        conductor={panel.conductor}
+                        inicial={panel.slots}
+                        onGuardar={guardarPanel}
+                        onCancelarEdicion={() => abrirDisponibilidad(panel.conductor.id)}
+                        onCerrar={() => setPanel(null)}
+                        onEditando={setEnEdicion}
+                    />
+                </Modal>
+            )}
 
             {nuevoAbierto && (
                 <ModalNuevoConductor
