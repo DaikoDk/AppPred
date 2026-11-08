@@ -57,7 +57,7 @@ export default function Layout() {
                 <div className="page-content">
                     <Outlet context={{ slotBarra }} />
                 </div>
-                <div ref={setSlotBarra} className="sticky bottom-0 z-30 sm:hidden" />
+                <div ref={setSlotBarra} className="sticky bottom-0 z-30 shrink-0 sm:hidden" />
             </main>
         </div>
     );

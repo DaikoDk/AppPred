@@ -1,4 +1,3 @@
-import IndicadorCarga from '../ui/IndicadorCarga.jsx';
 import { useSesion } from '../../hooks/useSesion.jsx';
 
 /**
@@ -8,7 +7,7 @@ export default function TopBar({ titulo, onAlternarSidebar }) {
     const { usuario } = useSesion();
     const nombre = usuario?.nombre || usuario?.email || 'Usuario';
     return (
-        <header className="top-bar">
+        <header className="top-bar shrink-0 max-sm:h-16">
             <div className="top-bar-left">
                 <button type="button" className="btn-toggle-sidebar" onClick={onAlternarSidebar}>
                     <i className="fas fa-bars"></i>
@@ -23,7 +22,6 @@ export default function TopBar({ titulo, onAlternarSidebar }) {
                     </div>
                 </div>
             </div>
-            <IndicadorCarga />
         </header>
     );
 }
