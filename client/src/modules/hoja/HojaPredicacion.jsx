@@ -13,7 +13,7 @@ export default function HojaPredicacion() {
     const items = PESTANAS_HOJA.filter((p) => !p.soloSuperAdmin || esSuperAdmin);
     return (
         <>
-            <div className="tw sticky top-[76px] z-20 mx-auto mb-6 w-full max-w-[1244px] bg-canvas">
+            <div className="tw sticky top-[76px] z-20 mx-auto -mt-8 mb-6 w-full max-w-[1244px] bg-[#f5f7fa] pt-8">
                 <Pestanas items={items} etiqueta="Secciones de Hoja de Predicación" />
             </div>
             <Outlet />
