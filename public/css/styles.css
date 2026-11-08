@@ -2797,9 +2797,26 @@ body {
     color: #dc2626;
 }
 
-#resultados-table tbody tr.sin-asignar td:last-child {
-    padding: 0 0.5rem;
+/* "SIN ASIGNAR" resaltado solo en la celda; la lista desplegable no hereda negrita ni color */
+#resultados-table select.cond-select.cond-vacio > button,
+#resultados-table select.cond-select.cond-vacio selectedcontent {
+    color: #dc2626;
     font-weight: 700;
+}
+
+@supports not (appearance: base-select) {
+    #resultados-table select.cond-select.cond-vacio {
+        color: #dc2626;
+        font-weight: 700;
+    }
+}
+
+#resultados-table select.cond-select option {
+    font-weight: 500;
+}
+
+#resultados-table select.cond-select option.op-vacio {
+    color: #dc2626;
 }
 
 #resultados-table select.cond-select {
@@ -3100,7 +3117,7 @@ body {
     #resultados-table select.cond-select option:checked {
         background: #eff6ff;
         color: #1d4ed8;
-        font-weight: 600;
+        font-weight: 500;
     }
 
     #resultados-table select.cond-select option.op-no-disp {

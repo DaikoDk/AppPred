@@ -412,7 +412,9 @@ function renderResultadosTable(data, inicio, getDateStr, dispMap, asignCount) {
                 <td>${GRUPO_LABEL[r.grupo] || r.grupo || ''}</td>
                 <td>${r.territorio || '—'}</td>
                 <td>${r.punto_reunion || '—'}</td>
-                <td>${r.asignado ? `<select class="form-control cond-select">${opts}</select>` : '<span class="text-danger">SIN ASIGNAR</span>'}</td>
+                <td>${r.asignado
+                    ? `<select class="form-control cond-select">${opts}</select>`
+                    : `<select class="form-control cond-select cond-vacio"><option value="" class="op-vacio" selected>SIN ASIGNAR</option>${opts}</select>`}</td>
             </tr>`;
         });
     });
@@ -421,6 +423,25 @@ function renderResultadosTable(data, inicio, getDateStr, dispMap, asignCount) {
     marcarDiasResultados();
     const cuerpo = container.querySelector('#resultados-table tbody');
     if (cuerpo) prepararSelects(cuerpo);
+    if (!container.dataset.escuchaConductor) {
+        container.dataset.escuchaConductor = '1';
+        container.addEventListener('change', e => {
+            if (e.target.classList.contains('cond-select')) actualizarFilaConductor(e.target);
+        });
+    }
+}
+
+// Al elegir (o quitar) un conductor a mano: la fila deja de verse "sin asignar" y se recalculan los contadores
+function actualizarFilaConductor(select) {
+    const tr = select.closest('tr');
+    const vacio = !select.value;
+    tr?.classList.toggle('sin-asignar', vacio);
+    select.classList.toggle('cond-vacio', vacio);
+    const filas = [...document.querySelectorAll('#resultados-table tbody tr[data-turno-id]')];
+    const elegidos = filas.map(f => f.querySelector('.cond-select')?.value).filter(Boolean);
+    document.getElementById('stat-asignados').textContent = elegidos.length;
+    document.getElementById('stat-sin-asignar').textContent = filas.length - elegidos.length;
+    document.getElementById('stat-conductores').textContent = new Set(elegidos.map(v => v.split('|')[0])).size;
 }
 
 // Primera y última fila de cada día (barra de color y esquinas de la celda del día)
