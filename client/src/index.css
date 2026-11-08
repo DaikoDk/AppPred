@@ -8,7 +8,7 @@
 @import '@fontsource-variable/geist';
 @import './styles/styles.css' layer(legacy);
 
-@theme {
+@theme static {
     /* Tipografía: una sola familia (Geist), sin cursivas ni pesos extremos */
     --font-sans: 'Geist Variable', system-ui, sans-serif;
 
@@ -43,35 +43,176 @@
 
     /* Movimiento: curva con desaceleración, nunca ease, linear ni ease-in-out */
     --ease-skill: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* Entrada de paneles flotantes: sube 8 px y aparece (solo transform y opacity) */
+    --animate-sube: sube 300ms var(--ease-skill);
+    @keyframes sube {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
 }
 
 /* ---- Estilos de texto con nombre (skill, sección B1). Se usan en lugar de combinar tamaño y peso a mano. ---- */
-@utility heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; }
-@utility heading-2 { font-size: 48px; line-height: 48px; font-weight: 600; }
-@utility heading-3 { font-size: 36px; line-height: 40px; font-weight: 600; }
-@utility heading-4 { font-size: 30px; line-height: 36px; font-weight: 600; }
-@utility heading-5 { font-size: 24px; line-height: 32px; font-weight: 600; }
-@utility heading-6 { font-size: 20px; line-height: 28px; font-weight: 600; }
-@utility title-1 { font-size: 20px; line-height: 28px; font-weight: 500; }
-@utility title-2 { font-size: 18px; line-height: 28px; font-weight: 500; }
-@utility title-3 { font-size: 16px; line-height: 24px; font-weight: 500; }
-@utility title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
-@utility title-5 { font-size: 12px; line-height: 16px; font-weight: 500; }
-@utility body-1 { font-size: 16px; line-height: 24px; font-weight: 600; }
-@utility body-2 { font-size: 16px; line-height: 24px; font-weight: 500; }
-@utility body-3 { font-size: 16px; line-height: 24px; font-weight: 400; }
-@utility body-4 { font-size: 14px; line-height: 20px; font-weight: 600; }
-@utility body-5 { font-size: 14px; line-height: 20px; font-weight: 500; }
-@utility body-6 { font-size: 14px; line-height: 20px; font-weight: 400; }
-@utility button-lg { font-size: 18px; line-height: 28px; font-weight: 600; }
-@utility button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
-@utility button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
-@utility button-xsm { font-size: 12px; line-height: 16px; font-weight: 600; }
-@utility caption-1 { font-size: 14px; line-height: 20px; font-weight: 500; }
-@utility caption-2 { font-size: 14px; line-height: 20px; font-weight: 400; }
-@utility caption-3 { font-size: 12px; line-height: 16px; font-weight: 600; }
-@utility caption-4 { font-size: 12px; line-height: 16px; font-weight: 500; }
-@utility caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+@utility heading-1 {
+    font-size: 60px;
+    line-height: 60px;
+    font-weight: 600;
+}
+@utility heading-2 {
+    font-size: 48px;
+    line-height: 48px;
+    font-weight: 600;
+}
+@utility heading-3 {
+    font-size: 36px;
+    line-height: 40px;
+    font-weight: 600;
+}
+@utility heading-4 {
+    font-size: 30px;
+    line-height: 36px;
+    font-weight: 600;
+}
+@utility heading-5 {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 600;
+}
+@utility heading-6 {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+}
+@utility title-1 {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 500;
+}
+@utility title-2 {
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 500;
+}
+@utility title-3 {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+}
+@utility title-4 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+}
+@utility title-5 {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+}
+@utility body-1 {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+}
+@utility body-2 {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 500;
+}
+@utility body-3 {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+}
+@utility body-4 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+}
+@utility body-5 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+}
+@utility body-6 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+}
+@utility button-lg {
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 600;
+}
+@utility button-md {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+}
+@utility button-sm {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+}
+@utility button-xsm {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+}
+@utility caption-1 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+}
+@utility caption-2 {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+}
+@utility caption-3 {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+}
+@utility caption-4 {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+}
+@utility caption-5 {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+}
+
+/* Reseteo acotado a los componentes nuevos (clase `tw`): fuente Geist y botones e inputs sin el aspecto del navegador.
+   No se usa el preflight de Tailwind porque cambiaría el CSS anterior que todavía usan otras pantallas.
+   Está en la capa components: gana al CSS anterior y pierde frente a las utilidades. */
+@layer components {
+    .tw {
+        font-family: var(--font-sans);
+        font-style: normal;
+    }
+    .tw button,
+    .tw input {
+        font: inherit;
+        letter-spacing: inherit;
+        color: inherit;
+        margin: 0;
+        padding: 0;
+        border: 0 solid;
+        border-radius: 0;
+        background: transparent;
+    }
+    .tw button {
+        cursor: pointer;
+    }
+}
 
 /* Foco visible en todo elemento interactivo (accesibilidad) */
 @layer base {
@@ -79,12 +220,22 @@
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
     }
-    h1, h2, h3, h4 { text-wrap: balance; }
-    p, li { text-wrap: pretty; }
+    h1,
+    h2,
+    h3,
+    h4 {
+        text-wrap: balance;
+    }
+    p,
+    li {
+        text-wrap: pretty;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
         animation: none !important;
         transition: opacity 200ms linear !important;
         transform: none !important;

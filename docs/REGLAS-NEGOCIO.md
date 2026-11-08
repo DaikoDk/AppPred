@@ -155,3 +155,5 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-UI-06 (Front):** Mientras se guarda o exporta, una pantalla de carga bloquea toda la interfaz.
 - **RN-UI-07 (Front):** Tras guardar o limpiar una asignación, la lista "Semana" vuelve a "Seleccionar semana..." (como en el front anterior).
 - **RN-UI-08 (Front):** Las rutas son `/programa`, `/asignacion`, `/plantilla`, `/conductores`, `/puntos`, `/historial` y `/admin`; `/` y `/dashboard.html` llevan a `/programa` (o al login si no hay sesión). `/` también completa el regreso del login con Google.
+- **RN-UI-09 (Front):** El editor de turnos tiene dos presentaciones con el mismo comportamiento y datos: chips por día en pantallas de 1321 px o más, y la tabla con vista por día y por semana por debajo. Un cambio de comportamiento del editor se hace en las dos.
+- **RN-UI-10 (Front):** Las listas del editor (hora, grupo, punto de reunión, modalidad) no tienen una opción "inválida": si el valor guardado ya no existe en la lista (por ejemplo un punto desactivado) se muestra y se conserva al guardar.

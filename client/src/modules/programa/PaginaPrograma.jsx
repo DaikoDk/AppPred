@@ -4,6 +4,8 @@ import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import MenuFlotante from '../../components/ui/MenuFlotante.jsx';
 import { finDeSemana, formatDate } from '../../utils/fechas.js';
 import { mensajeError } from '../../utils/errores.js';
+import { useMediaQuery } from '../../hooks/useMediaQuery.js';
+import EditorEscritorio from './EditorEscritorio.jsx';
 import EditorTurnos from './EditorTurnos.jsx';
 import ProgramasGuardados from './ProgramasGuardados.jsx';
 import {
@@ -55,6 +57,8 @@ export default function PaginaPrograma({ modo }) {
     const toast = useToast();
     const confirmar = useConfirmar();
     const esPlantilla = modo === 'plantilla';
+    // Editor nuevo solo en pantallas anchas: por debajo (tablets y móvil) se conserva el editor y la responsividad actuales
+    const escritorio = useMediaQuery('(min-width: 1321px)');
 
     const [inicio, setInicio] = useState('');
     const [fin, setFin] = useState('');
@@ -361,12 +365,22 @@ export default function PaginaPrograma({ modo }) {
                         )}
                         {editorAbierto && (
                             <>
-                                <EditorTurnos
-                                    filas={filas}
-                                    onCambiar={setFilas}
-                                    puntos={puntos}
-                                    semanaInicio={inicio}
-                                />
+                                {/* Pantalla ancha: editor con chips; el resto: editor actual con vista por día y por semana */}
+                                {escritorio ? (
+                                    <EditorEscritorio
+                                        filas={filas}
+                                        onCambiar={setFilas}
+                                        puntos={puntos}
+                                        semanaInicio={inicio}
+                                    />
+                                ) : (
+                                    <EditorTurnos
+                                        filas={filas}
+                                        onCambiar={setFilas}
+                                        puntos={puntos}
+                                        semanaInicio={inicio}
+                                    />
+                                )}
                                 <div id="programa-actions" style={{ marginTop: 20 }}>
                                     <button type="submit" className="btn btn-primary" disabled={guardando}>
                                         <i className="fas fa-save"></i> <span className="btn-text">{textoGuardar}</span>
