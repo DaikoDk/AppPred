@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+    DotsThree,
+    Printer,
     CalendarBlank,
     CalendarCheck,
     Eraser,
@@ -13,6 +15,8 @@ import {
     X
 } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
+import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
+import ModalImprimir from './ModalImprimir.jsx';
 import Desplegable from '../../components/ui/Desplegable.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import {
@@ -77,6 +81,8 @@ export default function Asignacion() {
     const [errorLista, setErrorLista] = useState(false);
     const [semana, setSemana] = useState('');
     const [ejecutando, setEjecutando] = useState(false);
+    // Programa que se está imprimiendo (modal de impresión en A4 horizontal)
+    const [imprimiendo, setImprimiendo] = useState(/** @type {ProgramaEstado | null} */ (null));
     const [res, setRes] = useState(/** @type {EstadoResultados | null} */ (null));
 
     const recargarProgramas = useCallback(async () => {
@@ -480,7 +486,7 @@ export default function Asignacion() {
                                                     </div>
                                                 </td>
                                                 <td className={TD}>
-                                                    <div className="flex flex-wrap gap-2">
+                                                    <div className="flex flex-wrap items-center gap-2">
                                                         {asignados > 0 && (
                                                             <>
                                                                 <Boton
@@ -491,15 +497,6 @@ export default function Asignacion() {
                                                                     title="Ver"
                                                                 >
                                                                     Ver
-                                                                </Boton>
-                                                                <Boton
-                                                                    variante="exito"
-                                                                    icono={GoogleLogo}
-                                                                    compacto
-                                                                    onClick={() => exportar(p.id)}
-                                                                    title="Exportar a Sheets"
-                                                                >
-                                                                    Sheets
                                                                 </Boton>
                                                                 <Boton
                                                                     variante="acento"
@@ -521,6 +518,38 @@ export default function Asignacion() {
                                                         >
                                                             Limpiar
                                                         </Boton>
+                                                        {asignados > 0 && (
+                                                            <MenuAcciones
+                                                                etiqueta="Más acciones del programa"
+                                                                items={[
+                                                                    {
+                                                                        texto: 'Exportar a Sheets',
+                                                                        icono: GoogleLogo,
+                                                                        onClick: () => exportar(p.id)
+                                                                    },
+                                                                    {
+                                                                        texto: 'Imprimir o guardar en PDF',
+                                                                        icono: Printer,
+                                                                        onClick: () => setImprimiendo(p)
+                                                                    }
+                                                                ]}
+                                                                boton={({ ref, abierto, alternar }) => (
+                                                                    <Boton
+                                                                        ref={ref}
+                                                                        variante="secundario"
+                                                                        icono={DotsThree}
+                                                                        soloIcono
+                                                                        compacto
+                                                                        aria-haspopup="menu"
+                                                                        aria-expanded={abierto}
+                                                                        onClick={alternar}
+                                                                        title="Más acciones"
+                                                                    >
+                                                                        Más acciones
+                                                                    </Boton>
+                                                                )}
+                                                            />
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -531,6 +560,7 @@ export default function Asignacion() {
                     </div>
                 </div>
             </section>
+            {imprimiendo && <ModalImprimir programa={imprimiendo} onCerrar={() => setImprimiendo(null)} />}
         </div>
     );
 }

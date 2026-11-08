@@ -179,3 +179,45 @@ export function descargarPng(canvas, nombre) {
         }, 'image/png');
     });
 }
+
+/**
+ * Abre el cuadro de impresión del navegador con la imagen en una hoja A4 horizontal. Desde ahí también se puede
+ * elegir "Guardar como PDF". Se imprime desde un iframe oculto, así no se imprime la pantalla de la app (RN-IMG-05).
+ * @param {string} urlImagen imagen como data URL
+ * @param {string} titulo título del documento (nombre sugerido al guardar el PDF)
+ * @returns {Promise<void>} se resuelve al cerrarse el cuadro de impresión
+ */
+export function imprimirImagen(urlImagen, titulo) {
+    return new Promise((resolver) => {
+        const marco = document.createElement('iframe');
+        marco.setAttribute('aria-hidden', 'true');
+        marco.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+        document.body.appendChild(marco);
+        const ventana = /** @type {Window} */ (marco.contentWindow);
+        const doc = /** @type {Document} */ (marco.contentDocument);
+        doc.open();
+        doc.write(
+            '<!doctype html><html><head><meta charset="utf-8"><style>' +
+                '@page{size:A4 landscape;margin:10mm}' +
+                'html,body{margin:0;height:100%}' +
+                'body{display:flex;align-items:center;justify-content:center}' +
+                'img{display:block;max-width:100%;max-height:100%}' +
+                '</style></head><body><img alt=""></body></html>'
+        );
+        doc.close();
+        doc.title = titulo;
+        const limpiar = () => {
+            marco.remove();
+            resolver();
+        };
+        const imagen = /** @type {HTMLImageElement} */ (doc.querySelector('img'));
+        imagen.addEventListener('load', () => {
+            ventana.addEventListener('afterprint', limpiar);
+            ventana.focus();
+            ventana.print();
+            // Respaldo por si el navegador no avisa que terminó la impresión
+            setTimeout(limpiar, 120000);
+        });
+        imagen.src = urlImagen;
+    });
+}
