@@ -1,4 +1,31 @@
 import { useCallback, useEffect, useState } from 'react';
+import {
+    CalendarBlank,
+    CalendarCheck,
+    Eraser,
+    Eye,
+    FloppyDisk,
+    GoogleLogo,
+    ListChecks,
+    MagicWand,
+    Stack,
+    X
+} from '@phosphor-icons/react';
+import Boton from '../../components/ui/Boton.jsx';
+import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
+import {
+    CAMPO,
+    CIFRA,
+    CUERPO,
+    ETIQUETA,
+    RAIZ,
+    RESUMEN,
+    TABLA,
+    TABLA_CONTENEDOR,
+    TARJETA,
+    TD,
+    TH
+} from '../../components/ui/estilos.js';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import { useCargando } from '../../components/ui/Cargando.jsx';
@@ -266,28 +293,23 @@ export default function Asignacion() {
         : [0, 0, 0, 0];
 
     return (
-        <div id="tab-asignacion" className="tab-content active">
-            <div className="card">
-                <div className="card-header">
-                    <div className="card-title-rich">
-                        <span className="title-icon">
-                            <i className="fas fa-calendar-check"></i>
-                        </span>
-                        <div>
-                            <h3>Ejecutar Asignación</h3>
-                            <p className="card-subtitle">Elige una semana y genera las asignaciones automáticamente</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="card-body">
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>
-                                <i className="far fa-calendar"></i> Semana
+        <div id="tab-asignacion" className={RAIZ}>
+            <section className={TARJETA}>
+                <EncabezadoTarjeta
+                    icono={CalendarCheck}
+                    titulo="Ejecutar Asignación"
+                    subtitulo="Elige una semana y genera las asignaciones automáticamente"
+                />
+                <div className={CUERPO}>
+                    <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[2fr_1fr]">
+                        <div className="min-w-0">
+                            <label className={`${ETIQUETA} flex items-center gap-1`}>
+                                <CalendarBlank size={16} aria-hidden="true" />
+                                Semana
                             </label>
                             <select
                                 id="sel-semana"
-                                className="form-control"
+                                className={CAMPO}
                                 value={semana}
                                 onChange={(e) => verAsignacion(e.target.value)}
                             >
@@ -306,71 +328,51 @@ export default function Asignacion() {
                                 )}
                             </select>
                         </div>
-                        <div className="form-group form-group-action" style={{ alignSelf: 'end' }}>
-                            <button
-                                type="button"
-                                id="btn-ejecutar-asignacion"
-                                className="btn btn-primary btn-block"
-                                disabled={ejecutando}
-                                onClick={ejecutar}
-                            >
-                                <i className="fas fa-magic"></i>{' '}
-                                <span className="btn-text" style={{ display: ejecutando ? 'none' : 'inline' }}>
-                                    Ejecutar Algoritmo
-                                </span>
-                                <span className="btn-loading" style={{ display: ejecutando ? 'inline-flex' : 'none' }}>
-                                    <i className="fas fa-spinner fa-spin"></i>
-                                </span>
-                            </button>
-                        </div>
+                        <Boton
+                            id="btn-ejecutar-asignacion"
+                            type="button"
+                            variante="primario"
+                            icono={MagicWand}
+                            disabled={ejecutando}
+                            onClick={ejecutar}
+                            className="w-full"
+                        >
+                            Ejecutar Algoritmo
+                        </Boton>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {res && (
-                <div className="card" id="card-resultados">
-                    <div className="card-header">
-                        <div className="card-title-rich">
-                            <span className="title-icon">
-                                <i className="fas fa-list-check"></i>
-                            </span>
-                            <div>
-                                <h3>Resultados</h3>
-                                <p className="card-subtitle">Revisa y ajusta los conductores antes de guardar</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="card-body">
-                        <div className="stats-row">
+                <section className={TARJETA} id="card-resultados">
+                    <EncabezadoTarjeta
+                        icono={ListChecks}
+                        titulo="Resultados"
+                        subtitulo="Revisa y ajusta los conductores antes de guardar"
+                    />
+                    <div className={CUERPO}>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             {[
-                                ['', 'Total'],
-                                ['success', 'Asignados'],
-                                ['danger', 'Sin Asignar'],
-                                ['info', 'Conductores']
-                            ].map(([clase, etiqueta], i) => (
-                                <div key={etiqueta} className={`stat-card${clase ? ' ' + clase : ''}`}>
-                                    <span className="stat-value">{stats[i]}</span>
-                                    <span className="stat-label">{etiqueta}</span>
+                                ['text-ink', 'Total'],
+                                ['text-ok', 'Asignados'],
+                                ['text-danger', 'Sin Asignar'],
+                                ['text-info', 'Conductores']
+                            ].map(([tono, etiqueta], i) => (
+                                <div key={etiqueta} className={RESUMEN}>
+                                    <span className={`${CIFRA} ${tono}`}>{stats[i]}</span>
+                                    <span className="caption-1 block text-muted">{etiqueta}</span>
                                 </div>
                             ))}
                         </div>
-                        <div style={{ marginBottom: 10 }} id="resultados-actions">
-                            <button type="button" className="btn btn-primary" onClick={guardar}>
-                                <i className="fas fa-save"></i>{' '}
-                                <span className="btn-text">
-                                    {res.editando ? 'Actualizar Asignación' : 'Guardar Asignación'}
-                                </span>
-                            </button>{' '}
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                style={{ marginLeft: 8 }}
-                                onClick={() => setRes(null)}
-                            >
-                                <i className="fas fa-times"></i> Cancelar
-                            </button>
+                        <div className="mt-4 flex flex-wrap gap-2" id="resultados-actions">
+                            <Boton variante="primario" icono={FloppyDisk} onClick={guardar}>
+                                {res.editando ? 'Actualizar Asignación' : 'Guardar Asignación'}
+                            </Boton>
+                            <Boton variante="secundario" icono={X} onClick={() => setRes(null)}>
+                                Cancelar
+                            </Boton>
                         </div>
-                        <div id="resultados-day-groups">
+                        <div className="mt-4" id="resultados-day-groups">
                             {res.filas && (
                                 <TablaResultados
                                     filas={res.filas}
@@ -385,47 +387,41 @@ export default function Asignacion() {
                             )}
                         </div>
                     </div>
-                </div>
+                </section>
             )}
 
-            <div className="card">
-                <div className="card-header">
-                    <div className="card-title-rich">
-                        <span className="title-icon plain">
-                            <i className="fas fa-layer-group"></i>
-                        </span>
-                        <div>
-                            <h3>Programas</h3>
-                            <p className="card-subtitle">Estado de asignación de cada semana</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="card-body">
-                    <div className="table-container">
-                        <table className="table table-programas table-asignacion">
+            <section className={TARJETA}>
+                <EncabezadoTarjeta icono={Stack} titulo="Programas" subtitulo="Estado de asignación de cada semana" />
+                <div className={CUERPO}>
+                    <div className={TABLA_CONTENEDOR}>
+                        <table className={TABLA} id="tabla-programas-asignacion">
                             <thead>
                                 <tr>
-                                    <th className="col-semana">Semana</th>
-                                    <th className="col-fechas">Inicio - Fin</th>
-                                    <th className="col-acciones">Acciones</th>
+                                    <th className={TH}>Semana</th>
+                                    <th className={TH}>Inicio - Fin</th>
+                                    <th className={TH}>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-programas-asignacion">
                                 {errorLista && (
-                                    <tr className="fila-estado">
-                                        <td colSpan={3}>Error</td>
+                                    <tr>
+                                        <td colSpan={3} className={`${TD} text-danger`}>
+                                            Error
+                                        </td>
                                     </tr>
                                 )}
                                 {!errorLista && programas === null && (
-                                    <tr className="fila-estado">
-                                        <td colSpan={3}>
-                                            <i className="fas fa-circle-notch fa-spin"></i> Cargando programas…
+                                    <tr>
+                                        <td colSpan={3} className={`${TD} body-6 text-center text-muted`}>
+                                            Cargando programas…
                                         </td>
                                     </tr>
                                 )}
                                 {!errorLista && programas?.length === 0 && (
-                                    <tr className="fila-estado">
-                                        <td colSpan={3}>No hay programas</td>
+                                    <tr>
+                                        <td colSpan={3} className={`${TD} body-6 text-center text-muted`}>
+                                            No hay programas
+                                        </td>
                                     </tr>
                                 )}
                                 {!errorLista &&
@@ -433,61 +429,66 @@ export default function Asignacion() {
                                         const asignados = p.asignados || 0;
                                         return (
                                             <tr key={p.id}>
-                                                <td className="col-semana">
-                                                    <strong>Semana</strong>
+                                                <td className={TD}>
+                                                    <span className="title-4 text-ink">Semana</span>
                                                 </td>
-                                                <td className="col-fechas">
-                                                    <span className="fecha-icon">
-                                                        <i className="far fa-calendar"></i>
-                                                    </span>
-                                                    <span className="fecha-texto">
-                                                        <span className="fecha-rango">
-                                                            {formatDate(p.semana_inicio)} — {formatDate(p.semana_fin)}
+                                                <td className={TD}>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-fill text-primary">
+                                                            <CalendarBlank size={20} aria-hidden="true" />
                                                         </span>
-                                                        <small className="fecha-sub">
-                                                            {p.total_turnos || 0} turnos ·{' '}
-                                                            {asignados > 0 ? (
-                                                                <span className="estado-ok">
-                                                                    ✓ {asignados} asignados
-                                                                </span>
-                                                            ) : (
-                                                                <span className="estado-pendiente">sin asignar</span>
-                                                            )}
-                                                        </small>
-                                                    </span>
+                                                        <span className="min-w-0">
+                                                            <span className="body-5 block text-ink">
+                                                                {formatDate(p.semana_inicio)} —{' '}
+                                                                {formatDate(p.semana_fin)}
+                                                            </span>
+                                                            <small className="caption-2 block text-muted">
+                                                                {p.total_turnos || 0} turnos ·{' '}
+                                                                {asignados > 0 ? (
+                                                                    <span className="text-ok">
+                                                                        ✓ {asignados} asignados
+                                                                    </span>
+                                                                ) : (
+                                                                    <span>sin asignar</span>
+                                                                )}
+                                                            </small>
+                                                        </span>
+                                                    </div>
                                                 </td>
-                                                <td className="col-acciones">
-                                                    {asignados > 0 && (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-sm btn-primary"
-                                                                onClick={() => verAsignacion(p.id)}
-                                                                title="Ver"
-                                                            >
-                                                                <i className="fas fa-eye"></i>
-                                                                <span className="btn-label">Ver</span>
-                                                            </button>{' '}
-                                                            <button
-                                                                type="button"
-                                                                className="btn btn-sm btn-success"
-                                                                onClick={() => exportar(p.id)}
-                                                                title="Exportar a Sheets"
-                                                            >
-                                                                <i className="fab fa-google"></i>
-                                                                <span className="btn-label">Sheets</span>
-                                                            </button>{' '}
-                                                        </>
-                                                    )}
-                                                    <button
-                                                        type="button"
-                                                        className="btn btn-sm btn-danger"
-                                                        onClick={() => limpiar(p)}
-                                                        title="Limpiar"
-                                                    >
-                                                        <i className="fas fa-eraser"></i>
-                                                        <span className="btn-label">Limpiar</span>
-                                                    </button>
+                                                <td className={TD}>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {asignados > 0 && (
+                                                            <>
+                                                                <Boton
+                                                                    variante="secundario"
+                                                                    icono={Eye}
+                                                                    compacto
+                                                                    onClick={() => verAsignacion(p.id)}
+                                                                    title="Ver"
+                                                                >
+                                                                    Ver
+                                                                </Boton>
+                                                                <Boton
+                                                                    variante="exito"
+                                                                    icono={GoogleLogo}
+                                                                    compacto
+                                                                    onClick={() => exportar(p.id)}
+                                                                    title="Exportar a Sheets"
+                                                                >
+                                                                    Sheets
+                                                                </Boton>
+                                                            </>
+                                                        )}
+                                                        <Boton
+                                                            variante="peligroSuave"
+                                                            icono={Eraser}
+                                                            compacto
+                                                            onClick={() => limpiar(p)}
+                                                            title="Limpiar"
+                                                        >
+                                                            Limpiar
+                                                        </Boton>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
@@ -496,7 +497,7 @@ export default function Asignacion() {
                         </table>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     );
 }

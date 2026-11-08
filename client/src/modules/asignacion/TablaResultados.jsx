@@ -1,5 +1,7 @@
+import { CalendarBlank, Clock, MapPin, MapTrifold, UserCheck, UsersThree } from '@phosphor-icons/react';
 import DiaBadge from '../../components/ui/DiaBadge.jsx';
 import SelectRecortable from '../../components/ui/SelectRecortable.jsx';
+import { CAMPO, TABLA, TABLA_CONTENEDOR, TD, TH } from '../../components/ui/estilos.js';
 import { fechaDelDia } from '../../utils/fechas.js';
 import { etiquetaGrupo, opcionConductor } from './logica.js';
 
@@ -8,9 +10,12 @@ import { etiquetaGrupo, opcionConductor } from './logica.js';
  * @typedef {import('../../types/models').Conductor} Conductor
  */
 
+/** Encabezado con ícono (Phosphor, ADR-021). */
+const COL = 'inline-flex items-center gap-1';
+
 /**
  * Tabla de Resultados con la lista de conductores en cada turno (renderResultadosTable).
- * Mismo marcado y clases que la app anterior.
+ * Mismas columnas, atributos y orden que la app anterior.
  * @param {{
  *   filas: FilaResultado[],
  *   semanaInicio: string | undefined,
@@ -42,27 +47,39 @@ export default function TablaResultados({
     });
 
     return (
-        <div className="table-container">
-            <table className="table" id="resultados-table">
+        <div className={TABLA_CONTENEDOR}>
+            <table className={TABLA} id="resultados-table">
                 <thead>
                     <tr>
-                        <th>
-                            <i className="fa-regular fa-calendar"></i> Día
+                        <th className={TH}>
+                            <span className={COL}>
+                                <CalendarBlank size={14} aria-hidden="true" /> Día
+                            </span>
                         </th>
-                        <th>
-                            <i className="fa-regular fa-clock"></i> Hora
+                        <th className={TH}>
+                            <span className={COL}>
+                                <Clock size={14} aria-hidden="true" /> Hora
+                            </span>
                         </th>
-                        <th>
-                            <i className="fa-solid fa-users"></i> Grupo
+                        <th className={TH}>
+                            <span className={COL}>
+                                <UsersThree size={14} aria-hidden="true" /> Grupo
+                            </span>
                         </th>
-                        <th>
-                            <i className="fa-solid fa-map-location-dot"></i> Territorio
+                        <th className={TH}>
+                            <span className={COL}>
+                                <MapTrifold size={14} aria-hidden="true" /> Territorio
+                            </span>
                         </th>
-                        <th>
-                            <i className="fa-solid fa-location-dot"></i> P. Reunión
+                        <th className={TH}>
+                            <span className={COL}>
+                                <MapPin size={14} aria-hidden="true" /> P. Reunión
+                            </span>
                         </th>
-                        <th>
-                            <i className="fa-solid fa-user-check"></i> Conductor
+                        <th className={TH}>
+                            <span className={COL}>
+                                <UserCheck size={14} aria-hidden="true" /> Conductor
+                            </span>
                         </th>
                     </tr>
                 </thead>
@@ -82,13 +99,13 @@ export default function TablaResultados({
                             // Fila libre del programa: se muestra, no se asigna
                             const e = f.extra;
                             return (
-                                <tr key={`e${i}`} className="fila-extra-res" {...marcas}>
-                                    <td className="dia-cell">{badge}</td>
-                                    <td>{e.hora || ''}</td>
-                                    <td>{etiquetaGrupo(e.grupo)}</td>
-                                    <td>{(e.territorio || '').trim()}</td>
-                                    <td>{(e.punto_reunion || '').trim()}</td>
-                                    <td>{(e.conductor || '').trim()}</td>
+                                <tr key={`e${i}`} className="bg-canvas" {...marcas}>
+                                    <td className={TD}>{badge}</td>
+                                    <td className={TD}>{e.hora || ''}</td>
+                                    <td className={TD}>{etiquetaGrupo(e.grupo)}</td>
+                                    <td className={TD}>{(e.territorio || '').trim()}</td>
+                                    <td className={TD}>{(e.punto_reunion || '').trim()}</td>
+                                    <td className={TD}>{(e.conductor || '').trim()}</td>
                                 </tr>
                             );
                         }
@@ -99,23 +116,23 @@ export default function TablaResultados({
                         return (
                             <tr
                                 key={r.turno_id}
-                                className={vacio ? 'sin-asignar' : undefined}
+                                className={vacio ? 'bg-danger-bg/60' : undefined}
                                 data-turno-id={r.turno_id}
                                 {...marcas}
                             >
-                                <td className="dia-cell">{badge}</td>
-                                <td>{r.hora || ''}</td>
-                                <td>{etiquetaGrupo(r.grupo)}</td>
-                                <td>{r.territorio || '—'}</td>
-                                <td>{r.punto_reunion || '—'}</td>
-                                <td>
+                                <td className={TD}>{badge}</td>
+                                <td className={TD}>{r.hora || ''}</td>
+                                <td className={TD}>{etiquetaGrupo(r.grupo)}</td>
+                                <td className={TD}>{r.territorio || '—'}</td>
+                                <td className={TD}>{r.punto_reunion || '—'}</td>
+                                <td className={TD}>
                                     <SelectRecortable
-                                        className={`form-control cond-select${vacio ? ' cond-vacio' : ''}`}
+                                        className={`${CAMPO} py-1.5 ${vacio ? 'border-danger text-danger' : ''}`}
                                         value={valor}
                                         onChange={(e) => onElegir(r.turno_id, e.target.value)}
                                     >
                                         {inicialmenteSinAsignar.has(r.turno_id) && (
-                                            <option value="" className="op-vacio">
+                                            <option value="" className="text-danger">
                                                 SIN ASIGNAR
                                             </option>
                                         )}
@@ -125,7 +142,7 @@ export default function TablaResultados({
                                                 <option
                                                     key={c.id}
                                                     value={op.valor}
-                                                    className={op.noDisponible ? 'op-no-disp' : undefined}
+                                                    className={op.noDisponible ? 'text-muted' : undefined}
                                                 >
                                                     {op.texto}
                                                 </option>
