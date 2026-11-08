@@ -141,7 +141,6 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
                 </>
             ) : (
                 <>
-                    <p className="body-6 mb-3 text-muted">Toca una casilla para marcarla o quitarla.</p>
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
                         <div className="min-w-0 flex-1">
                             <GrillaDisponibilidad slots={slots} editable onAlternar={alternar} />
