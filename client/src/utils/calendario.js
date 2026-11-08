@@ -62,3 +62,16 @@ export function formatoCorto(iso) {
 export function hoyISO() {
     return aISO(new Date());
 }
+
+/** Lunes de la semana (de lunes a domingo) que contiene la fecha. @param {Date} d */
+export function lunesDe(d) {
+    return sumarDias(d, -((d.getDay() + 6) % 7));
+}
+
+/** "9 nov. — 15 nov." para la semana que empieza en el lunes `iso`; vacío si no hay fecha. @param {string | null | undefined} iso */
+export function textoSemana(iso) {
+    const lunes = fechaDeISO(iso);
+    if (!lunes) return '';
+    const corta = (/** @type {Date} */ d) => d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
+    return `${corta(lunes)} — ${corta(sumarDias(lunes, 6))}`;
+}

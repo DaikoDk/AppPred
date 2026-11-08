@@ -5,9 +5,11 @@ import {
     fechaDeISO,
     formatoCorto,
     inicioDeMes,
+    lunesDe,
     mismoDia,
     sumarDias,
     sumarMeses,
+    textoSemana,
     tituloMes
 } from './calendario.js';
 
@@ -80,6 +82,19 @@ describe('mismoDia', () => {
     it('compara día, mes y año, ignorando la hora', () => {
         expect(mismoDia(new Date(2026, 10, 9, 0, 0), new Date(2026, 10, 9, 23, 59))).toBe(true);
         expect(mismoDia(new Date(2026, 10, 9), new Date(2025, 10, 9))).toBe(false);
+    });
+});
+
+describe('semanas de lunes a domingo', () => {
+    it('lunesDe devuelve el lunes de cualquier día de la semana, incluido el domingo', () => {
+        expect(ISO(lunesDe(new Date(2026, 10, 9)))).toBe('2026-11-09'); // lunes
+        expect(ISO(lunesDe(new Date(2026, 10, 15)))).toBe('2026-11-09'); // domingo
+        expect(ISO(lunesDe(new Date(2026, 10, 1)))).toBe('2026-10-26'); // domingo de la semana anterior
+    });
+
+    it('textoSemana muestra el lunes y el domingo de esa semana', () => {
+        expect(textoSemana('2026-11-09')).toBe('9 nov. — 15 nov.');
+        expect(textoSemana('')).toBe('');
     });
 });
 

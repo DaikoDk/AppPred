@@ -300,32 +300,25 @@ export default function PaginaPrograma({ modo }) {
                 />
                 <div className="p-4">
                     <form id="form-programa" onSubmit={guardar}>
-                        <div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
-                            <div className="block min-w-0">
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="min-w-0">
                                 <span className={ETIQUETA_FECHA}>
                                     <CalendarBlank size={16} aria-hidden="true" />
-                                    Semana Inicio
+                                    Semana
                                 </span>
                                 <CampoFecha
                                     id="prog-semana-inicio"
-                                    rotulo="Semana Inicio"
+                                    modo="semana"
+                                    rotulo="Semana"
                                     valor={inicio}
                                     onCambiar={cambiarInicio}
                                 />
-                            </div>
-                            <div className="block min-w-0">
-                                <span className={ETIQUETA_FECHA}>
-                                    <CalendarBlank size={16} aria-hidden="true" />
-                                    Semana Fin
-                                </span>
-                                <CampoFecha id="prog-semana-fin" rotulo="Semana Fin" valor={fin} onCambiar={setFin} />
                             </div>
                             <Boton
                                 id="btn-empezar-programa"
                                 variante="exito"
                                 icono={iconoEditor}
                                 onClick={alternarEditor}
-                                className="col-span-2 sm:col-span-1"
                             >
                                 {textoEditor}
                             </Boton>
