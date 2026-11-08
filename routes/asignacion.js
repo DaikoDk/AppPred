@@ -346,7 +346,9 @@ router.post('/exportar-sheets', async (req, res) => {
         res.json({
             mensaje: `Nueva pestaña creada: ${result.sheetName}`,
             url: result.url,
-            sheetName: result.sheetName
+            urlHoja: result.urlHoja,
+            sheetName: result.sheetName,
+            sheetId: result.sheetId
         });
     } catch (error) {
         console.error('Error en POST /asignacion/exportar-sheets:', error);
