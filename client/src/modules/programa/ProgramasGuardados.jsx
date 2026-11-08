@@ -1,9 +1,15 @@
+import { CalendarBlank, PencilSimple, Stack, Trash } from '@phosphor-icons/react';
+import Boton from '../../components/ui/Boton.jsx';
+import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { formatDate } from '../../utils/fechas.js';
 
 /** @typedef {import('../../types/models').Programa} Programa */
 
+const COLUMNAS = 'md:grid-cols-[1fr_1.5fr_1fr]';
+
 /**
- * Lista "Programas Guardados" (listarProgramas de la app anterior).
+ * Lista "Programas Guardados". En escritorio es una tabla de tres columnas con botones de ícono; en móvil
+ * cada programa es una fila con su ícono y fechas a la izquierda y las acciones apiladas a la derecha.
  * @param {{
  *   programas: Programa[] | null,
  *   error: boolean,
@@ -12,90 +18,63 @@ import { formatDate } from '../../utils/fechas.js';
  * }} props  `programas` en null = cargando.
  */
 export default function ProgramasGuardados({ programas, error, onEditar, onEliminar }) {
+    const estado = 'body-6 p-6 text-center text-muted';
     let cuerpo;
     if (error) {
-        cuerpo = (
-            <tr>
-                <td colSpan={3}>Error</td>
-            </tr>
-        );
+        cuerpo = <li className={estado}>Error</li>;
     } else if (programas === null) {
-        cuerpo = (
-            <tr className="fila-estado">
-                <td colSpan={3}>
-                    <i className="fas fa-circle-notch fa-spin"></i> Cargando programas…
-                </td>
-            </tr>
-        );
+        cuerpo = <li className={estado}>Cargando programas…</li>;
     } else if (programas.length === 0) {
-        cuerpo = (
-            <tr className="fila-estado">
-                <td colSpan={3}>No hay programas guardados</td>
-            </tr>
-        );
+        cuerpo = <li className={estado}>No hay programas guardados</li>;
     } else {
         cuerpo = programas.map((p) => (
-            <tr key={p.id}>
-                <td className="col-semana">
-                    <strong>Semana</strong>
-                </td>
-                <td className="col-fechas">
-                    <span className="fecha-icon">
-                        <i className="far fa-calendar"></i>
+            <li
+                key={p.id}
+                className={`flex items-center justify-between gap-3 border-b border-line px-2 py-3 last:border-b-0 md:grid ${COLUMNAS} md:px-3`}
+            >
+                <b className="body-4 hidden text-ink md:block">Semana</b>
+                <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-fill text-primary md:hidden">
+                        <CalendarBlank size={20} aria-hidden="true" />
                     </span>
-                    <span className="fecha-texto">
-                        <span className="fecha-rango">
+                    <span className="min-w-0">
+                        <span className="body-5 block text-ink">
                             {formatDate(p.semana_inicio)} — {formatDate(p.semana_fin)}
                         </span>
-                        <small className="fecha-sub">Programa semanal</small>
+                        <small className="caption-5 block text-muted md:hidden">Programa semanal</small>
                     </span>
-                </td>
-                <td className="col-acciones">
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-primary"
-                        onClick={() => onEditar(p.id)}
-                        title="Editar"
-                    >
-                        <i className="fas fa-edit"></i>
-                        <span className="btn-label">Editar</span>
-                    </button>{' '}
-                    <button type="button" className="btn btn-sm btn-danger" onClick={() => onEliminar(p)}>
-                        <i className="fas fa-trash"></i>
-                        <span className="btn-label">Eliminar</span>
-                    </button>
-                </td>
-            </tr>
+                </div>
+                <div className="flex shrink-0 flex-col gap-2 md:flex-row">
+                    <Boton variante="secundario" icono={PencilSimple} onClick={() => onEditar(p.id)} compacto>
+                        Editar
+                    </Boton>
+                    <Boton variante="peligroSuave" icono={Trash} onClick={() => onEliminar(p)} compacto>
+                        Eliminar
+                    </Boton>
+                </div>
+            </li>
         ));
     }
 
     return (
-        <div className="card">
-            <div className="card-header">
-                <div className="card-title-rich">
-                    <span className="title-icon plain">
-                        <i className="fas fa-layer-group"></i>
-                    </span>
-                    <div>
-                        <h3>Programas Guardados</h3>
-                        <p className="card-subtitle">Programas creados previamente</p>
-                    </div>
+        <section className="rounded-3xl border border-line bg-surface">
+            <EncabezadoTarjeta
+                icono={Stack}
+                sinCaja
+                titulo="Programas Guardados"
+                subtitulo="Programas creados previamente"
+            />
+            <div className="p-4">
+                <div
+                    role="row"
+                    className={`caption-3 hidden rounded-lg bg-canvas px-3 py-2 tracking-wide text-muted uppercase md:grid ${COLUMNAS}`}
+                >
+                    <span>Semana</span>
+                    <span>Inicio - Fin</span>
+                    <span>Acciones</span>
                 </div>
+                <ul id="tbody-programas">{cuerpo}</ul>
             </div>
-            <div className="card-body">
-                <div className="table-container">
-                    <table className="table table-programas">
-                        <thead>
-                            <tr>
-                                <th className="col-semana">Semana</th>
-                                <th className="col-fechas">Inicio - Fin</th>
-                                <th className="col-acciones">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-programas">{cuerpo}</tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        </section>
     );
 }

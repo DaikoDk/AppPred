@@ -1,12 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
-import MenuFlotante from '../../components/ui/MenuFlotante.jsx';
+import {
+    ArrowCounterClockwise,
+    CalendarBlank,
+    CalendarPlus,
+    DotsThree,
+    FileArrowDown,
+    FloppyDisk,
+    PencilSimple,
+    Play,
+    X
+} from '@phosphor-icons/react';
+import Boton from '../../components/ui/Boton.jsx';
+import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
+import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { finDeSemana, formatDate } from '../../utils/fechas.js';
 import { mensajeError } from '../../utils/errores.js';
 import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import EditorEscritorio from './EditorEscritorio.jsx';
-import EditorTurnos from './EditorTurnos.jsx';
+import EditorMovil from './EditorMovil.jsx';
 import ProgramasGuardados from './ProgramasGuardados.jsx';
 import {
     combinarConPlantilla,
@@ -57,8 +70,8 @@ export default function PaginaPrograma({ modo }) {
     const toast = useToast();
     const confirmar = useConfirmar();
     const esPlantilla = modo === 'plantilla';
-    // Editor nuevo solo en pantallas anchas: por debajo (tablets y móvil) se conserva el editor y la responsividad actuales
-    const escritorio = useMediaQuery('(min-width: 1321px)');
+    // Desde 769 px, la tabla con chips; en móvil, la vista por día y por semana (misma estructura de siempre)
+    const escritorio = useMediaQuery('(min-width: 769px)');
 
     const [inicio, setInicio] = useState('');
     const [fin, setFin] = useState('');
@@ -257,38 +270,8 @@ export default function PaginaPrograma({ modo }) {
     };
 
     // ---- textos que cambian según el modo (los mismos que la app anterior)
-    let titulo = <>Nuevo Programa Semanal</>;
-    if (esPlantilla)
-        titulo = (
-            <>
-                <i className="fas fa-pencil-alt"></i> Editar Plantilla
-            </>
-        );
-    else if (editando)
-        titulo = (
-            <>
-                <i className="fas fa-edit" style={{ color: '#e67e22' }}></i>{' '}
-                <span style={{ color: '#e67e22' }}>Editando Programa</span>
-            </>
-        );
-
-    let botonEditor = (
-        <>
-            <i className="fas fa-play"></i> Empezar a crear programa
-        </>
-    );
-    if (editorAbierto)
-        botonEditor = (
-            <>
-                <i className="fas fa-times"></i> Cerrar
-            </>
-        );
-    else if (esPlantilla)
-        botonEditor = (
-            <>
-                <i className="fas fa-pencil-alt"></i> Editar Plantilla
-            </>
-        );
+    const textoEditor = editorAbierto ? 'Cerrar' : esPlantilla ? 'Editar Plantilla' : 'Empezar a crear programa';
+    const iconoEditor = editorAbierto ? X : esPlantilla ? PencilSimple : Play;
 
     let textoGuardar = 'Guardar Programa';
     if (esPlantilla) textoGuardar = 'Guardar Plantilla';
@@ -298,130 +281,156 @@ export default function PaginaPrograma({ modo }) {
     if (esPlantilla) banner = TEXTO_BANNER_PLANTILLA;
     else if (editando) banner = `Editando programa: ${formatDate(inicio)} — ${formatDate(fin)}`;
 
+    const titulo = esPlantilla ? (
+        'Editar Plantilla'
+    ) : editando ? (
+        <span className="flex items-center gap-1">
+            <PencilSimple size={20} aria-hidden="true" />
+            Editando Programa
+        </span>
+    ) : (
+        'Nuevo Programa Semanal'
+    );
+    // Calendario nativo con ícono atenuado y cifras tabulares; el borde reacciona al pasar el cursor y al enfocar
+    const CAMPO_FECHA =
+        'body-6 w-full cursor-pointer rounded-lg border border-line bg-surface px-3 py-2 text-ink tabular-nums outline-none transition-[border-color] duration-300 ease-skill hover:border-ink/30 focus-visible:border-primary [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-50 [&::-webkit-calendar-picker-indicator]:transition-opacity [&::-webkit-calendar-picker-indicator]:duration-300 hover:[&::-webkit-calendar-picker-indicator]:opacity-100';
+    const ETIQUETA_FECHA = 'title-4 mb-1 flex items-center gap-1 text-ink';
+
     return (
-        <div id="tab-programa" className="tab-content active">
-            <div className="card">
-                <div className="card-header">
-                    <div className="card-title-rich">
-                        <span className="title-icon">
-                            <i className="fas fa-calendar-plus"></i>
-                        </span>
-                        <div>
-                            <h3>{titulo}</h3>
-                            <p className="card-subtitle">Define el rango de fechas para crear un programa</p>
-                        </div>
-                    </div>
-                </div>
-                <div className="card-body">
+        <div className="tw mx-auto flex w-full max-w-[1244px] flex-col gap-6">
+            <section className="rounded-3xl border border-line bg-surface">
+                <EncabezadoTarjeta
+                    icono={CalendarPlus}
+                    titulo={titulo}
+                    claseTitulo={editando ? 'text-warn' : ''}
+                    subtitulo="Define el rango de fechas para crear un programa"
+                />
+                <div className="p-4">
                     <form id="form-programa" onSubmit={guardar}>
-                        <div className="form-row" style={{ alignItems: 'end' }}>
-                            <div className="form-group">
-                                <label>
-                                    <i className="far fa-calendar"></i> Semana Inicio
-                                </label>
+                        <div className="grid grid-cols-2 items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                            <label className="block">
+                                <span className={ETIQUETA_FECHA}>
+                                    <CalendarBlank size={16} aria-hidden="true" />
+                                    Semana Inicio
+                                </span>
                                 <input
                                     type="date"
                                     id="prog-semana-inicio"
-                                    className="form-control"
+                                    className={CAMPO_FECHA}
                                     required
                                     value={inicio}
                                     onClick={abrirCalendario}
                                     onChange={(e) => cambiarInicio(e.target.value)}
                                 />
-                            </div>
-                            <div className="form-group">
-                                <label>
-                                    <i className="far fa-calendar"></i> Semana Fin
-                                </label>
+                            </label>
+                            <label className="block">
+                                <span className={ETIQUETA_FECHA}>
+                                    <CalendarBlank size={16} aria-hidden="true" />
+                                    Semana Fin
+                                </span>
                                 <input
                                     type="date"
                                     id="prog-semana-fin"
-                                    className="form-control"
+                                    className={CAMPO_FECHA}
                                     required
                                     value={fin}
                                     onClick={abrirCalendario}
                                     onChange={(e) => setFin(e.target.value)}
                                 />
-                            </div>
-                            <div className="form-group form-group-action" style={{ alignSelf: 'end' }}>
-                                <button
-                                    type="button"
-                                    id="btn-empezar-programa"
-                                    className="btn btn-success"
-                                    onClick={alternarEditor}
-                                >
-                                    {botonEditor}
-                                </button>
-                            </div>
+                            </label>
+                            <Boton
+                                id="btn-empezar-programa"
+                                variante="exito"
+                                icono={iconoEditor}
+                                onClick={alternarEditor}
+                                className="col-span-2 sm:col-span-1"
+                            >
+                                {textoEditor}
+                            </Boton>
                         </div>
+
                         {banner && (
                             <div
                                 id="edit-banner"
-                                className="alert alert-warning"
-                                style={{ marginTop: 16, marginBottom: 15, padding: '10px 15px', fontWeight: 'bold' }}
+                                className="body-5 mt-4 flex items-center gap-2 rounded-lg bg-warn-bg px-3 py-2 text-warn"
                             >
-                                <i className="fas fa-edit"></i> <span id="edit-banner-text">{banner}</span>
+                                <PencilSimple size={16} aria-hidden="true" />
+                                <span id="edit-banner-text">{banner}</span>
                             </div>
                         )}
+
                         {editorAbierto && (
                             <>
-                                {/* Pantalla ancha: editor con chips; el resto: editor actual con vista por día y por semana */}
-                                {escritorio ? (
-                                    <EditorEscritorio
-                                        filas={filas}
-                                        onCambiar={setFilas}
-                                        puntos={puntos}
-                                        semanaInicio={inicio}
-                                    />
-                                ) : (
-                                    <EditorTurnos
-                                        filas={filas}
-                                        onCambiar={setFilas}
-                                        puntos={puntos}
-                                        semanaInicio={inicio}
-                                    />
-                                )}
-                                <div id="programa-actions" style={{ marginTop: 20 }}>
-                                    <button type="submit" className="btn btn-primary" disabled={guardando}>
-                                        <i className="fas fa-save"></i> <span className="btn-text">{textoGuardar}</span>
-                                    </button>
+                                <div className="mt-4">
+                                    {/* Desde 769 px la tabla con chips; en móvil, la vista por día y por semana */}
+                                    {escritorio ? (
+                                        <EditorEscritorio
+                                            filas={filas}
+                                            onCambiar={setFilas}
+                                            puntos={puntos}
+                                            semanaInicio={inicio}
+                                        />
+                                    ) : (
+                                        <EditorMovil
+                                            filas={filas}
+                                            onCambiar={setFilas}
+                                            puntos={puntos}
+                                            semanaInicio={inicio}
+                                        />
+                                    )}
+                                </div>
+                                <div
+                                    id="programa-actions"
+                                    className="mt-4 flex flex-wrap items-center justify-end gap-2"
+                                >
                                     {editando && (
-                                        <>
-                                            {' '}
-                                            <button type="button" className="btn btn-secondary" onClick={cerrarEdicion}>
-                                                <i className="fas fa-times"></i> Cancelar Edición
-                                            </button>{' '}
-                                            <MenuFlotante
-                                                opciones={[
-                                                    {
-                                                        texto: 'Actualizar con la plantilla',
-                                                        icono: 'fa-file-import',
-                                                        onClick: actualizarConPlantilla
-                                                    }
-                                                ]}
-                                            />
-                                        </>
+                                        <MenuAcciones
+                                            etiqueta="Más acciones"
+                                            items={[
+                                                {
+                                                    texto: 'Actualizar con la plantilla',
+                                                    icono: FileArrowDown,
+                                                    onClick: actualizarConPlantilla
+                                                }
+                                            ]}
+                                            boton={({ ref, abierto, alternar }) => (
+                                                <Boton
+                                                    ref={ref}
+                                                    variante="secundario"
+                                                    aria-label="Más acciones"
+                                                    aria-haspopup="menu"
+                                                    aria-expanded={abierto}
+                                                    onClick={alternar}
+                                                >
+                                                    <DotsThree size={16} weight="bold" aria-hidden="true" />
+                                                </Boton>
+                                            )}
+                                        />
                                     )}
                                     {esPlantilla && (
-                                        <>
-                                            {' '}
-                                            <button
-                                                type="button"
-                                                id="btn-restablecer-plantilla"
-                                                className="btn btn-warning"
-                                                style={{ display: 'inline-flex' }}
-                                                onClick={restablecer}
-                                            >
-                                                <i className="fas fa-undo"></i> Restablecer Plantilla
-                                            </button>
-                                        </>
+                                        <Boton
+                                            id="btn-restablecer-plantilla"
+                                            variante="advertencia"
+                                            icono={ArrowCounterClockwise}
+                                            onClick={restablecer}
+                                        >
+                                            Restablecer Plantilla
+                                        </Boton>
                                     )}
+                                    {editando && (
+                                        <Boton variante="secundario" icono={X} onClick={cerrarEdicion}>
+                                            Cancelar Edición
+                                        </Boton>
+                                    )}
+                                    <Boton type="submit" variante="primario" icono={FloppyDisk} disabled={guardando}>
+                                        {textoGuardar}
+                                    </Boton>
                                 </div>
                             </>
                         )}
                     </form>
                 </div>
-            </div>
+            </section>
             {!esPlantilla && (
                 <ProgramasGuardados
                     programas={programas}

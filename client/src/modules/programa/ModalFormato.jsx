@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CAMPOS_FORMATO, FORMATO_DEFECTO, limpiarFormato } from './filas.js';
 
 /**
@@ -67,7 +68,8 @@ export default function ModalFormato({ formato, esLibre, descripcion, onAplicar,
     /** @param {boolean} activo */
     const cls = (activo) => (activo ? 'activo' : undefined);
 
-    return (
+    // Se dibuja en el body: fuera de cualquier contenedor `tw`, para conservar sus estilos
+    return createPortal(
         <div
             className="modal-overlay"
             onClick={(e) => {
@@ -183,6 +185,7 @@ export default function ModalFormato({ formato, esLibre, descripcion, onAplicar,
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
