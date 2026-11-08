@@ -247,3 +247,17 @@
         transform: none !important;
     }
 }
+
+/* Pantalla de alto fijo en móvil (la activa Layout con la clase shell-movil): el documento no se desplaza y solo el
+   contenido hace scroll. El CSS anterior fija body en min-height: 100vh, que en Android es más alto que lo visible y
+   deja el documento desplazable: el navegador lo sube y la barra inferior queda con un hueco debajo. */
+@layer components {
+    @media (max-width: 639px) {
+        html.shell-movil,
+        html.shell-movil body {
+            height: var(--alto-app, 100dvh);
+            min-height: 0;
+            overflow: hidden;
+        }
+    }
+}
