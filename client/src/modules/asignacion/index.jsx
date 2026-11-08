@@ -301,8 +301,8 @@ export default function Asignacion() {
                     subtitulo="Elige una semana y genera las asignaciones automáticamente"
                 />
                 <div className={CUERPO}>
-                    <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[2fr_1fr]">
-                        <div className="min-w-0">
+                    <div className="flex flex-wrap items-end gap-3">
+                        <div className="w-72 max-w-full">
                             <label className={`${ETIQUETA} flex items-center gap-1`}>
                                 <CalendarBlank size={16} aria-hidden="true" />
                                 Semana
@@ -334,7 +334,6 @@ export default function Asignacion() {
                             icono={MagicWand}
                             disabled={ejecutando}
                             onClick={ejecutar}
-                            className="w-full"
                         >
                             Ejecutar Algoritmo
                         </Boton>
