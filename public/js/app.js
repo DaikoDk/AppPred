@@ -122,7 +122,7 @@ async function checkAuth() {
 
 /* ====== TABS ====== */
 function initTabs() {
-    const titles = { asignacion: 'Asignación', programa: 'Programa Semanal', conductores: 'Conductores', puntos: 'Puntos de Reunión', historial: 'Historial', admin: 'Admin' };
+    const titles = { asignacion: 'Asignación', programa: 'Programa', conductores: 'Conductores', puntos: 'Puntos de Reunión', historial: 'Historial', admin: 'Admin' };
     document.querySelectorAll('.nav-item[data-tab]').forEach(tab => {
         tab.addEventListener('click', e => {
             e.preventDefault();
@@ -1326,7 +1326,7 @@ async function loadPlantilla() {
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.remove('active'));
     document.getElementById('nav-plantilla')?.classList.add('active');
     const pt = document.getElementById('page-title');
-    if (pt) pt.textContent = 'Plantilla (Editar modelo por defecto)';
+    if (pt) pt.textContent = 'Plantilla';
 
     editandoProgramaId = TEMPLATE_ID;
     modoPlantilla = true;
