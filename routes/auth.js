@@ -14,7 +14,9 @@ function genToken(userId, email) {
 
 router.get('/google', async (req, res) => {
     try {
-        const redirectUrl = process.env.SUPABASE_AUTH_REDIRECT_URL ||
+        // En desarrollo vuelve al host desde el que se abrió la app (localhost o la IP de la LAN),
+        // no a la URL de producción de SUPABASE_AUTH_REDIRECT_URL. Debe estar en Redirect URLs de Supabase.
+        const redirectUrl = (process.env.NODE_ENV === 'production' && process.env.SUPABASE_AUTH_REDIRECT_URL) ||
             `${req.protocol}://${req.get('host')}/`;
 
         const { data, error } = await supabase.auth.signInWithOAuth({
