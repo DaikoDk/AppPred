@@ -271,5 +271,10 @@
             min-height: 0;
             overflow: hidden;
         }
+        /* El fondo azul va solo en html: lo que queda fuera del alto de la app (la barra del navegador) toma el color de la
+           barra inferior. Si se pone también en body, toda la pantalla se vuelve azul. */
+        html.shell-movil {
+            background-color: var(--color-primary);
+        }
     }
 }
