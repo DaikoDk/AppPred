@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FloppyDisk, PencilSimple, X } from '@phosphor-icons/react';
-import { nombreDia } from '../../utils/dias.js';
 import Boton from '../../components/ui/Boton.jsx';
-import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import { CAMPO, CASILLA, ETIQUETA, INSIGNIA, RESUMEN } from '../../components/ui/estilos.js';
 import Desplegable from '../../components/ui/Desplegable.jsx';
 import { OPCIONES_GRUPO } from './grupos.js';
@@ -28,7 +26,6 @@ import GrillaDisponibilidad from './GrillaDisponibilidad.jsx';
  * }} props
  */
 export default function Disponibilidad({ conductor, inicial, onGuardar, onCancelarEdicion, onCerrar, onEditando }) {
-    const confirmar = useConfirmar();
     const [editando, setEditando] = useState(false);
     // Avisa a la pestaña si la grilla está en edición (cambia el borde y el encabezado)
     useEffect(() => {
@@ -56,28 +53,6 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
                 ? lista.map((s) => (s.dia === dia && s.hora === hora ? { ...s, disponible } : s))
                 : [...lista, { dia, hora, disponible }];
         });
-
-    /** Marcar o quitar pide confirmación (modal), como el resto de confirmaciones de la app (ADR-016). @param {Dia} dia @param {string} hora */
-    const alternar = async (dia, hora) => {
-        const activo = slots.some((s) => s.dia === dia && s.hora === hora && s.disponible);
-        const ok = await confirmar(
-            activo
-                ? {
-                      titulo: '¿Quitar este horario?',
-                      mensaje: `${nombreDia(dia)} — ${hora}`,
-                      textoConfirmar: 'Quitar',
-                      peligro: true,
-                      icono: 'fa-trash'
-                  }
-                : {
-                      titulo: '¿Agregar este horario?',
-                      mensaje: `${nombreDia(dia)} — ${hora}`,
-                      textoConfirmar: 'Agregar',
-                      icono: 'fa-plus'
-                  }
-        );
-        if (ok === true) marcar(dia, hora, !activo);
-    };
 
     const guardar = async () => {
         try {
@@ -149,7 +124,7 @@ export default function Disponibilidad({ conductor, inicial, onGuardar, onCancel
                 <>
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
                         <div className="min-w-0 flex-1">
-                            <GrillaDisponibilidad slots={slots} editable onAlternar={alternar} />
+                            <GrillaDisponibilidad slots={slots} editable onMarcar={marcar} />
                         </div>
 
                         <div className={`${RESUMEN} lg:w-72 lg:shrink-0`}>

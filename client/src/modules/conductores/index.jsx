@@ -4,13 +4,12 @@ import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { CUERPO, RAIZ, TARJETA } from '../../components/ui/estilos.js';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
-import FormConductor from './FormConductor.jsx';
+import ModalNuevoConductor from './ModalNuevoConductor.jsx';
 import ListaConductores from './ListaConductores.jsx';
 import Disponibilidad from './Disponibilidad.jsx';
 import { mensajeError } from '../../utils/errores.js';
 import {
     actualizarConductor,
-    crearConductor,
     desactivarConductor,
     guardarDisponibilidad,
     listarConductores,
@@ -30,6 +29,7 @@ export default function Conductores() {
     const [errorLista, setErrorLista] = useState(false);
     // Panel de disponibilidad abierto; `version` fuerza a recargar el panel desde el servidor
     const [enEdicion, setEnEdicion] = useState(false);
+    const [nuevoAbierto, setNuevoAbierto] = useState(false);
     const [panel, setPanel] = useState(
         /** @type {{ conductor: Conductor, slots: DisponibilidadSlot[], version: number } | null} */ (null)
     );
@@ -59,19 +59,6 @@ export default function Conductores() {
             setPanel((p) => ({ conductor, slots, version: (p?.version ?? 0) + 1 }));
         } catch {
             toast('Error cargando disponibilidad', 'error');
-        }
-    };
-
-    /** @param {import('./api.js').DatosConductor} datos */
-    const crear = async (datos) => {
-        try {
-            const nuevo = await crearConductor(datos);
-            toast('Conductor creado', 'success');
-            const lista = await recargar();
-            await abrirDisponibilidad(nuevo.id, lista);
-        } catch (err) {
-            toast(mensajeError(err, 'Error'), 'error');
-            throw err;
         }
     };
 
@@ -112,8 +99,6 @@ export default function Conductores() {
 
     return (
         <div className={RAIZ}>
-            <FormConductor onGuardar={crear} />
-
             {/* En edición el borde cambia de color: no se combina con border-line (ambas fijan el color del borde) */}
             <section className={enEdicion ? 'rounded-3xl border border-editando bg-surface' : TARJETA}>
                 <EncabezadoTarjeta
@@ -152,7 +137,19 @@ export default function Conductores() {
                 error={errorLista}
                 onDisponibilidad={(id) => abrirDisponibilidad(id)}
                 onDesactivar={desactivar}
+                onNuevo={() => setNuevoAbierto(true)}
             />
+
+            {nuevoAbierto && (
+                <ModalNuevoConductor
+                    onCerrar={() => setNuevoAbierto(false)}
+                    onCreado={async (id) => {
+                        setNuevoAbierto(false);
+                        const lista = await recargar();
+                        await abrirDisponibilidad(id, lista);
+                    }}
+                />
+            )}
         </div>
     );
 }

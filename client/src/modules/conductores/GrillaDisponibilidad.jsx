@@ -1,8 +1,10 @@
 // @ts-check
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Check, Plus } from '@phosphor-icons/react';
 import { DIAS, nombreDia } from '../../utils/dias.js';
 import { FRANJAS } from '../../utils/constantes.js';
+import { useConfirmar } from '../../components/ui/Confirmar.jsx';
+import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 
 /**
  * @typedef {import('../../types/models').Dia} Dia
@@ -38,19 +40,121 @@ const FRANJA_DOMINGO = FRANJAS[FRANJAS.length - 1];
 const aplica = (dia, hora) => (hora === FRANJA_DOMINGO) === (dia === 'DOMINGO');
 
 /**
- * Grilla de disponibilidad: franjas en filas y días en columnas. Cada casilla es un espacio de la semana:
- * marcada (azul) si el conductor puede ese horario, con borde punteado si no; gris si ese espacio no aplica.
- * En modo edición cada casilla se marca o se quita con un clic.
+ * Grilla de disponibilidad. En escritorio: franjas en filas y días en columnas (maqueta). En móvil: un día
+ * a la vez, con cada franja como botón de ancho completo, porque siete columnas no entran en un teléfono.
+ * Marcar o quitar pide confirmación (modal, ADR-016) y luego llama a `onMarcar`.
+ * Una casilla marcada es azul; una vacía, punteada; gris si ese espacio no aplica.
  * @param {{
  *   slots: Disponibilidad[],
  *   editable: boolean,
- *   onAlternar?: (dia: Dia, hora: string) => void
+ *   onMarcar?: (dia: Dia, hora: string, disponible: boolean) => void
  * }} props
  */
-export default function GrillaDisponibilidad({ slots, editable, onAlternar }) {
+export default function GrillaDisponibilidad({ slots, editable, onMarcar }) {
+    const confirmar = useConfirmar();
+    const escritorio = useMediaQuery('(min-width: 640px)');
+    const [diaMovil, setDiaMovil] = useState(/** @type {Dia} */ ('LUNES'));
     const activos = new Set(slots.filter((s) => s.disponible).map((s) => `${s.dia}|${s.hora}`));
     const base =
         'grid h-12 w-full place-items-center rounded-lg transition-[background-color,border-color,transform] duration-300 ease-skill';
+
+    /** @param {Dia} dia @param {string} hora */
+    const alternar = async (dia, hora) => {
+        const on = activos.has(`${dia}|${hora}`);
+        const ok = await confirmar(
+            on
+                ? {
+                      titulo: '¿Quitar este horario?',
+                      mensaje: `${nombreDia(dia)} — ${hora}`,
+                      textoConfirmar: 'Quitar',
+                      peligro: true,
+                      icono: 'fa-trash'
+                  }
+                : {
+                      titulo: '¿Agregar este horario?',
+                      mensaje: `${nombreDia(dia)} — ${hora}`,
+                      textoConfirmar: 'Agregar',
+                      icono: 'fa-plus'
+                  }
+        );
+        if (ok === true) onMarcar?.(dia, hora, !on);
+    };
+
+    if (!escritorio) {
+        return (
+            <div className="flex flex-col gap-3">
+                <div role="tablist" aria-label="Día de la semana" className="flex gap-1.5 overflow-x-auto pb-1">
+                    {DIAS.map((d) => {
+                        const elegido = d === diaMovil;
+                        return (
+                            <button
+                                key={d}
+                                type="button"
+                                role="tab"
+                                aria-selected={elegido}
+                                onClick={() => setDiaMovil(d)}
+                                className={`caption-1 min-h-9 shrink-0 cursor-pointer rounded-lg px-3 text-ink transition-[box-shadow,opacity] duration-300 ease-skill ${COLOR_DIA[d]} ${elegido ? 'ring-2 ring-ink' : 'opacity-70'}`}
+                            >
+                                {nombreDia(d)}
+                            </button>
+                        );
+                    })}
+                </div>
+                <ul className="flex list-none flex-col gap-2">
+                    {FRANJAS.map((hora) => {
+                        const clave = `${diaMovil}|${hora}`;
+                        const on = activos.has(clave);
+                        if (!on && !aplica(diaMovil, hora)) {
+                            return (
+                                <li
+                                    key={clave}
+                                    className="flex min-h-12 items-center justify-between gap-3 rounded-lg bg-fill px-3 text-soft"
+                                >
+                                    <span className="body-6">{hora}</span>
+                                    <span className="caption-1">No aplica</span>
+                                </li>
+                            );
+                        }
+                        const contenido = (
+                            <>
+                                <span className="body-6 text-left">{hora}</span>
+                                <span className="caption-1 inline-flex shrink-0 items-center gap-1.5">
+                                    {on ? (
+                                        <>
+                                            <Check size={16} weight="bold" aria-hidden="true" /> Disponible
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Plus size={16} aria-hidden="true" /> No disponible
+                                        </>
+                                    )}
+                                </span>
+                            </>
+                        );
+                        const clase = `flex min-h-12 w-full items-center justify-between gap-3 rounded-lg px-3 ${
+                            on ? 'bg-primary text-white' : 'border border-dashed border-line bg-surface text-muted'
+                        }`;
+                        return (
+                            <li key={clave}>
+                                {editable ? (
+                                    <button
+                                        type="button"
+                                        aria-pressed={on}
+                                        onClick={() => alternar(diaMovil, hora)}
+                                        className={`${clase} cursor-pointer outline-none transition-[background-color,transform] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]`}
+                                    >
+                                        {contenido}
+                                    </button>
+                                ) : (
+                                    <div className={clase}>{contenido}</div>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+        );
+    }
 
     return (
         <div className="overflow-x-auto">
@@ -95,7 +199,7 @@ export default function GrillaDisponibilidad({ slots, editable, onAlternar }) {
                                     type="button"
                                     aria-pressed={on}
                                     aria-label={`${nombreDia(dia)} ${hora}`}
-                                    onClick={() => onAlternar?.(dia, hora)}
+                                    onClick={() => alternar(dia, hora)}
                                     className={`${clase} cursor-pointer outline-none hover:border-primary/60 focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.96]`}
                                 >
                                     {contenido}

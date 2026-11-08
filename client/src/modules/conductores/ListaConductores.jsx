@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Table, Trash, Users } from '@phosphor-icons/react';
+import { Table, Trash, UserPlus, Users } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import Desplegable from '../../components/ui/Desplegable.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
@@ -24,10 +24,11 @@ import { OPCIONES_GRUPO, claseBadgeGrupo } from './grupos.js';
  *   conductores: Conductor[],
  *   error: boolean,
  *   onDisponibilidad: (id: string) => void,
- *   onDesactivar: (c: Conductor) => void
+ *   onDesactivar: (c: Conductor) => void,
+ *   onNuevo: () => void
  * }} props
  */
-export default function ListaConductores({ conductores, error, onDisponibilidad, onDesactivar }) {
+export default function ListaConductores({ conductores, error, onDisponibilidad, onDesactivar, onNuevo }) {
     const [texto, setTexto] = useState('');
     const [grupo, setGrupo] = useState('');
     const [soloPc, setSoloPc] = useState(false);
@@ -47,6 +48,11 @@ export default function ListaConductores({ conductores, error, onDisponibilidad,
         <section className={TARJETA}>
             <EncabezadoTarjeta icono={Users} titulo="Lista de Conductores" />
             <div className={CUERPO}>
+                <div className="mb-4 flex justify-end">
+                    <Boton variante="primario" icono={UserPlus} onClick={onNuevo}>
+                        Nuevo conductor
+                    </Boton>
+                </div>
                 <div className="mb-4 grid grid-cols-1 items-end gap-3 sm:grid-cols-[2fr_1fr]">
                     <input
                         type="text"
