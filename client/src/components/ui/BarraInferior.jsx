@@ -31,7 +31,7 @@ export default function BarraInferior({ barra, mas }) {
     return (
         <nav
             aria-label="Secciones de Hoja de Predicación"
-            className="tw fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t border-line bg-surface px-2 py-1 sm:hidden"
+            className="tw fixed inset-x-0 bottom-0 z-30 flex gap-1 border-t border-line bg-fill px-2 py-1 sm:hidden"
         >
             {barra.map((s) => {
                 const Icono = s.icono;
@@ -39,7 +39,9 @@ export default function BarraInferior({ barra, mas }) {
                     <NavLink
                         key={s.ruta}
                         to={s.ruta}
-                        className={({ isActive }) => `${CELDA} ${isActive ? 'text-primary' : 'text-muted'}`}
+                        className={({ isActive }) =>
+                            `${CELDA} ${isActive ? 'bg-primary/15 text-primary' : 'text-muted'}`
+                        }
                     >
                         <Icono size={22} aria-hidden="true" />
                         <span className="caption-3 w-full truncate text-center">{s.corto}</span>
@@ -53,7 +55,7 @@ export default function BarraInferior({ barra, mas }) {
                     aria-haspopup="menu"
                     aria-expanded={abierto}
                     onClick={() => setAbierto((a) => !a)}
-                    className={`${CELDA} cursor-pointer ${masActivo || abierto ? 'text-primary' : 'text-muted'}`}
+                    className={`${CELDA} cursor-pointer ${masActivo || abierto ? 'bg-primary/15 text-primary' : 'text-muted'}`}
                 >
                     <DotsThree size={22} weight="bold" aria-hidden="true" />
                     <span className="caption-3 w-full truncate text-center">Más</span>
