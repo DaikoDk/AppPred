@@ -10,7 +10,7 @@ import Login from './pages/Login.jsx';
 // Cada módulo se carga bajo demanda (ADR-019)
 const Programa = lazy(() => import('./modules/programa/index.jsx'));
 const Asignacion = lazy(() => import('./modules/asignacion/index.jsx'));
-const Plantilla = lazy(() => import('./modules/plantilla/index.jsx'));
+const Plantilla = lazy(() => import('./modules/programa/Plantilla.jsx'));
 const Conductores = lazy(() => import('./modules/conductores/index.jsx'));
 const Puntos = lazy(() => import('./modules/puntos/index.jsx'));
 const Historial = lazy(() => import('./modules/historial/index.jsx'));
