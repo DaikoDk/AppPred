@@ -14,3 +14,6 @@ RENDER
 *.log
 .DS_Store
 Thumbs.db
+
+# Páginas generadas por Archify
+.archify/
