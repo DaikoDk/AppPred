@@ -15,7 +15,7 @@ import PanelFlotante from './PanelFlotante.jsx';
 
 // Cada celda ocupa lo mismo; el texto corto cabe en 390 px con cuatro secciones y "Más"
 const CELDA =
-    'flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg py-2 outline-none transition-[color] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary';
+    'no-underline flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg py-2 outline-none transition-[color] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary';
 
 /**
  * Barra inferior de navegación de Hoja de Predicación, solo en móvil (menos de 640px).
