@@ -291,3 +291,20 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - El PDF se obtiene imprimiendo esa misma imagen desde un iframe oculto con `@page { size: A4 landscape }`: no hay librería de PDF y cambia según el navegador cómo se ve el cuadro de impresión.
 - Compartir usa la Web Share API con archivos cuando el navegador la soporta; si no, descarga y abre WhatsApp Web (no permite adjuntar archivos por URL).
 - Reglas: RN-IMG-01 a RN-IMG-06.
+
+## ADR-024: El historial del algoritmo se mide en semanas asignadas
+
+**Estado:** Vigente
+
+**Contexto:** El algoritmo miraba el historial de los últimos 28 días contados desde hoy sobre la fecha de confirmación (`ultima_asignacion`). Si se confirmaban varias semanas el mismo día, todas quedaban con la fecha de hoy y parecían recientes; y asignar una semana distinta de la actual daba un puntaje distinto. Los programas viejos se borran (ADR-017, RN-PROG-03) pero el algoritmo no los lee: usa `asignaciones_historial`.
+
+**Decisión:**
+- Se usan las **últimas 4 semanas con asignación anteriores a la semana que se asigna**, ubicadas por el `semana_inicio` de su programa (`utils/historialAsignacion.js`, constante `SEMANAS_HISTORIAL`).
+- "Última asignación" se mide con el inicio de esa semana, no con la fecha de confirmación.
+- `/asignar` y `/confirmar` usan el mismo cálculo, así el `score` guardado y el mostrado parten del mismo historial.
+- No hay reinicio manual: las semanas más viejas salen solas de la ventana. No se agregan columnas ni se borra historial.
+
+**Consecuencias:**
+- Cambia quién queda asignado respecto a la ventana de 28 días (RN-ASIG-05 y RN-ASIG-06).
+- Las filas de `asignaciones_historial` de programas borrados se ignoran; la tabla sigue creciendo unas 17 filas por semana (poco).
+- Reglas: RN-ASIG-05 y RN-ASIG-06. Prueba: `client/src/utils/historialAsignacion.test.js`.
