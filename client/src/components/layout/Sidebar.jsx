@@ -1,17 +1,25 @@
 // @ts-check
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { CaretDown, MapPin, SignOut } from '@phosphor-icons/react';
+import { CaretDown, SignOut, SquaresFour } from '@phosphor-icons/react';
 import { ITEMS_NAV, PESTANAS_HOJA } from './navegacion.js';
 import { useSesion } from '../../hooks/useSesion.jsx';
 
 // Clases de la skill (ADR-021) aplicadas sobre las del CSS anterior, que siguen manejando ancho, estado contraído
 // y overlay. Las etiquetas van en flujo normal (no absolutas) y se ocultan al contraer.
 const ITEM =
-    'nav-item body-5 static flex items-center gap-3 rounded-lg border-l-0 px-3 py-2.5 no-underline transition-[background-color,color] duration-300 ease-skill outline-none focus-visible:ring-2 focus-visible:ring-white/60';
+    'nav-item body-5 static flex items-center rounded-lg border-l-0 px-3 py-2.5 no-underline transition-[background-color,color] duration-300 ease-skill outline-none focus-visible:ring-2 focus-visible:ring-white/60';
 const ITEM_ACTIVO = 'bg-white/15 text-white';
 const ITEM_INACTIVO = 'text-white/75 hover:bg-white/10 hover:text-white';
 // Padre con subsecciones: texto más fuerte; lleva el resalte principal y la subsección activa uno más suave
+const TEXTO =
+    'static overflow-hidden whitespace-nowrap transform-none transition-[max-width,opacity,margin] duration-300 ease-skill';
+/** Retraso con que cada texto aparece al expandir el menú (cascada); al contraer desaparecen juntos. */
+const retrasoTexto = (/** @type {boolean} */ colapsado, /** @type {number} */ n) => ({
+    transitionDelay: colapsado ? '0ms' : 50 + n * 40 + 'ms'
+});
+const textoItem = (/** @type {boolean} */ colapsado) =>
+    `${TEXTO} ${colapsado ? 'ml-0 max-w-0 opacity-0' : 'ml-3 max-w-[220px] opacity-100'}`;
 const ITEM_GRUPO = ITEM.replace('body-5', 'body-4');
 const SUBITEM_ACTIVO = 'bg-white/10 text-white';
 const SUBITEM_INACTIVO = 'text-white/70 hover:bg-white/10 hover:text-white';
@@ -39,15 +47,19 @@ export default function Sidebar({ colapsado, abierto, onNavegar }) {
 
     return (
         <aside className={`${clases} tw bg-primary-dark text-white`} id="sidebar">
-            <div className="flex h-[76px] items-center gap-3 border-b border-white/10 px-6">
-                <MapPin size={20} weight="fill" aria-hidden="true" className="shrink-0" />
-                <span className={`heading-6 static whitespace-nowrap transform-none ${colapsado ? 'hidden' : ''}`}>
-                    Predicación
+            {/* El ícono queda centrado en el ancho contraído (70 px) y no cambia de tamaño; solo el texto aparece y desaparece */}
+            <div className="flex h-[76px] items-center gap-3 overflow-hidden border-b border-white/10 pl-[21px]">
+                <SquaresFour size={28} weight="fill" aria-hidden="true" className="min-h-7 min-w-7 shrink-0" />
+                <span
+                    className={`static flex min-w-0 flex-col whitespace-nowrap transform-none transition-opacity duration-300 ease-skill ${colapsado ? 'opacity-0' : ''}`}
+                >
+                    <span className="heading-6">Asignaciones</span>
+                    <span className="caption-4 text-white/70">Las Vegas</span>
                 </span>
             </div>
             {/* Contraído, los tooltips salen hacia la derecha: sin recorte no aparece la barra de desplazamiento */}
             <nav className={`sidebar-nav flex flex-col gap-1 p-3 ${colapsado ? 'overflow-visible!' : ''}`}>
-                {ITEMS_NAV.filter((i) => !i.soloSuperAdmin || esSuperAdmin).map((item) => {
+                {ITEMS_NAV.filter((i) => !i.soloSuperAdmin || esSuperAdmin).map((item, n) => {
                     const Icono = item.icono;
                     const hijos = (HIJOS[/** @type {keyof typeof HIJOS} */ (item.ruta)] ?? []).filter(
                         (h) => !h.soloSuperAdmin || esSuperAdmin
@@ -67,8 +79,13 @@ export default function Sidebar({ colapsado, abierto, onNavegar }) {
                             >
                                 {({ isActive }) => (
                                     <>
-                                        <Icono size={20} weight={isActive ? 'fill' : 'regular'} aria-hidden="true" />
-                                        <span className={colapsado ? 'hidden' : 'static transform-none'}>
+                                        <Icono
+                                            size={20}
+                                            weight={isActive ? 'fill' : 'regular'}
+                                            aria-hidden="true"
+                                            className="shrink-0"
+                                        />
+                                        <span className={textoItem(colapsado)} style={retrasoTexto(colapsado, n)}>
                                             {item.titulo}
                                         </span>
                                     </>
@@ -91,14 +108,15 @@ export default function Sidebar({ colapsado, abierto, onNavegar }) {
                                         />
                                     </button>
                                     {grupoAbierto && (
-                                        <ul
-                                            id={idGrupo}
-                                            className="mt-1 ml-4 flex animate-sube list-none flex-col gap-0.5"
-                                        >
-                                            {hijos.map((h) => {
+                                        <ul id={idGrupo} className="mt-1 ml-4 flex list-none flex-col gap-0.5">
+                                            {hijos.map((h, n) => {
                                                 const IconoHijo = h.icono;
                                                 return (
-                                                    <li key={h.ruta}>
+                                                    <li
+                                                        key={h.ruta}
+                                                        className="animate-[sube_220ms_var(--ease-skill)_backwards] motion-reduce:animate-none"
+                                                        style={{ animationDelay: n * 35 + 'ms' }}
+                                                    >
                                                         <NavLink
                                                             to={h.ruta}
                                                             onClick={onNavegar}
@@ -106,7 +124,11 @@ export default function Sidebar({ colapsado, abierto, onNavegar }) {
                                                                 `${SUBITEM} ${isActive ? SUBITEM_ACTIVO : SUBITEM_INACTIVO}`
                                                             }
                                                         >
-                                                            <IconoHijo size={16} aria-hidden="true" />
+                                                            <IconoHijo
+                                                                size={16}
+                                                                aria-hidden="true"
+                                                                className="shrink-0"
+                                                            />
                                                             {h.titulo}
                                                         </NavLink>
                                                     </li>
@@ -128,8 +150,10 @@ export default function Sidebar({ colapsado, abierto, onNavegar }) {
                         cerrar();
                     }}
                 >
-                    <SignOut size={20} aria-hidden="true" />
-                    <span className={colapsado ? 'hidden' : 'static transform-none'}>Cerrar Sesión</span>
+                    <SignOut size={20} aria-hidden="true" className="shrink-0" />
+                    <span className={textoItem(colapsado)} style={retrasoTexto(colapsado, ITEMS_NAV.length)}>
+                        Cerrar Sesión
+                    </span>
                 </a>
             </nav>
         </aside>
