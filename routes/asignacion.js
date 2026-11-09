@@ -5,6 +5,7 @@ const router = express.Router();
 const { supabase } = require('../supabase/client');
 const { generarDistanciaHaversine } = require('../utils/geolib');
 const { exportAsignacionToSheets } = require('../utils/googleSheets');
+const { cargarHistorial } = require('../utils/historialAsignacion');
 
 function calcularScore(c, turno, programa, yaAsignadosSemana, histTotales, ultimaAsignacion, puntosMap, dispCounts) {
     const modalidad = turno.modalidad || 'FISICO';
@@ -87,23 +88,8 @@ router.post('/asignar', async (req, res) => {
             }
         });
 
-        // Only consider history from the last 4 weeks
-        const cuatroSemanasAtras = new Date();
-        cuatroSemanasAtras.setDate(cuatroSemanasAtras.getDate() - 28);
-        const fechaCorte = cuatroSemanasAtras.toISOString().split('T')[0];
-
-        const { data: historial } = await supabase
-            .from('asignaciones_historial')
-            .select('conductor_id, cantidad_turnos, ultima_asignacion')
-            .gte('ultima_asignacion', fechaCorte);
-        const histTotales = {};
-        const ultimaAsignacion = {};
-        (historial || []).forEach(h => {
-            histTotales[h.conductor_id] = (histTotales[h.conductor_id] || 0) + (h.cantidad_turnos || 0);
-            if (h.ultima_asignacion && (!ultimaAsignacion[h.conductor_id] || h.ultima_asignacion > ultimaAsignacion[h.conductor_id])) {
-                ultimaAsignacion[h.conductor_id] = h.ultima_asignacion;
-            }
-        });
+        // History: the last 4 assigned weeks before the week being assigned (ADR-024)
+        const { histTotales, ultimaAsignacion } = await cargarHistorial(supabase, programa.semana_inicio);
 
         const { data: puntosDB } = await supabase
             .from('puntos_reunion')
@@ -217,9 +203,7 @@ router.post('/confirmar', async (req, res) => {
         const puntosMap = {};
         (puntosDB || []).forEach(p => { if (p.ubicacion) puntosMap[p.nombre] = p.ubicacion; });
 
-        const { data: historial } = await supabase
-            .from('asignaciones_historial')
-            .select('conductor_id, cantidad_turnos, ultima_asignacion');
+        const { histTotales, ultimaAsignacion } = await cargarHistorial(supabase, programa.semana_inicio);
 
         const hoy = new Date().toISOString().split('T')[0];
 
@@ -233,17 +217,6 @@ router.post('/confirmar', async (req, res) => {
                 .eq('id', a.turno_id)
                 .single();
             if (!turno) continue;
-
-            const histTotales = {};
-            const ultimaAsignacion = {};
-            (historial || []).forEach(h => {
-                if (h.conductor_id === conductor.id) {
-                    histTotales[h.conductor_id] = (histTotales[h.conductor_id] || 0) + (h.cantidad_turnos || 0);
-                    if (h.ultima_asignacion && (!ultimaAsignacion[h.conductor_id] || h.ultima_asignacion > ultimaAsignacion[h.conductor_id])) {
-                        ultimaAsignacion[h.conductor_id] = h.ultima_asignacion;
-                    }
-                }
-            });
 
             const score = calcularScore(conductor, turno, programa, {}, histTotales, ultimaAsignacion, puntosMap, null);
 

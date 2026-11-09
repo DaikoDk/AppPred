@@ -96,14 +96,14 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-ASIG-04 (Back):** Si no hay candidatos, el turno queda sin asignar con la razón "No hay conductores disponibles". **No se relaja ninguna condición** (por ejemplo, un conductor del grupo equivocado nunca se usa como respaldo).
 - **RN-ASIG-05 (Back):** Entre candidatos gana el de mayor **puntaje**:
   - −5000 si ya fue asignado en esa misma semana (casi siempre evita repetir).
-  - −2 por cada turno acumulado en las últimas 4 semanas.
-  - Última asignación: −200 si fue hace 7 días o menos; +50 si fue hace más de 7 días o nunca.
+  - −2 por cada turno acumulado en las últimas 4 semanas asignadas (RN-ASIG-06).
+  - Última asignación: se mide desde el **inicio de la semana** de su última asignación hasta el inicio de la semana que se asigna: −200 si fue 7 días o menos (la semana anterior); +50 si fue hace más o nunca.
   - +200 si el turno es CARTAS o en Parque Las Vegas y el conductor tiene poca movilidad.
   - −200 si el turno es FISICO fuera de Parque Las Vegas y el conductor tiene poca movilidad.
   - +200 si el turno es en Parque Las Vegas y el conductor es `solo_parque`.
   - Cercanía: hasta +10 según la distancia (Haversine) entre su casa y el punto (10 − 0,5 por km, mínimo 0).
   - Escasez: hasta +100 a quien tiene pocos espacios de disponibilidad (100 − 3 por espacio, mínimo 0).
-- **RN-ASIG-06 (Back):** El historial considerado para el puntaje es el de los **últimos 28 días**.
+- **RN-ASIG-06 (Back):** El historial considerado para el puntaje son las **últimas 4 semanas con asignación anteriores a la semana que se asigna**, medidas por el `semana_inicio` de cada programa y no por la fecha en que se confirmó. Una semana sin asignaciones no cuenta como semana de historial. La semana que se asigna y las posteriores no cuentan. Las filas de historial de programas ya borrados se ignoran. (Reemplaza la ventana de 28 días desde hoy; ver ADR-024.)
 - **RN-ASIG-07 (Back):** El puntaje es una heurística voraz: asigna turno por turno en el orden anterior, sin buscar el óptimo global. Cambiar el orden o los pesos cambia los resultados.
 
 ## Confirmar y guardar la asignación
@@ -111,7 +111,7 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-CONF-01 (Front):** Solo se guardan los turnos con conductor elegido; los que quedan en SIN ASIGNAR no se envían ni se modifican.
 - **RN-CONF-02 (Front):** El usuario puede elegir a mano cualquier conductor para un turno SIN ASIGNAR; la lista no se filtra por disponibilidad.
 - **RN-CONF-03 (Front):** Antes de guardar se avisa (sin bloquear) de los turnos con **Territorio vacío**. Solo cuentan los turnos con celda de texto libre vacía; las listas desplegables (como Punto de reunión) y las **filas extra** no cuentan.
-- **RN-CONF-04 (Back):** Confirmar guarda `conductor_id` y `score` en el turno y hace upsert en `asignaciones_historial` por `(semana_id, conductor_id)` con `cantidad_turnos` = veces que el conductor aparece esa semana y `ultima_asignacion` = hoy.
+- **RN-CONF-04 (Back):** Confirmar guarda `conductor_id` y `score` en el turno y hace upsert en `asignaciones_historial` por `(semana_id, conductor_id)` con `cantidad_turnos` = veces que el conductor aparece esa semana y `ultima_asignacion` = hoy. El algoritmo ya no usa `ultima_asignacion`: ubica cada semana por su `semana_inicio` (RN-ASIG-06).
 - **RN-CONF-05 (Back):** Los `conductor_id` que no existan o no estén activos se ignoran sin error.
 - **RN-CONF-06 (Front):** Guardar la asignación **siempre** exporta después a Google Sheets. Si la exportación falla, la asignación **sigue guardada** y se informa el error aparte.
 - **RN-CONF-07 (Back):** "Limpiar" una semana deja `conductor_id` y `score` en null en todos sus turnos y borra su historial de asignaciones.
