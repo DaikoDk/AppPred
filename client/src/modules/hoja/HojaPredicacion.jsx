@@ -22,7 +22,7 @@ export default function HojaPredicacion() {
     const mas = items.filter((p) => !p.enBarra);
     return (
         <>
-            <div className="tw sticky top-[76px] z-20 mx-auto -mt-8 mb-6 hidden w-full max-w-[1244px] bg-[#f5f7fa] pt-8 sm:block">
+            <div className="tw sticky top-[76px] z-20 mx-auto -mt-8 hidden w-full max-w-[1244px] bg-[#f5f7fa] pt-8 pb-6 sm:block before:absolute before:top-full before:left-0 before:size-6 before:content-[''] before:bg-[radial-gradient(circle_at_24px_24px,transparent_24px,#f5f7fa_24px)] after:absolute after:top-full after:right-0 after:size-6 after:content-[''] after:bg-[radial-gradient(circle_at_0_24px,transparent_24px,#f5f7fa_24px)]">
                 <Pestanas items={items} etiqueta="Secciones de Hoja de Predicación" />
             </div>
             {/* Mientras carga el código de una pestaña solo cambia el contenido; el indicador de carga avisa */}
