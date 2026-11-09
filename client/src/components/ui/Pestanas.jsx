@@ -47,7 +47,7 @@ export default function Pestanas({ items, etiqueta }) {
             role="tablist"
             aria-label={etiqueta}
             onKeyDown={teclado}
-            className="tw flex gap-1 overflow-x-auto rounded-xl bg-fill p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="tw flex gap-1 overflow-x-auto rounded-xl bg-fill px-3 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
             {items.map((item, i) => {
                 const Icono = item.icono;
