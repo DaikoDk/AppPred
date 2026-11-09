@@ -37,7 +37,7 @@ export default function Login() {
         <div className="auth-container">
             <div className="auth-card">
                 <div className="auth-header">
-                    <h1>📋 Asignación de Predicación</h1>
+                    <h1>📋 Asignaciones Las Vegas</h1>
                     <p>Inicia sesión con Google para gestionar conductores y turnos</p>
                 </div>
                 <button
