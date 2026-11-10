@@ -5,9 +5,29 @@
 
 Convenciones: **Back** = se aplica en el servidor. **Front** = solo en `client/src/` (el servidor confía en lo que recibe). Las del editor y la asignación están en funciones puras con pruebas (`filas.js`, `logica.js`, `reglasDia.js`).
 
+## Prefijos
+
+Cada grupo de reglas tiene un prefijo. Un módulo nuevo registra aquí el suyo antes de escribir reglas (ver `docs/MODULOS.md`). Un identificador no se reutiliza: si una regla se retira, se marca como Retirada y su número queda ocupado.
+
+| Prefijo | Área | Tema |
+|---|---|---|
+| `RN-AUTH` | General | Autenticación y acceso |
+| `RN-DATA` | General | Datos y límites técnicos |
+| `RN-UI` | General y Hoja de Predicación | Interfaz |
+| `RN-PLAN` | Hoja de Predicación | Plantilla y estructura del programa |
+| `RN-PROG` | Hoja de Predicación | Crear y editar programas |
+| `RN-ACT` | Hoja de Predicación | Actualizar un programa con la plantilla |
+| `RN-COND` | Hoja de Predicación | Conductores y su disponibilidad |
+| `RN-PUNT` | Hoja de Predicación | Puntos de reunión |
+| `RN-ASIG` | Hoja de Predicación | Algoritmo de asignación |
+| `RN-CONF` | Hoja de Predicación | Confirmar y guardar la asignación |
+| `RN-SHEET` | Hoja de Predicación | Exportación a Google Sheets |
+| `RN-IMG` | Hoja de Predicación | Imagen PNG e impresión del programa |
+| `RN-FMT` | Hoja de Predicación | Formato por celda |
+
 ---
 
-## Dominio
+## Dominio (Hoja de Predicación)
 
 - **Programa semanal:** una semana (`semana_inicio`, `semana_fin`) con sus turnos y filas extra.
 - **Turno:** combinación día + franja horaria + grupo, con territorio, punto de reunión, modalidad y, tras asignar, un conductor.

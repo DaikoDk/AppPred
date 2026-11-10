@@ -55,7 +55,7 @@ El cliente está escrito en **JSX** (JavaScript), pero deja listo lo necesario p
 
 ## Qué NO conviene tipar de golpe
 
-- Todo `app.js` heredado: no se migra a TS; se reescribe a React por módulo (ADR-013) y entra ya tipado con JSDoc.
+- El front anterior (`app.js`) ya no existe: se reescribió a React por módulo (ADR-013) y entró tipado con JSDoc. Los módulos nuevos se escriben igual desde el primer archivo (ver `docs/MODULOS.md`).
 - El backend: está fuera de este plan. Si más adelante se tipa, los tipos de `types/models.d.ts` pueden compartirse.
 
 ## Comandos
