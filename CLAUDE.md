@@ -1,7 +1,9 @@
-# AppPred: Sistema de Asignación de Predicación
+# Asignaciones Las Vegas
 
-App interna que arma el programa semanal de predicación, asigna conductores y exporta a Google Sheets.
+Sistema interno de asignaciones de la congregación Las Vegas. Hoy tiene el área Hoja de Predicación (arma el programa semanal de predicación, asigna conductores y exporta a Google Sheets) y crecerá con más áreas. Los nombres antiguos `AppPred` y `DisponibilidApp` se están retirando.
 Backend Express + Supabase (`server.js`, `routes/`, `utils/`); front React + Vite en `client/` (ADR-019).
+
+Para agregar un módulo o un área, sigue [`docs/MODULOS.md`](docs/MODULOS.md). Los servicios externos y las variables de entorno están en [`docs/INFRAESTRUCTURA.md`](docs/INFRAESTRUCTURA.md).
 
 ## Regla principal: leer los ADR y las reglas de negocio antes de tocar código
 
@@ -43,6 +45,7 @@ Gestor de paquetes: **pnpm** (no usar npm ni crear `package-lock.json`). Desde l
 
 - Idioma: interfaz, mensajes, comentarios y commits en español.
 - Commits: tipo convencional (`feat:`, `fix:`, `docs:`...), una idea por commit, **sin línea `Co-Authored-By`**.
+- Ramas: `main` es producción y `develop` es calidad. Cada cambio sale en una rama desde `develop` y vuelve con un PR a `develop`; `develop` pasa a `main` con otro PR.
 - Front:
   - Un módulo por pestaña de Hoja de Predicación (o por área del menú lateral, ADR-022) en `client/src/modules/<modulo>/` (página, componentes, `api.js` y lógica pura); los módulos no se importan entre sí. Lo compartido va a `components/ui`, `utils` o `hooks`.
   - Estilos: Tailwind v4 con el sistema de la skill `landing-page-design` (ADR-021). Todo texto usa un estilo con nombre (`heading-3`, `body-6`, `button-sm`...); espaciados solo de la tabla de la skill; íconos Phosphor; sin cursivas, degradados de fondo ni bordes de un solo lado. Un componente nuevo no usa clases de `styles.css`. Los componentes nuevos llevan la clase `tw` (reseteo acotado, no hay preflight) y los paneles flotantes usan `PanelFlotante`. El editor de Programa tiene dos presentaciones (RN-UI-09). Ese archivo es CSS anterior en la capa `legacy`: no se le agregan reglas y no lo toca Prettier (córrelo siempre desde `client/`, con `pnpm format`).
