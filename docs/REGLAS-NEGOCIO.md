@@ -176,14 +176,14 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 
 ## Interfaz (comportamiento que no debe romperse)
 
-- **RN-UI-01 (Front):** Los estilos de tabla de Programa y Asignación comparten clases (`table-programas`, `card-title-rich`, `menu-flotante`); cambiar una pestaña no debe romper la otra.
-- **RN-UI-02 (Front):** Cada día se pinta con su color (`tr[data-dia]` con variables `--dia-*`); la fila seleccionada se enmarca con el color de su día.
+- **RN-UI-01 (Front):** La tabla de resultados de Asignación tiene el mismo aspecto que el editor de Programa (bloque de día, campos del color del día y mismas columnas). Como los módulos no se importan entre sí, las clases están copiadas en `modules/asignacion/TablaResultados.jsx` desde `modules/programa/editorComun.jsx`: un cambio de aspecto en uno se revisa en el otro.
+- **RN-UI-02 (Front):** Cada día se pinta con su color: el bloque del día define la variable `--dia` y todos los campos de sus filas la usan. Los colores de los días son los de `index.css` (`--color-lunes`...).
 - **RN-UI-03 (Front):** El menú ⋯ de cada fila y el de acciones del programa son **flotantes** (no empujan el contenido).
 - **RN-UI-04 (Front):** Las listas de conductores respetan el texto sin negrita; la negrita roja solo aplica al texto seleccionado de SIN ASIGNAR.
 - **RN-UI-05:** Retirada. Aplicaba a los `onclick` del front anterior; React no los usa.
 - **RN-UI-06 (Front):** Mientras se guarda o exporta, una pantalla de carga bloquea toda la interfaz.
 - **RN-UI-07 (Front):** Tras guardar o limpiar una asignación, la lista "Semana" vuelve a "Seleccionar semana..." (como en el front anterior).
 - **RN-UI-08 (Front):** Hoja de Predicación es `/hoja`, con una pestaña por URL: `/hoja/programa`, `/hoja/asignacion`, `/hoja/plantilla`, `/hoja/conductores`, `/hoja/puntos`, `/hoja/historial` y `/hoja/configuracion` (solo super admin). `/hoja` lleva a `/hoja/programa`. Las rutas de antes (`/programa`, `/asignacion`, `/plantilla`, `/conductores`, `/puntos`, `/historial`) redirigen a su pestaña. `/admin` queda fuera de la hoja (menú lateral, solo super admin). `/`, `/dashboard.html` y rutas desconocidas llevan a `/hoja/programa` (o al login si no hay sesión). `/` también completa el regreso del login con Google.
-- **RN-UI-11 (Front):** La barra de pestañas de la hoja marca la activa según la URL, así que F5 y Atrás la mantienen. Con las flechas izquierda y derecha, Inicio y Fin se cambia de pestaña; solo la activa entra con Tab. Las pestañas de super admin no aparecen para los demás.
-- **RN-UI-09 (Front):** El editor de turnos tiene dos presentaciones con el mismo comportamiento y datos: chips por día en pantallas de 1321 px o más, y la tabla con vista por día y por semana por debajo. Un cambio de comportamiento del editor se hace en las dos.
+- **RN-UI-09 (Front):** El editor de turnos tiene dos presentaciones con el mismo comportamiento y datos: `EditorEscritorio.jsx` (chips por día) desde 769 px, y `EditorMovil.jsx` por debajo, con vista por día (una tarjeta por fila) y por semana (la misma tabla con desplazamiento horizontal); la vista elegida se recuerda en el navegador. Un cambio de comportamiento del editor se hace en las dos.
 - **RN-UI-10 (Front):** Las listas del editor (hora, grupo, punto de reunión, modalidad) no tienen una opción "inválida": si el valor guardado ya no existe en la lista (por ejemplo un punto desactivado) se muestra y se conserva al guardar.
+- **RN-UI-11 (Front):** La barra de pestañas de la hoja marca la activa según la URL, así que F5 y Atrás la mantienen. Con las flechas izquierda y derecha, Inicio y Fin se cambia de pestaña; solo la activa entra con Tab. Las pestañas de super admin no aparecen para los demás.

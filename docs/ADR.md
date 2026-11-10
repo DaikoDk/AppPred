@@ -4,6 +4,22 @@
 
 Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Propuesto.
 
+Para agregar una decisión, usa el número siguiente al último y esta forma:
+
+```markdown
+## ADR-NNN: Título que dice la decisión
+
+**Estado:** Propuesto | Vigente | Reemplazado por ADR-NNN
+
+**Contexto:** Qué problema o necesidad la motivó.
+
+**Decisión:** Qué se decidió, concreto y verificable en el código.
+
+**Consecuencias:** Qué implica, qué riesgos deja y qué reglas (RN) afecta.
+```
+
+Si una corrección solo actualiza una descripción que quedó vieja (un archivo renombrado, un valor que cambió), se corrige en el texto; si cambia lo decidido, va en un ADR nuevo.
+
 ---
 
 ## ADR-001: Front en vanilla HTML/JS/CSS, sin framework ni build
@@ -26,7 +42,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 **Contexto:** Se despliega en Render.
 
-**Decisión:** `server.js` monta `express.static('public')` y las rutas `/api/*`. Front y back comparten origen, por lo que no hay CORS real entre ellos (aun así `cors({ origin: true })` está activo).
+**Decisión:** `server.js` monta los archivos estáticos del front (`client/dist` desde ADR-019; antes `public/`) y las rutas `/api/*`. Front y back comparten origen, por lo que no hay CORS real entre ellos (aun así `cors({ origin: true })` está activo).
 
 **Consecuencias:**
 - Un solo servicio, un solo comando de arranque (`pnpm start`).
@@ -81,7 +97,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 **Consecuencias:**
 - **Toda consulta que liste programas debe excluir el id de la plantilla** (`GET /`, `/con-estado` ya lo hacen). Olvidarlo hace aparecer una semana del año 2000 en las listas.
 - La plantilla no se puede eliminar (`DELETE` responde 403).
-- `DEFAULT_TURNOS` está **duplicado** en `routes/programa.js` y `public/js/app.js` (el del front además incluye Sábado y Domingo). Si se cambia uno, revisar el otro.
+- `DEFAULT_TURNOS` está **duplicado** en `routes/programa.js` y en el front (`TURNOS_POR_DEFECTO` de `client/src/modules/programa/filas.js`, que además incluye Sábado y Domingo). Si se cambia uno, revisar el otro.
 
 ## ADR-007: Programa = turnos + filas extra (dos tablas distintas)
 
@@ -157,11 +173,11 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 ## ADR-013: Migración a React + Vite sin cambiar estilos
 
-**Estado:** Vigente (completada en la rama `feat/migracion-react`)
+**Estado:** Vigente (completada e integrada en `main`)
 
-**Decisión:** Migrar por pestañas a React + Vite, reutilizando `styles.css` sin cambios, con Express sirviendo `client/dist` y un solo servicio en Render. Detalle en `.archify/explainer-migracion-react-*/plan-migracion-react.html`.
+**Decisión:** Migrar por pestañas a React + Vite, reutilizando `styles.css` sin cambios, con Express sirviendo `client/dist` y un solo servicio en Render. El plan detallado se generó como página local en `.archify/`, que no se sube al repositorio.
 
-**Consecuencias:** este documento y `REGLAS-NEGOCIO.md` pasan a ser la **lista de paridad**: ninguna regla puede perderse en la migración. Las reglas marcadas "solo front" (RN-FRONT-\*) son las que más riesgo corren.
+**Consecuencias:** este documento y `REGLAS-NEGOCIO.md` pasan a ser la **lista de paridad**: ninguna regla puede perderse en la migración. Las reglas marcadas "(Front)" son las que más riesgo corren.
 
 ## ADR-014: Lógica de negocio del editor vive en el front y el estado en el DOM
 
@@ -175,7 +191,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 ## ADR-015: Estilos en un solo CSS con variables por día
 
-**Estado:** Vigente
+**Estado:** Reemplazado en parte por ADR-021 (los componentes migrados usan Tailwind; `styles.css` queda como capa `legacy` hasta que ningún componente lo use)
 
 **Decisión:** Un único `styles.css`. Cada día define `--dia-acento`, `--dia-fondo` y `--dia-borde` en `tr[data-dia=...]`; el marco de la fila enfocada se dibuja con `box-shadow inset` en cada celda. En móvil el editor se muestra como tarjetas por día. Los `select` de conductor usan `appearance: base-select` con un respaldo para navegadores sin soporte.
 
@@ -212,7 +228,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 **Contexto:** El sistema va a tener más módulos y entre 10 y 15 usuarios más (de 4 a unos 14-19). La migración a React ya exige replicar las reglas de negocio sin perder ninguna; sumar TypeScript a la vez agrega fricción.
 
 **Decisión:**
-- El cliente nuevo vive en `client/` (Vite + React, JavaScript con JSX) y se sirve en `/nuevo` hasta el corte.
+- El cliente nuevo vive en `client/` (Vite + React, JavaScript con JSX). Durante la migración se sirvió en `/nuevo`; tras el corte se sirve en la raíz (ADR-002).
 - Se deja preparado para TypeScript: `tsconfig` con `checkJs`, tipos del dominio en `client/src/types/models.d.ts`, JSDoc con `// @ts-check` y reglas de escritura en `client/MIGRACION-TS.md`. La migración a TS se hace archivo por archivo cuando todos los módulos estén estables.
 - Estructura por módulos: `client/src/modules/<modulo>/` con páginas, componentes y llamadas a la API propias; solo lo compartido va a `components/ui`; los módulos no se importan entre sí; cada módulo se carga con `React.lazy`.
 - Estilos: *(Reemplazado por ADR-021)* `styles.css` se copió sin cambios y los componentes usaban las mismas clases.
@@ -254,7 +270,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 - La CSP no cambia: fuentes e íconos se empaquetan con la app, no vienen de CDN.
 - Las mejoras de la maqueta que cambian comportamiento (pantalla de inicio, filtros y sugerencias en Asignación, cuadrícula de disponibilidad) **no** forman parte de esta decisión y requieren aprobación aparte.
 
-**Actualización (editor de Programa):** el editor de escritorio se escribió con Tailwind y la skill (`EditorEscritorio.jsx`): cada día define el color (`--dia`) y todos los campos de sus filas lo usan; reemplaza el `<select>` nativo por un desplegable propio (`Desplegable.jsx` y `PanelFlotante.jsx`) con buscador en listas largas, teclado y foco. Solo se usa desde **1321 px**; por debajo se mantiene el editor y la responsividad anteriores (`EditorTurnos.jsx`, con vista por día y por semana, que sigue con las clases de `styles.css`). Ambos editan la misma lista de filas. Los componentes nuevos llevan la clase `tw`, un reseteo acotado (fuente Geist y botones sin el aspecto del navegador) en lugar del preflight de Tailwind, para no alterar el CSS anterior.
+**Actualización (editor de Programa):** el editor de escritorio se escribió con Tailwind y la skill (`EditorEscritorio.jsx`): cada día define el color (`--dia`) y todos los campos de sus filas lo usan; reemplaza el `<select>` nativo por un desplegable propio (`Desplegable.jsx` y `PanelFlotante.jsx`) con buscador en listas largas, teclado y foco. Se usa desde **769 px**; por debajo se usa `EditorMovil.jsx`, también con Tailwind, con vista por día y por semana (RN-UI-09). Ambos editan la misma lista de filas. *(Al escribirse esta actualización el corte era 1321 px y el editor de móvil era `EditorTurnos.jsx` con clases de `styles.css`.)* Los componentes nuevos llevan la clase `tw`, un reseteo acotado (fuente Geist y botones sin el aspecto del navegador) en lugar del preflight de Tailwind, para no alterar el CSS anterior.
 
 ## ADR-022: Hoja de Predicación como área con pestañas; Admin aparte
 
@@ -296,7 +312,7 @@ Formato: Contexto, Decisión, Consecuencias. Estados: Vigente, Reemplazado, Prop
 
 **Estado:** Vigente
 
-**Contexto:** El algoritmo miraba el historial de los últimos 28 días contados desde hoy sobre la fecha de confirmación (`ultima_asignacion`). Si se confirmaban varias semanas el mismo día, todas quedaban con la fecha de hoy y parecían recientes; y asignar una semana distinta de la actual daba un puntaje distinto. Los programas viejos se borran (ADR-017, RN-PROG-03) pero el algoritmo no los lee: usa `asignaciones_historial`.
+**Contexto:** El algoritmo miraba el historial de los últimos 28 días contados desde hoy sobre la fecha de confirmación (`ultima_asignacion`). Si se confirmaban varias semanas el mismo día, todas quedaban con la fecha de hoy y parecían recientes; y asignar una semana distinta de la actual daba un puntaje distinto. Los programas viejos se borran (ADR-009, RN-PROG-03) pero el algoritmo no los lee: usa `asignaciones_historial`.
 
 **Decisión:**
 - Se usan las **últimas 4 semanas con asignación anteriores a la semana que se asigna**, ubicadas por el `semana_inicio` de su programa (`utils/historialAsignacion.js`, constante `SEMANAS_HISTORIAL`).
