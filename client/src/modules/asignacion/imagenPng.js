@@ -191,20 +191,33 @@ export async function descargarPng(canvas, nombre) {
 }
 
 /**
+ * Prepara el PNG como archivo antes del clic. `navigator.share` exige un gesto reciente del usuario: si se genera el
+ * blob dentro del clic, Brave/Chrome del celular rechazan con "Permission denied" (NotAllowedError).
+ * @param {HTMLCanvasElement} canvas @param {string} nombre sin extensión
+ * @returns {Promise<File>}
+ */
+export async function archivoPng(canvas, nombre) {
+    return new File([await aBlob(canvas)], `${nombre}.png`, { type: 'image/png' });
+}
+
+/**
  * Comparte el PNG por la hoja de compartir del sistema (en el celular aparece WhatsApp). Si el navegador no puede
- * compartir archivos (en la PC), descarga la imagen y abre WhatsApp Web con el texto para adjuntarla (RN-IMG-06).
- * Si el usuario cierra la hoja de compartir, se lanza AbortError.
- * @param {HTMLCanvasElement} canvas @param {string} nombre sin extensión @param {string} texto
+ * compartir archivos (en la PC) o la rechaza por permisos, descarga la imagen y abre WhatsApp Web con el texto para
+ * adjuntarla (RN-IMG-06). Si el usuario cierra la hoja de compartir, se lanza AbortError.
+ * Se llama sin `await` previo, para conservar el gesto del usuario.
+ * @param {File} archivo de `archivoPng` @param {string} nombre sin extensión @param {string} texto
  * @returns {Promise<'compartido' | 'descargado'>}
  */
-export async function compartirPng(canvas, nombre, texto) {
-    const blob = await aBlob(canvas);
-    const archivo = new File([blob], `${nombre}.png`, { type: 'image/png' });
+export async function compartirPng(archivo, nombre, texto) {
     if (navigator.canShare?.({ files: [archivo] })) {
-        await navigator.share({ files: [archivo], title: nombre, text: texto });
-        return 'compartido';
+        try {
+            await navigator.share({ files: [archivo], title: nombre, text: texto });
+            return 'compartido';
+        } catch (err) {
+            if (/** @type {Error} */ (err).name !== 'NotAllowedError') throw err;
+        }
     }
-    descargarBlob(blob, nombre);
+    descargarBlob(archivo, nombre);
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
     return 'descargado';
 }
