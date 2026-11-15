@@ -7,27 +7,27 @@ import '@fontsource/arimo/700.css';
 import '@fontsource/arimo/700-italic.css';
 import '@fontsource/archivo-black/400.css';
 import { COLORES, construirTabla } from './tablaImagen.js';
+import { MEDIDAS, calcularAnchosColumnas, filasDeDatos } from './medidasSheets.js';
 import * as api from './api.js';
 import { normalizarExtras } from '../../utils/reglasDia.js';
 
 /** @typedef {import('./tablaImagen.js').TablaImagen} TablaImagen */
 
+// Las medidas (filas, fuentes, bordes y anchos de columna) son las de la hoja de Sheets: ver medidasSheets.js (ADR-030)
 const ESCALA = 2; // la imagen sale al doble de resolución para que se lea bien en el celular
 const MARGEN = 10;
-const RELLENO = 14; // espacio a cada lado del texto de una celda
-const ALTO_TITULO = 46;
-const ALTO_ENCABEZADO = 28;
-const ALTO_FILA = 27;
-const LETRA = 13;
 const SANS = "Arimo, Arial, 'Helvetica Neue', Helvetica, sans-serif";
 const NEGRITA = "'Archivo Black', 'Arial Black', Arial, Helvetica, sans-serif"; // ya es pesada: sin 'bold' no se falsea
 
 /**
  * @param {boolean} negrita @param {boolean} cursiva
  * @param {boolean} [pesada] usa la fuente pesada (Arial Black en la hoja de Sheets) en el título, el encabezado y las reuniones
+ * @param {number} [tamano] en px; por defecto Arial 10 como la hoja
  */
-const fuente = (negrita, cursiva, pesada = false) =>
-    pesada ? `${LETRA}px ${NEGRITA}` : `${cursiva ? 'italic ' : ''}${negrita ? 'bold ' : ''}${LETRA}px ${SANS}`;
+const fuente = (negrita, cursiva, pesada = false, tamano = MEDIDAS.letra) =>
+    pesada
+        ? `${cursiva ? 'italic ' : ''}${tamano}px ${NEGRITA}`
+        : `${cursiva ? 'italic ' : ''}${negrita ? 'bold ' : ''}${tamano}px ${SANS}`;
 
 /** Espera a que las fuentes del dibujo estén cargadas: el canvas no las pide solo y usaría la de respaldo. */
 async function cargarFuentes() {
@@ -41,137 +41,158 @@ async function cargarFuentes() {
     ]);
 }
 
-/** Ancho de cada columna: el del texto más largo (sin contar las reuniones, RN-SHEET-08) más el relleno. @param {CanvasRenderingContext2D} ctx @param {TablaImagen} tabla */
-function medirColumnas(ctx, tabla) {
-    const anchos = [0, 0, 0, 0, 0, 0];
-    ctx.font = fuente(true, false, true);
-    tabla.encabezados.forEach((t, i) => (anchos[i] = Math.max(anchos[i], ctx.measureText(t).width)));
-    for (const bloque of tabla.bloques) {
-        ctx.font = fuente(false, false);
-        anchos[0] = Math.max(anchos[0], ctx.measureText(bloque.nombre).width);
-    }
-    for (const fila of tabla.filas) {
-        if (fila.tipo === 'reunion') continue;
-        fila.celdas.forEach((celda, i) => {
-            ctx.font = fuente(!!celda.formato?.b, !!celda.formato?.i);
-            anchos[i + 1] = Math.max(anchos[i + 1], ctx.measureText(celda.texto).width);
-        });
-    }
-    const columnas = anchos.map((a) => Math.ceil(a) + RELLENO * 2);
-    // El título ocupa todo el ancho: si es más largo que la tabla, se reparte lo que falta entre las columnas
-    ctx.font = `${LETRA * 1.75}px ${NEGRITA}`;
-    const falta = Math.ceil(ctx.measureText(tabla.titulo).width) + RELLENO * 2 - columnas.reduce((a, b) => a + b, 0);
-    if (falta > 0) columnas.forEach((_, i) => (columnas[i] += falta / columnas.length));
-    return columnas;
-}
-
 /**
- * @param {CanvasRenderingContext2D} ctx @param {string} texto @param {number} x0 @param {number} x1 @param {number} yMedio
- * @param {'left' | 'center' | 'right'} alineacion @param {boolean} tachado
+ * Escribe un texto dentro de una celda con su alineación horizontal y vertical (el relleno es el de Sheets).
+ * @param {CanvasRenderingContext2D} ctx @param {string} texto @param {number} x0 @param {number} x1
+ * @param {number} y0 @param {number} y1 @param {'left' | 'center' | 'right'} h @param {'top' | 'middle' | 'bottom'} v
+ * @param {boolean} tachado
  */
-function escribir(ctx, texto, x0, x1, yMedio, alineacion, tachado) {
+function escribir(ctx, texto, x0, x1, y0, y1, h, v, tachado) {
+    const { relleno, interlineado } = MEDIDAS;
     const ancho = ctx.measureText(texto).width;
-    const x =
-        alineacion === 'left' ? x0 + RELLENO : alineacion === 'right' ? x1 - RELLENO - ancho : (x0 + x1 - ancho) / 2;
+    const x = h === 'left' ? x0 + relleno : h === 'right' ? x1 - relleno - ancho : (x0 + x1 - ancho) / 2;
+    const y =
+        v === 'top'
+            ? y0 + relleno + interlineado / 2
+            : v === 'bottom'
+              ? y1 - relleno - interlineado / 2
+              : (y0 + y1) / 2;
     ctx.textAlign = 'left';
-    ctx.fillText(texto, x, yMedio);
-    if (tachado) {
-        ctx.fillRect(x, yMedio, ancho, 1);
-    }
-}
-
-/** @param {CanvasRenderingContext2D} ctx @param {number} x0 @param {number} y0 @param {number} x1 @param {number} y1 */
-function linea(ctx, x0, y0, x1, y1) {
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(x1, y1);
-    ctx.stroke();
+    ctx.fillText(texto, x, y);
+    if (tachado) ctx.fillRect(x, y, ancho, 1);
 }
 
 /**
- * Dibuja el título, el encabezado azul, los bloques de cada día y las filas con los colores de la hoja exportada.
+ * Ejecuta el dibujo recortado a un rectángulo: lo que no cabe en la celda no se ve, como en Sheets.
+ * @param {CanvasRenderingContext2D} ctx @param {number} x0 @param {number} y0 @param {number} x1 @param {number} y1 @param {() => void} dibujar
+ */
+function recortado(ctx, x0, y0, x1, y1, dibujar) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x0, y0, x1 - x0, y1 - y0);
+    ctx.clip();
+    dibujar();
+    ctx.restore();
+}
+
+/** Recuadro de una celda o de un conjunto de celdas, con el ancho de línea indicado. @param {CanvasRenderingContext2D} ctx @param {number} x @param {number} y @param {number} ancho @param {number} alto @param {number} grosor */
+function recuadro(ctx, x, y, ancho, alto, grosor) {
+    ctx.lineWidth = grosor;
+    ctx.strokeRect(x, y, ancho, alto);
+}
+
+/**
+ * Dibuja la hoja exportada: título combinado, encabezado, bloque de cada día y filas con sus colores, y los bordes de
+ * Sheets (cada celda del encabezado, el bloque del día, cada fila y el borde exterior grueso).
  * @param {TablaImagen} tabla
  * @returns {HTMLCanvasElement}
  */
 export function dibujarTabla(tabla) {
+    const { altoFila, altoEncabezado, altoTitulo, letraTitulo, interlineado, borde, bordeGrueso } = MEDIDAS;
     const canvas = document.createElement('canvas');
     const ctx = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
-    const columnas = medirColumnas(ctx, tabla);
+    const columnas = calcularAnchosColumnas(filasDeDatos(tabla));
     const anchoTabla = columnas.reduce((a, b) => a + b, 0);
-    const alto = ALTO_TITULO + ALTO_ENCABEZADO + tabla.filas.length * ALTO_FILA;
+    // El título va combinado sobre toda la tabla; si fuera más ancho que ella, la imagen crece para que no se corte
+    ctx.font = fuente(false, false, true, letraTitulo);
+    const anchoTotal = Math.max(anchoTabla, Math.ceil(ctx.measureText(tabla.titulo).width) + 12);
+    const alto = altoTitulo + altoEncabezado + tabla.filas.length * altoFila;
 
-    canvas.width = Math.ceil((anchoTabla + MARGEN * 2) * ESCALA);
+    canvas.width = Math.ceil((anchoTotal + MARGEN * 2) * ESCALA);
     canvas.height = Math.ceil((alto + MARGEN * 2) * ESCALA);
     ctx.scale(ESCALA, ESCALA);
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    const x0 = MARGEN + (anchoTotal - anchoTabla) / 2;
     /** Borde izquierdo de cada columna (la última entrada es el borde derecho de la tabla). */
-    const xs = [MARGEN];
+    const xs = [x0];
     columnas.forEach((a) => xs.push(xs[xs.length - 1] + a));
-    const yEncabezado = MARGEN + ALTO_TITULO;
-    const yCuerpo = yEncabezado + ALTO_ENCABEZADO;
+    const yTitulo = MARGEN;
+    const yEncabezado = yTitulo + altoTitulo;
+    const yCuerpo = yEncabezado + altoEncabezado;
+    const yFin = yCuerpo + tabla.filas.length * altoFila;
 
-    // Título
+    // Título: Arial Black 17 en rojo, centrado sobre toda la tabla
     ctx.fillStyle = COLORES.titulo;
-    ctx.font = `${LETRA * 1.75}px ${NEGRITA}`;
-    escribir(ctx, tabla.titulo, MARGEN, MARGEN + anchoTabla, MARGEN + ALTO_TITULO / 2, 'center', false);
+    ctx.font = fuente(false, false, true, letraTitulo);
+    escribir(ctx, tabla.titulo, MARGEN, MARGEN + anchoTotal, yTitulo, yEncabezado, 'center', 'middle', false);
 
     // Encabezado
     ctx.fillStyle = COLORES.encabezado;
-    ctx.fillRect(MARGEN, yEncabezado, anchoTabla, ALTO_ENCABEZADO);
+    ctx.fillRect(x0, yEncabezado, anchoTabla, altoEncabezado);
     ctx.fillStyle = '#ffffff';
     ctx.font = fuente(true, false, true);
     tabla.encabezados.forEach((t, i) =>
-        escribir(ctx, t, xs[i], xs[i + 1], yEncabezado + ALTO_ENCABEZADO / 2, 'center', false)
+        recortado(ctx, xs[i], yEncabezado, xs[i + 1], yCuerpo, () =>
+            escribir(ctx, t, xs[i], xs[i + 1], yEncabezado, yCuerpo, 'center', 'middle', false)
+        )
     );
 
-    // Bloques de día: una celda por día con su nombre y número
+    // Bloques de día: una celda combinada con el nombre y el número en dos líneas
     for (const b of tabla.bloques) {
-        const y0 = yCuerpo + b.desde * ALTO_FILA;
-        const y1 = yCuerpo + b.hasta * ALTO_FILA;
+        const y0 = yCuerpo + b.desde * altoFila;
+        const y1 = yCuerpo + b.hasta * altoFila;
         ctx.fillStyle = b.fondo;
         ctx.fillRect(xs[0], y0, columnas[0], y1 - y0);
         ctx.fillStyle = COLORES.textoDia;
         ctx.font = fuente(false, false);
         const medio = (y0 + y1) / 2;
-        escribir(ctx, b.nombre, xs[0], xs[1], medio - (b.numero == null ? 0 : LETRA * 0.6), 'center', false);
-        if (b.numero != null) escribir(ctx, String(b.numero), xs[0], xs[1], medio + LETRA * 0.7, 'center', false);
+        const arriba = medio - interlineado / 2;
+        const abajo = medio + interlineado / 2;
+        recortado(ctx, xs[0], y0, xs[1], y1, () => {
+            escribir(ctx, b.nombre, xs[0], xs[1], arriba, arriba, 'center', 'middle', false);
+            escribir(
+                ctx,
+                b.numero == null ? '' : String(b.numero),
+                xs[0],
+                xs[1],
+                abajo,
+                abajo,
+                'center',
+                'middle',
+                false
+            );
+        });
     }
 
     // Filas
     tabla.filas.forEach((fila, r) => {
-        const y = yCuerpo + r * ALTO_FILA;
+        const y = yCuerpo + r * altoFila;
         const reunion = fila.tipo === 'reunion';
         ctx.fillStyle = fila.fondo;
-        ctx.fillRect(xs[1], y, anchoTabla - columnas[0], ALTO_FILA);
+        ctx.fillRect(xs[1], y, anchoTabla - columnas[0], altoFila);
         fila.celdas.forEach((celda, i) => {
+            if (!celda.texto) return;
             const f = celda.formato;
             ctx.fillStyle = reunion ? '#ffffff' : COLORES.textoCuerpo;
             ctx.font = fuente(!!f?.b, !!f?.i, reunion);
-            const alineacion = f?.h === 'left' || f?.h === 'right' ? f.h : 'center';
-            escribir(ctx, celda.texto, xs[i + 1], xs[i + 2], y + ALTO_FILA / 2, alineacion, !!f?.s);
+            const h = f?.h === 'left' || f?.h === 'right' ? f.h : 'center';
+            const v = f?.v === 'top' || f?.v === 'bottom' ? f.v : 'middle';
+            // Como Sheets: el texto que no cabe desborda sobre las celdas vecinas vacías (hacia la izquierda si va a la
+            // derecha o al centro; hacia la derecha si va a la izquierda o al centro) y, si no hay espacio, se recorta
+            let desde = i;
+            let hasta = i;
+            if (h !== 'left') while (desde > 0 && !fila.celdas[desde - 1].texto) desde--;
+            if (h !== 'right') while (hasta < fila.celdas.length - 1 && !fila.celdas[hasta + 1].texto) hasta++;
+            recortado(ctx, xs[desde + 1], y, xs[hasta + 2], y + altoFila, () =>
+                escribir(ctx, celda.texto, xs[i + 1], xs[i + 2], y, y + altoFila, h, v, !!f?.s)
+            );
         });
     });
 
-    // Líneas: separadores de columnas y filas, y borde exterior más grueso
+    // Bordes negros como en la hoja (RN-IMG-08): cada celda del encabezado, el recuadro de cada bloque de día y de cada
+    // fila (sin líneas entre las celdas de una fila) y, al final, el borde exterior grueso
     ctx.strokeStyle = '#000000';
     ctx.fillStyle = '#000000';
-    ctx.lineWidth = 1;
-    const yFin = yCuerpo + tabla.filas.length * ALTO_FILA;
-    for (let i = 1; i < xs.length - 1; i++) linea(ctx, xs[i], yEncabezado, xs[i], yEncabezado + ALTO_ENCABEZADO);
-    tabla.filas.forEach((fila, r) => {
-        const y = yCuerpo + r * ALTO_FILA;
-        linea(ctx, xs[1], y, xs[xs.length - 1], y);
-        // Las filas de reunión se ven como una sola celda
-        for (let i = 1; i < xs.length - 1; i++)
-            if (fila.tipo !== 'reunion' || i === 1) linea(ctx, xs[i], y, xs[i], y + ALTO_FILA);
-    });
+    columnas.forEach((a, i) => recuadro(ctx, xs[i], yEncabezado, a, altoEncabezado, borde));
     for (const b of tabla.bloques)
-        linea(ctx, xs[0], yCuerpo + b.hasta * ALTO_FILA, xs[xs.length - 1], yCuerpo + b.hasta * ALTO_FILA);
-    ctx.lineWidth = 2;
-    ctx.strokeRect(MARGEN, yEncabezado, anchoTabla, yFin - yEncabezado);
+        recuadro(ctx, xs[0], yCuerpo + b.desde * altoFila, columnas[0], (b.hasta - b.desde) * altoFila, borde);
+    tabla.filas.forEach((_, r) =>
+        recuadro(ctx, xs[1], yCuerpo + r * altoFila, anchoTabla - columnas[0], altoFila, borde)
+    );
+    recuadro(ctx, x0, yEncabezado, anchoTabla, yFin - yEncabezado, bordeGrueso);
     return canvas;
 }
 

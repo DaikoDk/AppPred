@@ -2,7 +2,6 @@
 // Modelo de la tabla de la imagen PNG del programa asignado. Replica el contenido y los colores de la hoja que se
 // exporta a Google Sheets (RN-SHEET-03..07 y 09), pero se arma en el front: no cambia la exportación (RN-IMG-*).
 import { DIAS, nombreDia } from '../../utils/dias.js';
-import { FRANJAS } from '../../utils/constantes.js';
 import { parseLocalDate } from '../../utils/fechas.js';
 
 /**
@@ -14,7 +13,7 @@ import { parseLocalDate } from '../../utils/fechas.js';
  *   punto_reunion: string | null, conductor_id: string | null, formato?: Formato | null,
  *   conductores?: { nombre?: string | null } | null
  * }} TurnoDeImagen
- * @typedef {{ h?: string, b?: boolean, i?: boolean, s?: boolean }} FormatoCeldaImagen
+ * @typedef {{ h?: string, v?: string, b?: boolean, i?: boolean, s?: boolean }} FormatoCeldaImagen
  * @typedef {{ texto: string, formato: FormatoCeldaImagen | null }} CeldaImagen
  * @typedef {{ dia: Dia, tipo: 'regular' | 'extra' | 'reunion', fondo: string, celdas: CeldaImagen[] }} FilaImagen
  * @typedef {{ dia: Dia, nombre: string, numero: number | null, desde: number, hasta: number, fondo: string }} BloqueDia
@@ -88,7 +87,11 @@ export function construirTabla({ turnos, extras, semanaInicio, semanaFin }) {
     DIAS.forEach((dia, indice) => {
         const regulares = turnos
             .filter((t) => t.dia === dia)
-            .sort((a, b) => (FRANJAS.indexOf(a.hora) + 1 || 99) - (FRANJAS.indexOf(b.hora) + 1 || 99));
+            .sort(
+                (a, b) =>
+                    (a.hora || '').localeCompare(b.hora || '', 'es') ||
+                    (a.grupo || '').localeCompare(b.grupo || '', 'es')
+            );
         const libres = extras.filter((e) => e.dia === dia).sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
         if (regulares.length === 0 && libres.length === 0) return;
 
@@ -100,8 +103,9 @@ export function construirTabla({ turnos, extras, semanaInicio, semanaFin }) {
         const libre = (/** @type {ExtraDatos} */ e) => ({
             regular: false,
             formato: e.formato,
-            textos: [e.hora, e.grupo, e.territorio, e.punto_reunion, e.conductor].map((t) =>
-                (t || '').trim().toUpperCase()
+            // La hora de una fila libre solo se recorta; lo demás va en mayúsculas (googleSheets.js)
+            textos: [e.hora, e.grupo, e.territorio, e.punto_reunion, e.conductor].map((t, i) =>
+                i === 0 ? (t || '').trim() : (t || '').trim().toUpperCase()
             )
         });
         libres.filter((e) => (e.orden ?? 0) < 0).forEach((e) => items.push(libre(e)));
