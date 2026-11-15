@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CalendarBlank, CalendarCheck, FloppyDisk, ListChecks, MagicWand, Stack, X } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import ModalImprimir from './ModalImprimir.jsx';
@@ -15,6 +15,8 @@ import { nombreDia } from '../../utils/dias.js';
 import { formatDate } from '../../utils/fechas.js';
 import { mensajeError } from '../../utils/errores.js';
 import { normalizarExtras } from '../../utils/reglasDia.js';
+import { useMediaQuery } from '../../hooks/useMediaQuery.js';
+import ResultadosMovil from './ResultadosMovil.jsx';
 import TablaResultados from './TablaResultados.jsx';
 import * as api from './api.js';
 import {
@@ -75,6 +77,9 @@ export default function Asignacion() {
     // Programa cuya imagen PNG se muestra en el modal de descarga y compartir (RN-IMG-06)
     const [conImagen, setConImagen] = useState(/** @type {ProgramaEstado | null} */ (null));
     const [res, setRes] = useState(/** @type {EstadoResultados | null} */ (null));
+    // En móvil se quitan la tarjeta "Ejecutar Asignación" y el resumen, y los resultados tienen vista por día (RN-UI-13)
+    const movil = useMediaQuery('(max-width: 768px)');
+    const tarjetaResultados = useRef(/** @type {HTMLElement | null} */ (null));
     // Fila cuyo formato de celdas se está editando; se guarda al aplicar (RN-FMT-05)
     const [formateando, setFormateando] = useState(/** @type {FilaResultado | null} */ (null));
 
@@ -153,16 +158,18 @@ export default function Asignacion() {
         }
     };
 
-    const ejecutar = async () => {
-        if (!semana) {
+    /** @param {string} [semanaId] por defecto, la semana elegida en el selector */
+    const ejecutar = async (semanaId = semana) => {
+        if (!semanaId) {
             toast('Selecciona una semana', 'warning');
             return;
         }
+        setSemana(semanaId);
         setEjecutando(true);
         try {
-            const d = await api.ejecutarAlgoritmo(semana);
+            const d = await api.ejecutarAlgoritmo(semanaId);
             toast(`Previsualización: ${d.resumen.asignados} turnos asignados`, 'success');
-            await mostrarResultados(d, semana, false);
+            await mostrarResultados(d, semanaId, false);
         } catch (err) {
             toast(mensajeError(err, 'Error'), 'error');
         } finally {
@@ -205,6 +212,10 @@ export default function Asignacion() {
             toast(mensajeError(err, 'No se pudo guardar el formato'), 'error');
         }
     };
+
+    useEffect(() => {
+        if (movil && res?.semanaId) tarjetaResultados.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [movil, res?.semanaId]);
 
     const guardar = async () => {
         if (!res?.filas) {
@@ -283,74 +294,78 @@ export default function Asignacion() {
 
     return (
         <div id="tab-asignacion" className={RAIZ}>
-            <section className={TARJETA}>
-                <EncabezadoTarjeta
-                    icono={CalendarCheck}
-                    titulo="Ejecutar Asignación"
-                    subtitulo="Elige una semana y genera las asignaciones automáticamente"
-                />
-                <div className={CUERPO}>
-                    <div className="flex flex-wrap items-end gap-3">
-                        <div className="w-72 max-w-full">
-                            <label className={`${ETIQUETA} flex items-center gap-1`}>
-                                <CalendarBlank size={16} aria-hidden="true" />
-                                Semana
-                            </label>
-                            <Desplegable
-                                variante="campo"
-                                rotulo="Semana"
-                                valor={semana}
-                                onCambiar={verAsignacion}
-                                etiquetaVacio="Seleccionar semana..."
-                                textoVacioChip={errorLista ? 'Error' : 'Seleccionar semana...'}
-                                opciones={
-                                    errorLista
-                                        ? []
-                                        : [
-                                              { valor: '', etiqueta: 'Seleccionar semana...' },
-                                              ...(programas || []).map((p) => ({
-                                                  valor: p.id,
-                                                  etiqueta: `${formatDate(p.semana_inicio)} - ${formatDate(p.semana_fin)}${(p.asignados || 0) > 0 ? ` ✓ ${p.asignados} asignados` : ''}`
-                                              }))
-                                          ]
-                                }
-                            />
+            {!movil && (
+                <section className={TARJETA}>
+                    <EncabezadoTarjeta
+                        icono={CalendarCheck}
+                        titulo="Ejecutar Asignación"
+                        subtitulo="Elige una semana y genera las asignaciones automáticamente"
+                    />
+                    <div className={CUERPO}>
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="w-72 max-w-full">
+                                <label className={`${ETIQUETA} flex items-center gap-1`}>
+                                    <CalendarBlank size={16} aria-hidden="true" />
+                                    Semana
+                                </label>
+                                <Desplegable
+                                    variante="campo"
+                                    rotulo="Semana"
+                                    valor={semana}
+                                    onCambiar={verAsignacion}
+                                    etiquetaVacio="Seleccionar semana..."
+                                    textoVacioChip={errorLista ? 'Error' : 'Seleccionar semana...'}
+                                    opciones={
+                                        errorLista
+                                            ? []
+                                            : [
+                                                  { valor: '', etiqueta: 'Seleccionar semana...' },
+                                                  ...(programas || []).map((p) => ({
+                                                      valor: p.id,
+                                                      etiqueta: `${formatDate(p.semana_inicio)} - ${formatDate(p.semana_fin)}${(p.asignados || 0) > 0 ? ` ✓ ${p.asignados} asignados` : ''}`
+                                                  }))
+                                              ]
+                                    }
+                                />
+                            </div>
+                            <Boton
+                                id="btn-ejecutar-asignacion"
+                                type="button"
+                                variante="primario"
+                                icono={MagicWand}
+                                disabled={ejecutando}
+                                onClick={() => ejecutar()}
+                            >
+                                Ejecutar Algoritmo
+                            </Boton>
                         </div>
-                        <Boton
-                            id="btn-ejecutar-asignacion"
-                            type="button"
-                            variante="primario"
-                            icono={MagicWand}
-                            disabled={ejecutando}
-                            onClick={ejecutar}
-                        >
-                            Ejecutar Algoritmo
-                        </Boton>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {res && (
-                <section className={TARJETA} id="card-resultados">
+                <section ref={tarjetaResultados} className={TARJETA} id="card-resultados">
                     <EncabezadoTarjeta
                         icono={ListChecks}
                         titulo="Resultados"
                         subtitulo="Revisa y ajusta los conductores antes de guardar"
                     />
                     <div className={CUERPO}>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                            {[
-                                ['text-ink', 'Total'],
-                                ['text-ok', 'Asignados'],
-                                ['text-danger', 'Sin Asignar'],
-                                ['text-info', 'Conductores']
-                            ].map(([tono, etiqueta], i) => (
-                                <div key={etiqueta} className={RESUMEN}>
-                                    <span className={`${CIFRA} ${tono}`}>{stats[i]}</span>
-                                    <span className="caption-1 block text-muted">{etiqueta}</span>
-                                </div>
-                            ))}
-                        </div>
+                        {!movil && (
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                                {[
+                                    ['text-ink', 'Total'],
+                                    ['text-ok', 'Asignados'],
+                                    ['text-danger', 'Sin Asignar'],
+                                    ['text-info', 'Conductores']
+                                ].map(([tono, etiqueta], i) => (
+                                    <div key={etiqueta} className={RESUMEN}>
+                                        <span className={`${CIFRA} ${tono}`}>{stats[i]}</span>
+                                        <span className="caption-1 block text-muted">{etiqueta}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                         <div className="mt-4 flex flex-wrap gap-2" id="resultados-actions">
                             <Boton variante="primario" icono={FloppyDisk} onClick={guardar}>
                                 {res.editando ? 'Actualizar Asignación' : 'Guardar Asignación'}
@@ -360,20 +375,24 @@ export default function Asignacion() {
                             </Boton>
                         </div>
                         <div className="mt-4" id="resultados-day-groups">
-                            {res.filas && (
-                                <TablaResultados
-                                    filas={res.filas}
-                                    semanaInicio={inicioDe(res.semanaId)}
-                                    conductores={res.conductores}
-                                    cuenta={res.cuenta}
-                                    disponibles={res.disponibles}
-                                    elecciones={res.elecciones}
-                                    inicialmenteSinAsignar={res.sinAsignarAlInicio}
-                                    formatos={res.formatos}
-                                    onElegir={elegir}
-                                    onFormato={setFormateando}
-                                />
-                            )}
+                            {res.filas &&
+                                (() => {
+                                    const Vista = movil ? ResultadosMovil : TablaResultados;
+                                    return (
+                                        <Vista
+                                            filas={res.filas}
+                                            semanaInicio={inicioDe(res.semanaId)}
+                                            conductores={res.conductores}
+                                            cuenta={res.cuenta}
+                                            disponibles={res.disponibles}
+                                            elecciones={res.elecciones}
+                                            inicialmenteSinAsignar={res.sinAsignarAlInicio}
+                                            formatos={res.formatos}
+                                            onElegir={elegir}
+                                            onFormato={setFormateando}
+                                        />
+                                    );
+                                })()}
                         </div>
                     </div>
                 </section>
@@ -389,6 +408,7 @@ export default function Asignacion() {
                         onPng={setConImagen}
                         onSheets={exportar}
                         onImprimir={setImprimiendo}
+                        onAsignar={movil ? ejecutar : undefined}
                     />
                 </div>
             </section>

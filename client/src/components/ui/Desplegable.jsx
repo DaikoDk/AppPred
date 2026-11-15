@@ -31,7 +31,8 @@ const ESTILO_BOTON = {
  *   etiquetaVacio?: string,
  *   textoVacioChip?: string,
  *   anchoMin?: number,
- *   claseTexto?: string
+ *   claseTexto?: string,
+ *   sinRecorte?: boolean
  * }} props
  * `etiquetaVacio`: texto de la opción con valor '' dentro de la lista; `textoVacioChip`: lo que muestra el chip cuando está vacío.
  */
@@ -44,6 +45,7 @@ export default function Desplegable({
     textoVacioChip = '—',
     anchoMin = 240,
     claseTexto = '',
+    sinRecorte = false,
     variante = 'chip'
 }) {
     const id = useId();
@@ -81,7 +83,7 @@ export default function Desplegable({
                 }}
                 className={`${BASE_BOTON} ${ESTILO_BOTON[variante]}`}
             >
-                <span className={`truncate ${claseTexto}`}>{textoChip}</span>
+                <span className={`${sinRecorte ? 'break-words' : 'truncate'} ${claseTexto}`}>{textoChip}</span>
                 <CaretDown
                     size={16}
                     aria-hidden="true"

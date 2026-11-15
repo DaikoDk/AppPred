@@ -413,3 +413,19 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 **Consecuencias:**
 - Si cambian las medidas o los bordes de `googleSheets.js`, hay que cambiar también `medidasSheets.js` y `imagenPng.js`.
 - La exportación a Sheets no cambia. Reglas: RN-IMG-04 y RN-IMG-08. Ajusta ADR-023.
+
+## ADR-031: Asignación y Programa más compactos en móvil
+
+**Estado:** Vigente
+
+**Contexto:** En el celular la pantalla Asignación mostraba la tarjeta de ejecución y un resumen que ocupaban media pantalla, la tabla de resultados recortaba nombres y textos ("Ánge…", "AV.UNIVERSITAR") y no había vista por día como en Programa. Programa, al editar, repetía el rango de la semana en tres sitios. Agregar o quitar una fila no pedía confirmación.
+
+**Decisión:**
+- Asignación en móvil usa `ResultadosMovil.jsx` (vista por día o por semana) y oculta la tarjeta de ejecución y el resumen. Para no perder la función, las semanas sin asignar tienen el botón **Asignar** en la lista. El corte de móvil es el de Programa (768 px).
+- La lista de conductores de un turno se arma en `logica.js` (`opcionesDeConductor`), compartida por la tabla y las tarjetas. `Desplegable` gana la opción `sinRecorte`.
+- Programa en móvil, al editar, oculta el selector de semana, Cerrar y el aviso, y pone el rango en el subtítulo.
+- Agregar y quitar fila piden confirmación en los dos editores (`useConfirmarFila`).
+
+**Consecuencias:**
+- No se puede elegir otra semana ni cambiar las fechas de un programa existente desde el celular; se hace en pantalla ancha. Ejecutar el algoritmo en móvil se hace desde la lista de programas.
+- Reglas: RN-UI-13, RN-UI-14 y RN-UI-15. Prueba: `client/src/modules/asignacion/logica.test.js`.

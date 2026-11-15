@@ -6,6 +6,7 @@ import {
     eleccionInicial,
     filasDeResultados,
     opcionConductor,
+    opcionesDeConductor,
     resultadosGuardados,
     turnosSinTerritorio
 } from './logica.js';
@@ -147,5 +148,27 @@ describe('turnosSinTerritorio (RN-CONF-03)', () => {
             'Martes 10 nov · Mañana (8:20 AM) · Grupo A',
             'Sábado 14 nov · Madrugada (6:30 AM) · Toda la Congre.'
         ]);
+    });
+});
+
+describe('opcionesDeConductor', () => {
+    const r = turno('t', 'LUNES', 'Mañana (8:20 AM)');
+    const conductores = [
+        { id: 'c1', nombre: 'Ana' },
+        { id: 'c2', nombre: 'Beto' }
+    ];
+    const disp = new Set(['c1|LUNES|Mañana (8:20 AM)', 'c2|LUNES|Mañana (8:20 AM)']);
+
+    it('una opción por conductor, con el valor "id|nombre"', () => {
+        const ops = opcionesDeConductor(r, conductores, {}, disp, false);
+        expect(ops).toEqual([
+            { valor: 'c1|Ana', etiqueta: 'Ana' },
+            { valor: 'c2|Beto', etiqueta: 'Beto' }
+        ]);
+    });
+
+    it('SIN ASIGNAR va primero solo si el turno empezó sin asignar', () => {
+        expect(opcionesDeConductor(r, conductores, {}, disp, true)[0]).toEqual({ valor: '', etiqueta: 'SIN ASIGNAR' });
+        expect(opcionesDeConductor(r, conductores, {}, disp, false)).toHaveLength(2);
     });
 });

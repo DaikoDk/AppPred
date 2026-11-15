@@ -1,5 +1,5 @@
 // @ts-check
-import { CalendarBlank, DotsThree, Eye, GoogleLogo, ImageSquare, Printer } from '@phosphor-icons/react';
+import { CalendarBlank, DotsThree, Eye, GoogleLogo, ImageSquare, MagicWand, Printer } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { formatDate } from '../../utils/fechas.js';
@@ -18,10 +18,11 @@ const COLUMNAS = 'md:grid-cols-[1fr_1.5fr_1fr]';
  *   onVer: (id: string) => void,
  *   onPng: (p: ProgramaEstado) => void,
  *   onSheets: (id: string) => void,
- *   onImprimir: (p: ProgramaEstado) => void
- * }} props  `programas` en null = cargando.
+ *   onImprimir: (p: ProgramaEstado) => void,
+ *   onAsignar?: (id: string) => void
+ * }} props  `programas` en null = cargando. `onAsignar` (móvil) muestra el botón Asignar en las semanas sin asignar.
  */
-export default function TablaProgramas({ programas, error, onVer, onPng, onSheets, onImprimir }) {
+export default function TablaProgramas({ programas, error, onVer, onPng, onSheets, onImprimir, onAsignar }) {
     const estado = 'body-6 list-none p-6 text-center text-muted';
     let cuerpo;
     if (error) {
@@ -58,6 +59,18 @@ export default function TablaProgramas({ programas, error, onVer, onPng, onSheet
                         </span>
                     </div>
                     <div className="grid shrink-0 grid-cols-2 gap-2 md:flex md:flex-row md:items-center">
+                        {asignados === 0 && onAsignar && (
+                            <Boton
+                                variante="primario"
+                                icono={MagicWand}
+                                compacto
+                                className="col-span-2"
+                                onClick={() => onAsignar(p.id)}
+                                title="Ejecutar el algoritmo de asignación"
+                            >
+                                Asignar
+                            </Boton>
+                        )}
                         {asignados > 0 && (
                             <>
                                 <Boton variante="primario" icono={Eye} compacto onClick={() => onVer(p.id)} title="Ver">
