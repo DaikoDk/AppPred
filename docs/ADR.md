@@ -398,3 +398,18 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 - Un turno editado conserva su conductor aunque cambie de día, hora o grupo; no se revalida la disponibilidad (RN-CONF-02) y su `score` guardado puede quedar desactualizado.
 - Sigue sin ser atómico (ADR-003): varias llamadas por guardado.
 - Reemplaza el riesgo de ADR-008 sobre perder asignaciones. Regla: RN-PROG-04.
+
+## ADR-030: La imagen PNG usa las medidas de la hoja de Sheets
+
+**Estado:** Vigente
+
+**Contexto:** El PNG imitaba la hoja con medidas propias (filas de 27 px, relleno de 14 px, líneas entre todas las celdas) y salía distinto: más alto, con marcos negros por celda y anchos de columna que no coincidían.
+
+**Decisión:**
+- `modules/asignacion/medidasSheets.js` copia lo que define `utils/googleSheets.js`: `calcularAnchosColumnas` (con `anchoTexto` y `esFilaReunionEspecial`), filas de 25 px, Arial 10 pt, Arial Black 17 pt en el título, bordes de 1 px y 3 px, y el relleno de celda de Sheets.
+- El alto del título (32 px) y del encabezado (21 px) no los fija el backend: son los que Sheets aplica solos y se estimaron midiendo una exportación real (captura).
+- `medidasSheets.test.js` cubre la fórmula con casos fijos. Al crearla se comprobó que da lo mismo que la del backend en 2000 casos aleatorios; la copia debe mantenerse igual a mano, como `DEFAULT_TURNOS` (ADR-006).
+
+**Consecuencias:**
+- Si cambian las medidas o los bordes de `googleSheets.js`, hay que cambiar también `medidasSheets.js` y `imagenPng.js`.
+- La exportación a Sheets no cambia. Reglas: RN-IMG-04 y RN-IMG-08. Ajusta ADR-023.
