@@ -3,7 +3,7 @@ import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { nombreDia } from '../../utils/dias.js';
 import { FRANJAS, GRUPOS, GRUPO_LABEL, MODALIDADES } from '../../utils/constantes.js';
-import ModalFormato from './ModalFormato.jsx';
+import ModalFormato from '../../components/ui/ModalFormato.jsx';
 
 /**
  * Piezas compartidas por el editor de pantalla ancha y el de móvil: ambos editan la misma lista de filas (RN-UI-09).

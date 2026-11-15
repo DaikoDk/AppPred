@@ -366,3 +366,18 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 
 **Consecuencias:**
 - La imagen se ve igual en PC y celular; el bundle de Asignación carga unos archivos de fuente más. Regla: RN-IMG-07.
+
+## ADR-028: El formato de celdas también se edita desde Asignación
+
+**Estado:** Vigente
+
+**Contexto:** El formato por celda solo se podía cambiar en el editor de Programa, y guardar un programa reemplaza sus turnos (ADR-008), lo que borraba las asignaciones. Para corregir el aspecto de una fila ya asignada había que volver a asignar.
+
+**Decisión:**
+- La tabla de Resultados de Asignación agrega un menú `⋯` por fila con **Formato de celdas** (el mismo modal que Programa).
+- Dos endpoints nuevos, `PATCH /api/programa-semanal/turnos/:id/formato` y `/extras/:id/formato`, actualizan solo la columna `formato`, saneada con `limpiarFormato`. No hay cambios de esquema (ADR-003).
+- `ModalFormato` pasa a `components/ui` y la lógica de formato a `utils/formato.js`, porque los módulos no se importan entre sí.
+
+**Consecuencias:**
+- Aquí el formato se guarda al aplicarlo, no con el botón Guardar de la asignación (RN-FMT-04 y RN-FMT-05).
+- No afecta a la exportación a Sheets ni a la imagen PNG: ambas ya leen `formato`.

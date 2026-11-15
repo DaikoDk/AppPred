@@ -55,6 +55,22 @@ export function exportarASheets(semanaId) {
     });
 }
 
+/** Guarda solo el formato de un turno, sin tocar su asignación (RN-FMT-05). @param {string} turnoId @param {import('../../types/models').Formato} formato */
+export function guardarFormatoTurno(turnoId, formato) {
+    return apiFetch(`/api/programa-semanal/turnos/${turnoId}/formato`, {
+        method: 'PATCH',
+        body: JSON.stringify({ formato })
+    });
+}
+
+/** Guarda solo el formato de una fila libre (RN-FMT-05). @param {string} filaId @param {import('../../types/models').Formato} formato */
+export function guardarFormatoLibre(filaId, formato) {
+    return apiFetch(`/api/programa-semanal/extras/${filaId}/formato`, {
+        method: 'PATCH',
+        body: JSON.stringify({ formato })
+    });
+}
+
 /** @returns {Promise<Conductor[]>} */
 export async function conductoresActivos() {
     try {

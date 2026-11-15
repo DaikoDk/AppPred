@@ -334,6 +334,27 @@ router.delete('/extras/:id', async (req, res) => {
     }
 });
 
+// Solo cambia el formato de una fila: no toca la asignación ni el resto de sus datos (ADR-028, RN-FMT-05)
+function rutaFormato(tabla, nombre) {
+    return async (req, res) => {
+        try {
+            const { data, error } = await supabase
+                .from(tabla)
+                .update({ formato: limpiarFormato(req.body.formato) })
+                .eq('id', req.params.id)
+                .select('id, formato')
+                .single();
+            if (error) throw error;
+            res.json({ mensaje: 'Formato actualizado', fila: data });
+        } catch (error) {
+            console.error(`Error PATCH /programa-semanal/${nombre}/:id/formato:`, error);
+            res.status(500).json({ error: 'Error al guardar el formato' });
+        }
+    };
+}
+router.patch('/turnos/:id/formato', rutaFormato('programa_semanal_turnos', 'turnos'));
+router.patch('/extras/:id/formato', rutaFormato('programa_semanal_extra_filas', 'extras'));
+
 router.put('/:id', async (req, res) => {
     try {
         const { turnos, filasExtra, semana_inicio, semana_fin } = req.body;

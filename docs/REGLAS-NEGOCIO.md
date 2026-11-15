@@ -165,7 +165,8 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-FMT-01 (Back):** Por celda solo se admiten: `h` (left/center/right), `v` (top/middle/bottom) y `b`, `i`, `s` en verdadero. Todo lo demás se descarta al guardar.
 - **RN-FMT-02 (Back):** Los campos con formato posible son `hora`, `grupo`, `territorio`, `punto_reunion` y `conductor`.
 - **RN-FMT-03 (Front):** Por defecto: centrado horizontal y vertical al medio; solo se almacena lo que se aparta del defecto.
-- **RN-FMT-04 (Front):** El formato se guarda al guardar el programa, no al aplicarlo.
+- **RN-FMT-04 (Front):** En el editor de Programa el formato se guarda al guardar el programa, no al aplicarlo. En Asignación se guarda al aplicarlo (RN-FMT-05).
+- **RN-FMT-05 (Front y Back):** En Asignación, el menú `⋯` de cada fila (turno o fila libre) ofrece **Formato de celdas**, el mismo modal que Programa. Al aplicarlo se guarda **solo** el formato de esa fila (`PATCH /turnos/:id/formato` o `/extras/:id/formato`, saneado con RN-FMT-01): no cambia conductores, `score` ni el resto de los datos (ADR-028).
 
 ## Datos y límites técnicos
 

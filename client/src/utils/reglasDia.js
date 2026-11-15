@@ -5,9 +5,9 @@
  * @typedef {import('../types/models').Dia} Dia
  * @typedef {import('../types/models').Formato} Formato
  * Datos como vienen de la API o de la plantilla (campos opcionales y nulos).
- * @typedef {{ dia: string, hora?: string | null, grupo?: string | null, territorio?: string | null,
+ * @typedef {{ id?: string, dia: string, hora?: string | null, grupo?: string | null, territorio?: string | null,
  *   punto_reunion?: string | null, modalidad?: string | null, formato?: Formato | null }} TurnoDatos
- * @typedef {{ dia: string, hora?: string | null, grupo?: string | null, territorio?: string | null,
+ * @typedef {{ id?: string, dia: string, hora?: string | null, grupo?: string | null, territorio?: string | null,
  *   punto_reunion?: string | null, conductor?: string | null, orden?: number | null,
  *   formato?: Formato | null }} ExtraDatos
  */

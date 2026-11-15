@@ -7,9 +7,11 @@ import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { CIFRA, CUERPO, ETIQUETA, RAIZ, RESUMEN, TARJETA } from '../../components/ui/estilos.js';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
+import ModalFormato from '../../components/ui/ModalFormato.jsx';
 import ModalPng from './ModalPng.jsx';
 import TablaProgramas from './TablaProgramas.jsx';
 import { useCargando } from '../../components/ui/Cargando.jsx';
+import { nombreDia } from '../../utils/dias.js';
 import { formatDate } from '../../utils/fechas.js';
 import { mensajeError } from '../../utils/errores.js';
 import { normalizarExtras } from '../../utils/reglasDia.js';
@@ -20,6 +22,7 @@ import {
     contarAsignaciones,
     cuerpoConfirmar,
     eleccionInicial,
+    etiquetaGrupo,
     filasDeResultados,
     resultadosGuardados,
     turnosSinTerritorio
@@ -31,6 +34,7 @@ import {
  * @typedef {import('./logica.js').DatosResultados} DatosResultados
  * @typedef {import('./logica.js').FilaResultado} FilaResultado
  * @typedef {import('../../types/models').Conductor} Conductor
+ * @typedef {import('../../types/models').Formato} Formato
  * @typedef {{
  *   semanaId: string,
  *   editando: boolean,
@@ -40,10 +44,21 @@ import {
  *   cuenta: Record<string, number>,
  *   disponibles: Set<string>,
  *   elecciones: Record<string, string>,
+ *   formatos: Record<string, Formato>,
  *   sinAsignarAlInicio: Set<string>,
  *   tocado: boolean
  * }} EstadoResultados
  */
+
+/** Id del turno o de la fila libre, que es la clave de su formato. @param {FilaResultado} f */
+const idDeFila = (f) => (f.tipo === 'turno' ? f.resultado.turno_id : f.extra.id);
+
+/** Texto bajo el título del modal de formato: "Domingo · 8:30AM". @param {FilaResultado} f */
+function descripcionDeFila(f) {
+    const hora = f.tipo === 'turno' ? f.resultado.hora : f.extra.hora;
+    const grupo = f.tipo === 'turno' ? f.resultado.grupo : f.extra.grupo;
+    return [nombreDia(f.dia), hora, etiquetaGrupo(grupo)].filter(Boolean).join(' · ');
+}
 
 // Pantalla Asignación. Reglas: RN-ASIG-*, RN-CONF-*, RN-SHEET-* en docs/REGLAS-NEGOCIO.md
 export default function Asignacion() {
@@ -60,6 +75,8 @@ export default function Asignacion() {
     // Programa cuya imagen PNG se muestra en el modal de descarga y compartir (RN-IMG-06)
     const [conImagen, setConImagen] = useState(/** @type {ProgramaEstado | null} */ (null));
     const [res, setRes] = useState(/** @type {EstadoResultados | null} */ (null));
+    // Fila cuyo formato de celdas se está editando; se guarda al aplicar (RN-FMT-05)
+    const [formateando, setFormateando] = useState(/** @type {FilaResultado | null} */ (null));
 
     const recargarProgramas = useCallback(async () => {
         try {
@@ -91,10 +108,19 @@ export default function Asignacion() {
             cuenta: contarAsignaciones(data.resultados),
             disponibles: new Set(data.disponibilidad || []),
             elecciones: {},
+            formatos: {},
             sinAsignarAlInicio,
             tocado: false
         });
-        const [conductores, extras] = await Promise.all([api.conductoresActivos(), api.filasLibres(semanaId)]);
+        const [conductores, extras, turnos] = await Promise.all([
+            api.conductoresActivos(),
+            api.filasLibres(semanaId),
+            api.asignacionesDeSemana(semanaId).catch(() => [])
+        ]);
+        /** @type {Record<string, Formato>} */
+        const formatos = {};
+        for (const t of turnos) formatos[t.id] = t.formato || {};
+        for (const e of extras) if (e.id) formatos[e.id] = e.formato || {};
         /** @type {Record<string, string>} */
         const elecciones = {};
         for (const r of data.resultados) elecciones[r.turno_id] = r.asignado ? eleccionInicial(r, conductores) : '';
@@ -104,6 +130,7 @@ export default function Asignacion() {
                       ...actual,
                       conductores,
                       elecciones,
+                      formatos,
                       filas: filasDeResultados(data.resultados, normalizarExtras(extras))
                   }
                 : actual
@@ -162,6 +189,21 @@ export default function Asignacion() {
         });
         if (eleccion === true) window.open(r.urlHoja || r.url, '_blank');
         else if (eleccion === 'alternativa') window.open(r.url, '_blank');
+    };
+
+    /** Guarda solo el formato de la fila, sin tocar las asignaciones (RN-FMT-05). @param {FilaResultado} fila @param {Formato} formato */
+    const aplicarFormato = async (fila, formato) => {
+        const id = idDeFila(fila);
+        setFormateando(null);
+        if (!id) return;
+        try {
+            if (fila.tipo === 'turno') await api.guardarFormatoTurno(id, formato);
+            else await api.guardarFormatoLibre(id, formato);
+            setRes((actual) => (actual ? { ...actual, formatos: { ...actual.formatos, [id]: formato } } : actual));
+            toast('Formato guardado', 'success');
+        } catch (err) {
+            toast(mensajeError(err, 'No se pudo guardar el formato'), 'error');
+        }
     };
 
     const guardar = async () => {
@@ -327,7 +369,9 @@ export default function Asignacion() {
                                     disponibles={res.disponibles}
                                     elecciones={res.elecciones}
                                     inicialmenteSinAsignar={res.sinAsignarAlInicio}
+                                    formatos={res.formatos}
                                     onElegir={elegir}
+                                    onFormato={setFormateando}
                                 />
                             )}
                         </div>
@@ -348,6 +392,15 @@ export default function Asignacion() {
                     />
                 </div>
             </section>
+            {formateando && res && (
+                <ModalFormato
+                    formato={res.formatos[idDeFila(formateando) ?? ''] || {}}
+                    esLibre={formateando.tipo === 'extra'}
+                    descripcion={descripcionDeFila(formateando)}
+                    onCerrar={() => setFormateando(null)}
+                    onAplicar={(formato) => aplicarFormato(formateando, formato)}
+                />
+            )}
             {conImagen && <ModalPng programa={conImagen} onCerrar={() => setConImagen(null)} />}
             {imprimiendo && <ModalImprimir programa={imprimiendo} onCerrar={() => setImprimiendo(null)} />}
         </div>
