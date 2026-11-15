@@ -16,7 +16,8 @@ import {
     OPCIONES_MODALIDAD,
     claseFormato,
     itemsMenuFila,
-    opcionesDePunto
+    opcionesDePunto,
+    useConfirmarFila
 } from './editorComun.jsx';
 import { agregarLibreJunto, agregarTurnoAlDia, agregarTurnoDebajo, cambiarFila, quitarFila } from './filas.js';
 
@@ -83,6 +84,7 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
     const [diaIdx, setDiaIdx] = useState(0);
     const [formateando, setFormateando] = useState(/** @type {Fila | null} */ (null));
     const opcionesPunto = opcionesDePunto(puntos);
+    const confirmarFila = useConfirmarFila();
     const diaActivo = DIAS[diaIdx];
     const filasDia = filas.filter((f) => f.dia === diaActivo);
 
@@ -187,7 +189,11 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                                         compacto
                                         variante="secundario"
                                         icono={Plus}
-                                        onClick={() => onCambiar((x) => agregarTurnoDebajo(x, f.clave))}
+                                        onClick={() =>
+                                            confirmarFila.agregar(f.dia, () =>
+                                                onCambiar((x) => agregarTurnoDebajo(x, f.clave))
+                                            )
+                                        }
                                     >
                                         Agregar fila
                                     </Boton>
@@ -195,7 +201,9 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                                         compacto
                                         variante="peligro"
                                         icono={Trash}
-                                        onClick={() => onCambiar((x) => quitarFila(x, f.clave))}
+                                        onClick={() =>
+                                            confirmarFila.quitar(f, () => onCambiar((x) => quitarFila(x, f.clave)))
+                                        }
                                     >
                                         Eliminar fila
                                     </Boton>
@@ -307,7 +315,11 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                             <Boton
                                 variante="primario"
                                 icono={Plus}
-                                onClick={() => onCambiar((f) => agregarTurnoAlDia(f, diaActivo))}
+                                onClick={() =>
+                                    confirmarFila.agregar(diaActivo, () =>
+                                        onCambiar((f) => agregarTurnoAlDia(f, diaActivo))
+                                    )
+                                }
                             >
                                 Agregar fila
                             </Boton>
