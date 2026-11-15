@@ -140,6 +140,7 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                     puntos={puntos}
                     semanaInicio={semanaInicio}
                     onDiaTocado={(dia) => setDiaIdx(Math.max(0, DIAS.indexOf(dia)))}
+                    completo
                 />
             ) : (
                 <>

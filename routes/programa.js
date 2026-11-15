@@ -334,6 +334,27 @@ router.delete('/extras/:id', async (req, res) => {
     }
 });
 
+// Solo cambia el formato de una fila: no toca la asignación ni el resto de sus datos (ADR-028, RN-FMT-05)
+function rutaFormato(tabla, nombre) {
+    return async (req, res) => {
+        try {
+            const { data, error } = await supabase
+                .from(tabla)
+                .update({ formato: limpiarFormato(req.body.formato) })
+                .eq('id', req.params.id)
+                .select('id, formato')
+                .single();
+            if (error) throw error;
+            res.json({ mensaje: 'Formato actualizado', fila: data });
+        } catch (error) {
+            console.error(`Error PATCH /programa-semanal/${nombre}/:id/formato:`, error);
+            res.status(500).json({ error: 'Error al guardar el formato' });
+        }
+    };
+}
+router.patch('/turnos/:id/formato', rutaFormato('programa_semanal_turnos', 'turnos'));
+router.patch('/extras/:id/formato', rutaFormato('programa_semanal_extra_filas', 'extras'));
+
 router.put('/:id', async (req, res) => {
     try {
         const { turnos, filasExtra, semana_inicio, semana_fin } = req.body;
@@ -345,11 +366,26 @@ router.put('/:id', async (req, res) => {
             if (updError) throw updError;
         }
 
-        const { error: delError } = await supabase.from('programa_semanal_turnos').delete().eq('semana_id', req.params.id);
-        if (delError) throw delError;
-
-        const turnosData = turnos.map(t => ({
-            semana_id: req.params.id,
+        // Los turnos que ya existen en este programa se actualizan en su sitio y conservan conductor_id y score;
+        // solo los nuevos se insertan y los que ya no están se borran (ADR-029)
+        const { data: existentes, error: exError } = await supabase
+            .from('programa_semanal_turnos')
+            .select('id, conductor_id')
+            .eq('semana_id', req.params.id);
+        if (exError) throw exError;
+        const idsExistentes = new Set((existentes || []).map(t => t.id));
+        const conservados = new Set();
+        const aActualizar = [];
+        const aInsertar = [];
+        turnos.forEach(t => {
+            if (t.id && idsExistentes.has(t.id) && !conservados.has(t.id)) {
+                conservados.add(t.id);
+                aActualizar.push(t);
+            } else {
+                aInsertar.push(t);
+            }
+        });
+        const datosTurno = t => ({
             dia: t.dia,
             hora: t.hora,
             grupo: t.grupo,
@@ -357,9 +393,44 @@ router.put('/:id', async (req, res) => {
             punto_reunion: t.punto_reunion || null,
             modalidad: t.modalidad || 'FISICO',
             formato: limpiarFormato(t.formato)
-        }));
-        const { error: insError } = await supabase.from('programa_semanal_turnos').insert(turnosData);
-        if (insError) throw insError;
+        });
+
+        for (const t of aActualizar) {
+            const { error: updTurnoError } = await supabase
+                .from('programa_semanal_turnos')
+                .update(datosTurno(t))
+                .eq('id', t.id)
+                .eq('semana_id', req.params.id);
+            if (updTurnoError) throw updTurnoError;
+        }
+        if (aInsertar.length > 0) {
+            const { error: insError } = await supabase
+                .from('programa_semanal_turnos')
+                .insert(aInsertar.map(t => ({ semana_id: req.params.id, ...datosTurno(t) })));
+            if (insError) throw insError;
+        }
+        const sobrantes = (existentes || []).filter(t => !conservados.has(t.id));
+        if (sobrantes.length > 0) {
+            const { error: delError } = await supabase
+                .from('programa_semanal_turnos')
+                .delete()
+                .in('id', sobrantes.map(t => t.id));
+            if (delError) throw delError;
+            // El historial cuenta los turnos de cada conductor en la semana: se ajusta a los que quedan
+            const afectados = [...new Set(sobrantes.map(t => t.conductor_id).filter(Boolean))];
+            for (const conductorId of afectados) {
+                const { count } = await supabase
+                    .from('programa_semanal_turnos')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('semana_id', req.params.id)
+                    .eq('conductor_id', conductorId);
+                const historial = supabase.from('asignaciones_historial');
+                const { error: histError } = count
+                    ? await historial.update({ cantidad_turnos: count }).eq('semana_id', req.params.id).eq('conductor_id', conductorId)
+                    : await historial.delete().eq('semana_id', req.params.id).eq('conductor_id', conductorId);
+                if (histError) throw histError;
+            }
+        }
 
         if (Array.isArray(filasExtra)) {
             await supabase.from('programa_semanal_extra_filas').delete().eq('semana_id', req.params.id);

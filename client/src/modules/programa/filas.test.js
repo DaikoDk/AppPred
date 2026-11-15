@@ -177,6 +177,17 @@ describe('cuerpoParaGuardar (RN-PROG-05)', () => {
         ]);
     });
 
+    it('envía el id de los turnos que ya existían para conservar sus asignaciones (ADR-029)', () => {
+        const filas = filasDesdeDatos(
+            [
+                { id: 't1', dia: 'LUNES', hora: 'Tarde (6:20 PM)', grupo: 'GRUPO A' },
+                { dia: 'LUNES', hora: 'Tarde (6:20 PM)', grupo: 'GRUPO B' }
+            ],
+            []
+        );
+        expect(cuerpoParaGuardar(filas).turnos.map((t) => t.id)).toEqual(['t1', undefined]);
+    });
+
     it('sin filas libres no envía filasExtra', () => {
         expect(cuerpoParaGuardar(filasDesdeDatos([{ dia: 'LUNES', grupo: 'GRUPO A' }], [])).filasExtra).toBeUndefined();
     });
@@ -279,6 +290,21 @@ describe('combinarConPlantilla (RN-ACT-01..05)', () => {
                 formato: {}
             }
         ]);
+    });
+
+    it('conserva el id del turno del programa y descarta el de la plantilla (ADR-029)', () => {
+        const r = combinarConPlantilla(
+            {
+                turnos: [{ id: 'prog-1', dia: 'LUNES', hora: 'Mañana (8:20 AM)', grupo: 'TODA LA CONGREGACION' }],
+                extras: []
+            },
+            [
+                { id: 'tpl-1', dia: 'LUNES', hora: 'Mañana (8:20 AM)', grupo: 'TODA LA CONGREGACION' },
+                { id: 'tpl-2', dia: 'LUNES', hora: 'Mañana (8:20 AM)', grupo: 'TODA LA CONGREGACION' }
+            ],
+            []
+        );
+        expect(r.turnos.map((t) => t.id)).toEqual(['prog-1', undefined]);
     });
 
     it('leerFilas + combinar con la misma plantilla deja el programa igual', () => {

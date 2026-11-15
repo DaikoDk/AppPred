@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CAMPOS_FORMATO, FORMATO_DEFECTO, limpiarFormato } from './filas.js';
+import { CAMPOS_FORMATO, FORMATO_DEFECTO, limpiarFormato } from '../../utils/formato.js';
 
 /**
  * @typedef {import('../../types/models').Formato} Formato
