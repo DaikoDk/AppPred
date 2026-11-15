@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import {
@@ -22,6 +23,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import EditorEscritorio from './EditorEscritorio.jsx';
 import EditorMovil from './EditorMovil.jsx';
 import ProgramasGuardados from './ProgramasGuardados.jsx';
+import { estadoBotonAsignar, rutaAsignacion } from './asignar.js';
 import {
     combinarConPlantilla,
     cuerpoParaGuardar,
@@ -39,6 +41,9 @@ import * as api from './api.js';
  */
 
 const TEXTO_BANNER_PLANTILLA = 'PLANTILLA — haz clic en "Editar Plantilla" para modificar los turnos';
+
+/** Copia comparable del editor, para detectar cambios sin guardar. @param {Fila[]} filas @param {string} inicio @param {string} fin */
+const instantanea = (filas, inicio, fin) => JSON.stringify({ filas, inicio, fin });
 
 /** Filas iniciales a partir de la plantilla; sin plantilla, los valores por defecto (toggleTurnosGrid). */
 async function filasDeLaPlantilla() {
@@ -61,6 +66,7 @@ async function filasDeLaPlantilla() {
 export default function PaginaPrograma({ modo }) {
     const toast = useToast();
     const confirmar = useConfirmar();
+    const navigate = useNavigate();
     const esPlantilla = modo === 'plantilla';
     // Desde 769 px, la tabla con chips; en móvil, la vista por día y por semana (misma estructura de siempre)
     const escritorio = useMediaQuery('(min-width: 769px)');
@@ -74,9 +80,16 @@ export default function PaginaPrograma({ modo }) {
     const [puntos, setPuntos] = useState(/** @type {string[]} */ ([]));
     const [programas, setProgramas] = useState(/** @type {Programa[] | null} */ (null));
     const [errorLista, setErrorLista] = useState(false);
+    // Turnos y asignados de cada programa para el botón "Asignar conductores" (RN-UI-16); vacío si no se pudo leer
+    const [estados, setEstados] = useState(/** @type {Record<string, import('./asignar.js').EstadoPrograma>} */ ({}));
+    // Lo que tenía el editor al abrirse, para saber si hay cambios sin guardar
+    const [base, setBase] = useState('');
 
     const recargarLista = useCallback(async () => {
         setProgramas(null);
+        api.estadoDeProgramas()
+            .then(setEstados)
+            .catch(() => setEstados({}));
         try {
             setProgramas(await api.listarProgramas());
             setErrorLista(false);
@@ -128,7 +141,9 @@ export default function PaginaPrograma({ modo }) {
             else setEditorAbierto(false);
             return;
         }
-        setFilas(await filasDeLaPlantilla());
+        const iniciales = await filasDeLaPlantilla();
+        setFilas(iniciales);
+        setBase(instantanea(iniciales, inicio, fin));
         setEditorAbierto(true);
     };
 
@@ -143,12 +158,46 @@ export default function PaginaPrograma({ modo }) {
             setEditandoId(id);
             setInicio(prog.semana_inicio);
             setFin(prog.semana_fin);
-            setFilas(filasDeProgramaGuardado(prog.programa_semanal_turnos || [], prog.filas_extra || []));
+            const cargadas = filasDeProgramaGuardado(prog.programa_semanal_turnos || [], prog.filas_extra || []);
+            setFilas(cargadas);
+            setBase(instantanea(cargadas, prog.semana_inicio, prog.semana_fin));
             setEditorAbierto(true);
             toast('Editando programa — modifica los turnos y guarda', 'info');
         } catch (err) {
             toast(mensajeError(err, 'Error al cargar programa'), 'error');
         }
+    };
+
+    /**
+     * Botón "Asignar conductores" / "Ver asignación" de Programas Guardados (RN-UI-16). Sin el requisito mínimo (al
+     * menos un turno) solo explica por qué; si no, lleva a Asignación, que ejecuta el algoritmo o muestra lo guardado.
+     * @param {Programa} p
+     */
+    const irAAsignar = async (p) => {
+        const estado = estadoBotonAsignar(estados[p.id]);
+        if (estado === 'sinTurnos') {
+            const r = await confirmar({
+                titulo: 'Aún no se pueden asignar conductores',
+                mensaje: `El programa del ${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)} no tiene turnos. Para asignar conductores necesita al menos un turno: edítalo, agrega los turnos y guarda.`,
+                textoConfirmar: 'Editar programa',
+                icono: 'fa-info-circle'
+            });
+            if (r === true) editarPrograma(p.id);
+            return;
+        }
+        // El algoritmo usa lo guardado en la base: lo que no se guardó se perdería al salir
+        if (editorAbierto && instantanea(filas, inicio, fin) !== base) {
+            const ok = await confirmar({
+                titulo: '¿Salir sin guardar?',
+                mensaje:
+                    'Tienes cambios sin guardar en el editor. Si sigues, se pierden y la asignación usa lo que ya está guardado.',
+                textoConfirmar: 'Salir sin guardar',
+                peligro: true,
+                icono: 'fa-exclamation-triangle'
+            });
+            if (ok !== true) return;
+        }
+        navigate(rutaAsignacion(p.id, estado));
     };
 
     /** @param {Programa} p */
@@ -415,9 +464,11 @@ export default function PaginaPrograma({ modo }) {
             {!esPlantilla && (
                 <ProgramasGuardados
                     programas={programas}
+                    estados={estados}
                     error={errorLista}
                     onEditar={editarPrograma}
                     onEliminar={eliminar}
+                    onAsignar={irAAsignar}
                 />
             )}
         </div>

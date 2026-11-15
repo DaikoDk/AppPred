@@ -460,3 +460,18 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 - Reglas: RN-UI-12. Archivos: `components/layout/Layout.jsx`, `components/ui/BarraInferior.jsx`, `index.css`.
 - Con el teclado abierto, las filas que quedan bajo él no se ven hasta cerrarlo o desplazar el contenido.
 - Si un navegador cambia cómo informa `visualViewport`, puede volver la franja: se diagnostica midiendo en el dispositivo, no con capturas.
+
+## ADR-034: Programa y Asignación se conectan por la URL, sin fusionarse
+
+**Estado:** Vigente
+
+**Contexto:** Programa (estructura de la semana) y Asignación (conductores de cada turno) son dos etapas del mismo programa semanal. Se evaluó fusionarlas en una pantalla: tiene costo medio-alto y riesgos (el algoritmo usa lo guardado, los ids de los turnos de ADR-029, la plantilla sin conductores, el móvil y separar permisos más adelante). Se pidió hacerlo más sencillo sin fusionar.
+
+**Decisión:**
+- Las pestañas siguen separadas (ADR-022) y los módulos no se importan entre sí. Programa lleva a Asignación con un enlace: `/hoja/asignacion?semana=<id>` muestra lo guardado y `&ejecutar=1` ejecuta el algoritmo al llegar.
+- En Programas Guardados, el botón depende del estado que ya da `GET /programa-semanal/con-estado`: sin turnos, **Asignar conductores** en gris que explica el requisito; con turnos sin asignar, **Asignar conductores**; con conductores, **Ver asignación**. El backend no cambia.
+- `Boton` gana la variante `apagado`: se ve deshabilitado pero responde al toque para explicar por qué.
+
+**Consecuencias:**
+- Reglas: RN-UI-16. Prueba: `client/src/modules/programa/asignar.test.js`.
+- Si se fusionan las pantallas más adelante, este enlace se reemplaza; las reglas del algoritmo y del guardado no dependen de él.

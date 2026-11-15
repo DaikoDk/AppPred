@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CalendarBlank, CalendarCheck, FloppyDisk, ListChecks, MagicWand, Stack, X } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import ModalImprimir from './ModalImprimir.jsx';
@@ -216,6 +217,35 @@ export default function Asignacion() {
     useEffect(() => {
         if (movil && res?.semanaId) tarjetaResultados.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, [movil, res?.semanaId]);
+
+    // Llegada desde Programa (RN-UI-16): ?semana=<id> elige la semana y muestra lo guardado; con &ejecutar=1 corre el
+    // algoritmo (solo previsualiza, RN-ASIG-01). "ejecutar" se quita de la URL para que F5 o Atrás no lo repitan.
+    const [params, setParams] = useSearchParams();
+    const urlLeida = useRef(false);
+    // Versión actual de las acciones, para usarlas una sola vez al llegar sin repetir el efecto en cada render
+    const acciones = useRef({ ejecutar, verAsignacion });
+    useEffect(() => {
+        acciones.current = { ejecutar, verAsignacion };
+    });
+    useEffect(() => {
+        if (urlLeida.current) return;
+        urlLeida.current = true;
+        const id = params.get('semana');
+        if (!id) return;
+        if (params.get('ejecutar') === '1') {
+            setParams({ semana: id }, { replace: true });
+            acciones.current.ejecutar(id);
+        } else {
+            acciones.current.verAsignacion(id);
+        }
+    }, [params, setParams]);
+
+    // La semana elegida queda en la URL, así F5 la mantiene
+    useEffect(() => {
+        if (!urlLeida.current) return;
+        const enUrl = params.get('semana') || '';
+        if (semana && semana !== enUrl) setParams({ semana }, { replace: true });
+    }, [semana, params, setParams]);
 
     const guardar = async () => {
         if (!res?.filas) {
