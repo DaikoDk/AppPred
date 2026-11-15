@@ -45,7 +45,7 @@ Cada grupo de reglas tiene un prefijo. Un módulo nuevo registra aquí el suyo a
 ## Autenticación y acceso
 
 - **RN-AUTH-01 (Back):** Solo entran correos presentes en `allowed_emails`; el correo se compara en minúsculas. Otro correo recibe 403 `Email no autorizado`.
-- **RN-AUTH-02 (Back):** Máximo 4 correos autorizados en total. Al llegar al límite no se puede añadir otro.
+- **RN-AUTH-02 (Back):** Máximo 20 correos autorizados en total (ADR-032). Al llegar al límite no se puede añadir otro.
 - **RN-AUTH-03 (Back):** Máximo 2 super admins. No se puede nombrar un tercero.
 - **RN-AUTH-04 (Back):** Solo un super admin puede ver/añadir/eliminar correos, cambiar roles o ver/editar la configuración.
 - **RN-AUTH-05 (Back):** Un super admin no puede eliminarse a sí mismo ni cambiarse el rol con el interruptor; para quitarse el rol usa "Renunciar".

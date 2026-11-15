@@ -8,7 +8,7 @@ import { agregarCorreo, alternarSuperAdmin, eliminarCorreo, listarCorreos, renun
 /** @typedef {import('./api.js').CorreoAutorizado} CorreoAutorizado */
 
 // Límites del backend (routes/auth.js). Pendientes de revisar con más usuarios: RN-AUTH-02/03, ADR-019.
-const MAX_USUARIOS = 4;
+const MAX_USUARIOS = 20;
 const MAX_SUPER_ADMINS = 2;
 
 const BOTON_CHICO = { fontSize: '0.75rem', padding: '2px 8px', height: 'auto', lineHeight: 1.4 };

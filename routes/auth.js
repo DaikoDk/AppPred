@@ -83,7 +83,7 @@ router.get('/validate', authenticateToken, async (req, res) => {
 
 /* ====== ALLOWED EMAILS CRUD (super admin only) ====== */
 
-const MAX_USERS = 4;
+const MAX_USERS = 20;
 const MAX_SUPER_ADMINS = 2;
 
 async function checkSuperAdmin(email) {

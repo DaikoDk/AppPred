@@ -80,7 +80,7 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 
 ## ADR-005: Lista blanca de correos con dos niveles de rol
 
-**Estado:** Vigente
+**Estado:** Vigente (el límite de usuarios cambió en ADR-032; el de super admins sigue igual)
 
 **Decisión:** Acceso solo para correos en `allowed_emails`. Hay un rol `is_super_admin` que habilita la pestaña Admin (gestión de correos y configuración). Límites fijos en `routes/auth.js`: `MAX_USERS = 4` y `MAX_SUPER_ADMINS = 2`.
 
@@ -429,3 +429,16 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 **Consecuencias:**
 - No se puede elegir otra semana ni cambiar las fechas de un programa existente desde el celular; se hace en pantalla ancha. Ejecutar el algoritmo en móvil se hace desde la lista de programas.
 - Reglas: RN-UI-13, RN-UI-14 y RN-UI-15. Prueba: `client/src/modules/asignacion/logica.test.js`.
+
+## ADR-032: Límite de 20 usuarios autorizados
+
+**Estado:** Vigente
+
+**Contexto:** La congregación necesita más miembros con acceso. El límite de 4 correos (ADR-005) ya no alcanza.
+
+**Decisión:** `MAX_USERS` pasa de 4 a 20 en `routes/auth.js` y en `client/src/modules/admin/index.jsx` (el front solo lo usa para mostrar el contador y deshabilitar el botón). `MAX_SUPER_ADMINS` sigue en 2 (RN-AUTH-03). Sigue siendo una constante de código.
+
+**Consecuencias:**
+- Reemplaza el límite de 4 de ADR-005 y modifica RN-AUTH-02.
+- Los dos valores deben mantenerse iguales; el backend es el que realmente aplica el límite.
+- No cambia el esquema de base de datos. No se crean roles ni permisos por área.
