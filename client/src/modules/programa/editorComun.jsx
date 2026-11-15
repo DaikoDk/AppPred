@@ -33,6 +33,8 @@ export const BOTON_ICONO =
 
 export const OPCIONES_HORA = FRANJAS.map((f) => ({ valor: f, etiqueta: f }));
 export const OPCIONES_GRUPO = GRUPOS.map((g) => ({ valor: g, etiqueta: GRUPO_LABEL[g] || g }));
+// Vista por semana en móvil: el nombre completo del grupo, como sale en la hoja
+export const OPCIONES_GRUPO_COMPLETO = GRUPOS.map((g) => ({ valor: g, etiqueta: g }));
 export const OPCIONES_MODALIDAD = MODALIDADES.map((m) => ({ valor: m, etiqueta: m }));
 
 /** @param {string[]} puntos */
