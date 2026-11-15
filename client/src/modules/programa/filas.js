@@ -13,7 +13,7 @@ import { diaDeExtra, diaDeTurno, normalizarExtras } from '../../utils/reglasDia.
  * @typedef {import('../../types/models').CampoFormato} CampoFormato
  *
  * @typedef {{
- *   clave: string, tipo: 'turno', dia: Dia,
+ *   clave: string, tipo: 'turno', dia: Dia, id?: string,
  *   hora: string, grupo: string, territorio: string, punto_reunion: string, modalidad: string,
  *   formato: Formato
  * }} FilaTurno
@@ -65,6 +65,7 @@ export function nuevaFilaTurno(dia, d = {}) {
         clave: nuevaClave(),
         tipo: 'turno',
         dia,
+        id: d.id,
         hora: d.hora || FRANJAS[0],
         grupo: d.grupo || 'TODA LA CONGREGACION',
         territorio: d.territorio || '',
@@ -193,6 +194,7 @@ export function leerFilas(filas) {
     const turnos = filas
         .filter((f) => f.tipo === 'turno')
         .map((f) => ({
+            id: f.id,
             dia: f.dia,
             hora: f.hora,
             grupo: f.grupo,
@@ -265,6 +267,8 @@ export function combinarConPlantilla(actual, plantillaTurnos, plantillaExtras) {
         const p = siguiente(progTurnos, `T|${dia}|${t.hora}|${t.grupo}`);
         return {
             ...t,
+            // Conserva el id del turno del programa: así sus asignaciones no se pierden (ADR-029)
+            id: p?.id,
             dia,
             territorio: gana(t.territorio, p?.territorio),
             punto_reunion: gana(t.punto_reunion, p?.punto_reunion),

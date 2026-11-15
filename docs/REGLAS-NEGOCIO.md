@@ -70,7 +70,7 @@ Cada grupo de reglas tiene un prefijo. Un módulo nuevo registra aquí el suyo a
 - **RN-PROG-01 (Back):** Para crear hacen falta `semana_inicio`, `semana_fin` y la lista `turnos`.
 - **RN-PROG-02 (Back):** Si falla la inserción de turnos al crear, el programa recién creado se borra.
 - **RN-PROG-03 (Back):** Se conservan solo los **10 programas más recientes** (por `semana_inicio`); los más antiguos se borran al crear uno nuevo. La plantilla no cuenta.
-- **RN-PROG-04 (Back):** Guardar una edición reemplaza todos los turnos y filas extra. **Consecuencia: se pierden las asignaciones del programa editado** (ver ADR-008).
+- **RN-PROG-04 (Back):** Guardar una edición **conserva las asignaciones**. Los turnos que ya existen en el programa (se identifican por su `id`) se actualizan en su sitio y mantienen `conductor_id` y `score`; los turnos nuevos se insertan sin conductor; los que ya no están se borran junto con su asignación, y el historial del conductor se ajusta a los turnos que le quedan (RN-CONF-04). Un `id` que no es de ese programa se trata como turno nuevo. Las filas extra sí se reemplazan, porque no se asignan (ver ADR-029).
 - **RN-PROG-05 (Back):** `territorio` y `punto_reunion` vacíos de un turno se guardan como `null`; `modalidad` vacía como `FISICO`.
 - **RN-PROG-06 (Front):** Eliminar un programa pide confirmación con modal de peligro y una espera de 10 s antes de poder confirmar; ofrece la alternativa de editarlo.
 - **RN-PROG-07 (Front):** La plantilla no se puede eliminar desde la interfaz.

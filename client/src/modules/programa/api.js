@@ -31,7 +31,7 @@ export function crearPrograma(cuerpo) {
     return apiFetch('/api/programa-semanal', { method: 'POST', body: JSON.stringify(cuerpo) });
 }
 
-/** Reemplaza todos los turnos y filas: se pierden las asignaciones (RN-PROG-04). @param {string} id @param {CuerpoPrograma} cuerpo */
+/** Actualiza los turnos por su id y conserva sus asignaciones (RN-PROG-04, ADR-029). @param {string} id @param {CuerpoPrograma} cuerpo */
 export function actualizarPrograma(id, cuerpo) {
     return apiFetch(`/api/programa-semanal/${id}`, { method: 'PUT', body: JSON.stringify(cuerpo) });
 }

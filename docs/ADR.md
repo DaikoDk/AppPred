@@ -114,7 +114,7 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 
 ## ADR-008: Guardar un programa reemplaza todos sus turnos (borrar e insertar)
 
-**Estado:** Vigente (con riesgo conocido)
+**Estado:** Reemplazado por ADR-029 (los turnos existentes se actualizan y conservan sus asignaciones; las filas extra siguen reemplazándose)
 
 **Decisión:** `PUT /programa-semanal/:id` borra todos los turnos y filas extra del programa y los vuelve a insertar con los datos del editor.
 
@@ -381,3 +381,20 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 **Consecuencias:**
 - Aquí el formato se guarda al aplicarlo, no con el botón Guardar de la asignación (RN-FMT-04 y RN-FMT-05).
 - No afecta a la exportación a Sheets ni a la imagen PNG: ambas ya leen `formato`.
+
+## ADR-029: Editar un programa conserva sus asignaciones
+
+**Estado:** Vigente
+
+**Contexto:** `PUT /programa-semanal/:id` borraba todos los turnos y los insertaba de nuevo (ADR-008), así que cualquier edición, incluso corregir una letra del territorio, dejaba el programa sin asignar y obligaba a repetir el algoritmo.
+
+**Decisión:**
+- El editor envía el `id` de cada turno que ya existía (`modules/programa/filas.js`). Al actualizar con la plantilla se conserva el `id` del turno del programa con el que se empareja cada fila, no el de la plantilla.
+- El backend actualiza en su sitio los turnos cuyo `id` pertenece al programa (sin tocar `conductor_id` ni `score`), inserta los nuevos y borra solo los que ya no están. Se hace en ese orden para que un fallo no deje el programa vacío.
+- Si se borra un turno asignado, el historial (`asignaciones_historial`) de ese conductor en la semana se ajusta a los turnos que le quedan, o se elimina si ya no le queda ninguno.
+- Las filas extra siguen reemplazándose completas: nunca se asignan (ADR-007).
+
+**Consecuencias:**
+- Un turno editado conserva su conductor aunque cambie de día, hora o grupo; no se revalida la disponibilidad (RN-CONF-02) y su `score` guardado puede quedar desactualizado.
+- Sigue sin ser atómico (ADR-003): varias llamadas por guardado.
+- Reemplaza el riesgo de ADR-008 sobre perder asignaciones. Regla: RN-PROG-04.
