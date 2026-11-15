@@ -180,8 +180,8 @@ export default function Asignacion() {
         const vacios = turnosSinTerritorio(turnos, inicioDe(res.semanaId));
         const ok = await confirmar({
             titulo: '¿Guardar la asignación?',
-            mensaje: `Se guardarán ${asignaciones.length} asignaciones y la semana se exportará a Google Sheets en una hoja nueva.`,
-            textoConfirmar: 'Guardar y exportar',
+            mensaje: `Se guardarán ${asignaciones.length} asignaciones. Para generar la hoja en Google Sheets usa «Exportar a Sheets» desde la lista de programas.`,
+            textoConfirmar: 'Guardar',
             icono: 'fa-floppy-disk',
             advertencia: vacios.length
                 ? {
@@ -194,19 +194,9 @@ export default function Asignacion() {
 
         const { semanaId, editando } = res;
         cargando.mostrar('Guardando asignación…');
-        /** @type {ResultadoExportacion | null} */
-        let exportacion = null;
-        /** @type {unknown} */
-        let errorExportar = null;
         try {
-            await api.confirmarAsignaciones(semanaId, asignaciones);
+            await api.confirmarAsignaciones(semanaId, asignaciones); // RN-CONF-06: solo guarda
             setRes(null);
-            cargando.mostrar('Exportando a Google Sheets…');
-            try {
-                exportacion = await api.exportarASheets(semanaId); // RN-CONF-06
-            } catch (err) {
-                errorExportar = err;
-            }
             if (editando) await verAsignacion(semanaId);
             await recargarProgramas();
             setSemana(''); // la app anterior vuelve a "Seleccionar semana..." al recargar la lista
@@ -217,13 +207,6 @@ export default function Asignacion() {
         }
         cargando.ocultar();
         toast(`${asignaciones.length} asignaciones guardadas`, 'success');
-        if (exportacion) await modalSheet(exportacion, 'Asignación guardada');
-        else
-            toast(
-                `Se guardó, pero no se pudo exportar a Google Sheets: ${mensajeError(errorExportar, 'error desconocido')}`,
-                'error',
-                8000
-            );
     };
 
     /** @param {string} semanaId */
@@ -236,27 +219,6 @@ export default function Asignacion() {
         } catch (err) {
             cargando.ocultar();
             toast(mensajeError(err, 'Error al exportar'), 'error');
-        }
-    };
-
-    /** @param {ProgramaEstado} p */
-    const limpiar = async (p) => {
-        const ok = await confirmar({
-            titulo: '¿Eliminar todas las asignaciones de esta semana?',
-            mensaje: `Semana del ${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}. Los turnos quedarán sin asignar.`,
-            textoConfirmar: 'Limpiar',
-            peligro: true,
-            icono: 'fa-eraser'
-        });
-        if (ok !== true) return;
-        try {
-            await api.limpiarAsignaciones(p.id);
-            toast('Asignaciones eliminadas', 'success');
-            setRes(null);
-            setSemana('');
-            recargarProgramas();
-        } catch (err) {
-            toast(mensajeError(err, 'Error al borrar'), 'error');
         }
     };
 
@@ -381,7 +343,6 @@ export default function Asignacion() {
                         error={errorLista}
                         onVer={verAsignacion}
                         onPng={setConImagen}
-                        onLimpiar={limpiar}
                         onSheets={exportar}
                         onImprimir={setImprimiendo}
                     />

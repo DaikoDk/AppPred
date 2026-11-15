@@ -6,7 +6,7 @@ import Modal from '../../components/ui/Modal.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { mensajeError } from '../../utils/errores.js';
 import { formatDate } from '../../utils/fechas.js';
-import { canvasDelPrograma, compartirPng, descargarPng } from './imagenPng.js';
+import { archivoPng, canvasDelPrograma, compartirPng, descargarPng } from './imagenPng.js';
 
 /** Indica si el navegador puede compartir un archivo (celular: sí; PC: depende del navegador). */
 function puedeCompartirArchivo() {
@@ -21,6 +21,7 @@ function puedeCompartirArchivo() {
 export default function ModalPng({ programa, onCerrar }) {
     const toast = useToast();
     const [canvas, setCanvas] = useState(/** @type {HTMLCanvasElement | null} */ (null));
+    const [archivo, setArchivo] = useState(/** @type {File | null} */ (null));
     const [imagen, setImagen] = useState(/** @type {string | null} */ (null));
     const [error, setError] = useState(false);
     const [puedeCompartir] = useState(puedeCompartirArchivo);
@@ -31,8 +32,10 @@ export default function ModalPng({ programa, onCerrar }) {
         (async () => {
             try {
                 const lienzo = await canvasDelPrograma(programa);
+                const png = await archivoPng(lienzo, titulo);
                 if (!activo) return;
                 setCanvas(lienzo);
+                setArchivo(png);
                 setImagen(lienzo.toDataURL('image/png'));
             } catch (err) {
                 if (!activo) return;
@@ -43,13 +46,13 @@ export default function ModalPng({ programa, onCerrar }) {
         return () => {
             activo = false;
         };
-    }, [programa, toast]);
+    }, [programa, titulo, toast]);
 
     /** Comparte o descarga; cerrar la hoja de compartir no es un error. */
     const compartir = async () => {
-        if (!canvas) return;
+        if (!archivo) return;
         try {
-            const resultado = await compartirPng(canvas, titulo, titulo);
+            const resultado = await compartirPng(archivo, titulo, titulo);
             if (resultado === 'descargado') toast('Imagen descargada: adjúntala en WhatsApp Web', 'success');
         } catch (err) {
             if (/** @type {Error} */ (err).name !== 'AbortError')
@@ -83,7 +86,7 @@ export default function ModalPng({ programa, onCerrar }) {
                     <Boton
                         variante="exito"
                         icono={puedeCompartir ? ShareNetwork : WhatsappLogo}
-                        disabled={!canvas}
+                        disabled={!archivo}
                         onClick={compartir}
                     >
                         <span className="sm:hidden">Compartir</span>
