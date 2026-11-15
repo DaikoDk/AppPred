@@ -10,6 +10,7 @@ import {
     COLOR_DIA,
     ModalFormatoFila,
     OPCIONES_GRUPO,
+    OPCIONES_GRUPO_COMPLETO,
     OPCIONES_HORA,
     OPCIONES_MODALIDAD,
     claseFormato,
@@ -26,6 +27,9 @@ import { agregarLibreJunto, agregarTurnoDebajo, cambiarFila, quitarFila } from '
 const COLUMNAS =
     'grid-cols-[minmax(120px,1.25fr)_minmax(92px,1fr)_minmax(84px,1fr)_minmax(108px,1.3fr)_minmax(76px,0.7fr)_96px]';
 
+// Vista por semana en móvil: cada columna mide lo que necesita su contenido más largo y la tabla se desplaza en horizontal
+const COLUMNAS_COMPLETO = 'grid-cols-[210px_220px_340px_330px_130px_96px]';
+
 /**
  * Editor de turnos con chips del color de cada día. Se usa desde 769 px; en móvil se usa EditorMovil
  * (vista por día) y, en su vista por semana, este mismo editor con scroll horizontal.
@@ -34,10 +38,13 @@ const COLUMNAS =
  *   onCambiar: (actualizar: (filas: Fila[]) => Fila[]) => void,
  *   puntos: string[],
  *   semanaInicio: string,
- *   onDiaTocado?: (dia: Dia) => void
+ *   onDiaTocado?: (dia: Dia) => void,
+ *   completo?: boolean
  * }} props
+ * `completo` muestra las celdas sin recortar (vista por semana en móvil).
  */
-export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInicio, onDiaTocado }) {
+export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInicio, onDiaTocado, completo = false }) {
+    const columnas = completo ? COLUMNAS_COMPLETO : COLUMNAS;
     const [formateando, setFormateando] = useState(/** @type {Fila | null} */ (null));
     const opcionesPunto = opcionesDePunto(puntos);
 
@@ -65,8 +72,8 @@ export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInici
     return (
         <>
             <div id="editor-escritorio" className="tw overflow-x-auto" onFocus={tocado} onPointerDown={tocado}>
-                <div className="min-w-[740px]">
-                    <div role="row" className={`ml-24 grid ${COLUMNAS} gap-2 pb-2 pl-2 text-muted`}>
+                <div className={completo ? 'w-max min-w-full' : 'min-w-[740px]'}>
+                    <div role="row" className={`ml-24 grid ${columnas} gap-2 pb-2 pl-2 text-muted`}>
                         <span className={titulo}>
                             <Clock size={14} aria-hidden="true" />
                             Hora
@@ -117,7 +124,7 @@ export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInici
 
                                     if (f.tipo === 'turno') {
                                         return (
-                                            <div key={f.clave} role="row" className={`grid ${COLUMNAS} gap-2`}>
+                                            <div key={f.clave} role="row" className={`grid ${columnas} gap-2`}>
                                                 <Desplegable
                                                     rotulo="Hora"
                                                     valor={f.hora}
@@ -128,7 +135,7 @@ export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInici
                                                 <Desplegable
                                                     rotulo="Grupo"
                                                     valor={f.grupo}
-                                                    opciones={OPCIONES_GRUPO}
+                                                    opciones={completo ? OPCIONES_GRUPO_COMPLETO : OPCIONES_GRUPO}
                                                     onCambiar={(v) => editar(f.clave, { grupo: v })}
                                                     claseTexto={claseFormato(f.formato, 'grupo')}
                                                 />
@@ -172,7 +179,7 @@ export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInici
                                         />
                                     );
                                     return (
-                                        <div key={f.clave} role="row" className={`grid ${COLUMNAS} gap-2`}>
+                                        <div key={f.clave} role="row" className={`grid ${columnas} gap-2`}>
                                             {libre('hora', 'Hora')}
                                             {libre('grupo', 'Grupo')}
                                             {libre('territorio', 'Territorio')}

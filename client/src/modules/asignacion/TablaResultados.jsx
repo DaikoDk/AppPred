@@ -1,6 +1,7 @@
 // @ts-check
-import { Clock, MapPin, MapTrifold, UserCheck, UsersThree } from '@phosphor-icons/react';
+import { Clock, DotsThree, MapPin, MapTrifold, PaintBrush, UserCheck, UsersThree } from '@phosphor-icons/react';
 import Desplegable from '../../components/ui/Desplegable.jsx';
+import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { nombreDia } from '../../utils/dias.js';
 import { fechaDelDia } from '../../utils/fechas.js';
 import { etiquetaGrupo, opcionConductor } from './logica.js';
@@ -9,6 +10,7 @@ import { etiquetaGrupo, opcionConductor } from './logica.js';
  * @typedef {import('./logica.js').FilaResultado} FilaResultado
  * @typedef {import('../../types/models').Conductor} Conductor
  * @typedef {import('../../types/models').Dia} Dia
+ * @typedef {import('../../types/models').Formato} Formato
  */
 
 // Mismo aspecto que el editor de Programa (modules/programa/editorComun.jsx, RN-UI-09): bloque de día a la
@@ -27,7 +29,10 @@ const CAMPO =
     'body-6 min-h-9 w-full min-w-0 rounded-lg border border-transparent bg-(--dia) px-3 py-2 text-ink outline-none';
 const CAMPO_LIBRE = `${CAMPO} border-dashed border-ink/30`;
 // Hora y Grupo tienen ancho fijo (su contenido más largo); Territorio y P. Reunión reparten el resto. Por debajo de 740 px la tabla se desplaza en horizontal
-const COLUMNAS = 'grid-cols-[176px_140px_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1.1fr)]';
+const COLUMNAS = 'grid-cols-[176px_140px_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_32px]';
+// Mismo botón ⋯ que el editor de Programa (modules/programa/editorComun.jsx)
+const BOTON_ICONO =
+    'relative grid size-8 place-items-center rounded-lg text-muted transition-[background-color,color,transform] duration-300 ease-skill hover:bg-fill hover:text-ink active:scale-[0.98]';
 const TITULO = 'caption-3 flex items-center gap-1 px-1 uppercase tracking-wide';
 
 /**
@@ -41,8 +46,11 @@ const TITULO = 'caption-3 flex items-center gap-1 px-1 uppercase tracking-wide';
  *   disponibles: Set<string>,
  *   elecciones: Record<string, string>,
  *   inicialmenteSinAsignar: Set<string>,
- *   onElegir: (turnoId: string, valor: string) => void
+ *   formatos: Record<string, Formato>,
+ *   onElegir: (turnoId: string, valor: string) => void,
+ *   onFormato: (fila: FilaResultado) => void
  * }} props
+ * `formatos` guarda el formato por id de turno o de fila libre; el menú ⋯ de cada fila abre el formato de celdas.
  */
 export default function TablaResultados({
     filas,
@@ -52,8 +60,34 @@ export default function TablaResultados({
     disponibles,
     elecciones,
     inicialmenteSinAsignar,
-    onElegir
+    formatos,
+    onElegir,
+    onFormato
 }) {
+    /** @param {FilaResultado} f @param {string | undefined} id */
+    const menu = (f, id) => (
+        <MenuAcciones
+            etiqueta="Más acciones de la fila"
+            items={[{ texto: 'Formato de celdas', icono: PaintBrush, onClick: () => onFormato(f) }]}
+            boton={({ ref, abierto, alternar }) => (
+                <button
+                    ref={ref}
+                    type="button"
+                    aria-label="Más acciones de la fila"
+                    aria-haspopup="menu"
+                    aria-expanded={abierto}
+                    onClick={alternar}
+                    className={BOTON_ICONO}
+                >
+                    <DotsThree size={16} weight="bold" aria-hidden="true" />
+                    {id && Object.keys(formatos[id] || {}).length > 0 && (
+                        <span aria-hidden="true" className="absolute top-1 right-1 size-2 rounded-full bg-primary" />
+                    )}
+                </button>
+            )}
+        />
+    );
+
     // Filas agrupadas por día, en el orden en que llegan; cada una conserva su posición para la clave
     /** @type {{ dia: Dia, items: { f: FilaResultado, i: number }[] }[]} */
     const grupos = [];
@@ -65,7 +99,7 @@ export default function TablaResultados({
 
     return (
         <div className="tw overflow-x-auto">
-            <div id="resultados-table" className="min-w-[740px]">
+            <div id="resultados-table" className="min-w-[780px]">
                 <div role="row" className={`ml-24 grid ${COLUMNAS} gap-2 pb-2 pl-2 text-muted`}>
                     <span className={TITULO}>
                         <Clock size={14} aria-hidden="true" />
@@ -87,6 +121,7 @@ export default function TablaResultados({
                         <UserCheck size={14} aria-hidden="true" />
                         Conductor
                     </span>
+                    <span></span>
                 </div>
 
                 {grupos.map((g) => (
@@ -112,6 +147,7 @@ export default function TablaResultados({
                                             <div className={CAMPO_LIBRE}>{(e.territorio || '').trim()}</div>
                                             <div className={CAMPO_LIBRE}>{(e.punto_reunion || '').trim()}</div>
                                             <div className={CAMPO_LIBRE}>{(e.conductor || '').trim()}</div>
+                                            {menu(f, e.id)}
                                         </div>
                                     );
                                 }
@@ -148,6 +184,7 @@ export default function TablaResultados({
                                                 })
                                             ]}
                                         />
+                                        {menu(f, r.turno_id)}
                                     </div>
                                 );
                             })}

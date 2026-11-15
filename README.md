@@ -84,7 +84,7 @@ Lee en este orden antes de cambiar algo:
 ## Zonas de mayor riesgo
 
 - Algoritmo de asignación (`routes/asignacion.js`, reglas `RN-ASIG-*`).
-- Guardar un programa borra sus asignaciones (ADR-008).
+- Guardar un programa conserva las asignaciones de los turnos que ya existen (ADR-029).
 - La plantilla es un programa con id fijo que no debe aparecer en los listados (ADR-006).
 - Exportación a Google Sheets (`utils/googleSheets.js`, reglas `RN-SHEET-*`): nunca sobrescribe pestañas.
 - Reglas que solo aplica el front (`client/src/utils/reglasDia.js`, `client/src/modules/programa/filas.js`, `client/src/modules/asignacion/logica.js`): tienen pruebas y el servidor no las valida.

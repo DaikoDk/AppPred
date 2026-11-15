@@ -114,7 +114,7 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 
 ## ADR-008: Guardar un programa reemplaza todos sus turnos (borrar e insertar)
 
-**Estado:** Vigente (con riesgo conocido)
+**Estado:** Reemplazado por ADR-029 (los turnos existentes se actualizan y conservan sus asignaciones; las filas extra siguen reemplazándose)
 
 **Decisión:** `PUT /programa-semanal/:id` borra todos los turnos y filas extra del programa y los vuelve a insertar con los datos del editor.
 
@@ -352,3 +352,49 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 **Consecuencias:**
 - Reemplaza el antiguo RN-CONF-07. Ya no hay forma de borrar el historial de una semana desde la app.
 - Una semana sin asignar no tiene botones en la lista; se asigna desde la selección de semana.
+
+## ADR-027: La imagen PNG usa fuentes propias en vez de las del sistema
+
+**Estado:** Vigente
+
+**Contexto:** La hoja de Sheets usa Arial y Arial Black. El celular (Android) no las tiene y el canvas caía a Roboto: el título, el encabezado y las reuniones perdían el peso y la imagen no se parecía a la hoja.
+
+**Decisión:**
+- Se agregan `@fontsource/arimo` (equivalente métrico de Arial) y `@fontsource/archivo-black` (peso similar a Arial Black). Las importa `modules/asignacion/imagenPng.js` y salen del mismo origen, así que la CSP no cambia (ADR-002).
+- Antes de dibujar se llama a `document.fonts.load`, porque el canvas no pide las fuentes por sí solo.
+- Ajusta ADR-023, que decía que no agregaba dependencias. La exportación a Sheets no cambia.
+
+**Consecuencias:**
+- La imagen se ve igual en PC y celular; el bundle de Asignación carga unos archivos de fuente más. Regla: RN-IMG-07.
+
+## ADR-028: El formato de celdas también se edita desde Asignación
+
+**Estado:** Vigente
+
+**Contexto:** El formato por celda solo se podía cambiar en el editor de Programa, y guardar un programa reemplaza sus turnos (ADR-008), lo que borraba las asignaciones. Para corregir el aspecto de una fila ya asignada había que volver a asignar.
+
+**Decisión:**
+- La tabla de Resultados de Asignación agrega un menú `⋯` por fila con **Formato de celdas** (el mismo modal que Programa).
+- Dos endpoints nuevos, `PATCH /api/programa-semanal/turnos/:id/formato` y `/extras/:id/formato`, actualizan solo la columna `formato`, saneada con `limpiarFormato`. No hay cambios de esquema (ADR-003).
+- `ModalFormato` pasa a `components/ui` y la lógica de formato a `utils/formato.js`, porque los módulos no se importan entre sí.
+
+**Consecuencias:**
+- Aquí el formato se guarda al aplicarlo, no con el botón Guardar de la asignación (RN-FMT-04 y RN-FMT-05).
+- No afecta a la exportación a Sheets ni a la imagen PNG: ambas ya leen `formato`.
+
+## ADR-029: Editar un programa conserva sus asignaciones
+
+**Estado:** Vigente
+
+**Contexto:** `PUT /programa-semanal/:id` borraba todos los turnos y los insertaba de nuevo (ADR-008), así que cualquier edición, incluso corregir una letra del territorio, dejaba el programa sin asignar y obligaba a repetir el algoritmo.
+
+**Decisión:**
+- El editor envía el `id` de cada turno que ya existía (`modules/programa/filas.js`). Al actualizar con la plantilla se conserva el `id` del turno del programa con el que se empareja cada fila, no el de la plantilla.
+- El backend actualiza en su sitio los turnos cuyo `id` pertenece al programa (sin tocar `conductor_id` ni `score`), inserta los nuevos y borra solo los que ya no están. Se hace en ese orden para que un fallo no deje el programa vacío.
+- Si se borra un turno asignado, el historial (`asignaciones_historial`) de ese conductor en la semana se ajusta a los turnos que le quedan, o se elimina si ya no le queda ninguno.
+- Las filas extra siguen reemplazándose completas: nunca se asignan (ADR-007).
+
+**Consecuencias:**
+- Un turno editado conserva su conductor aunque cambie de día, hora o grupo; no se revalida la disponibilidad (RN-CONF-02) y su `score` guardado puede quedar desactualizado.
+- Sigue sin ser atómico (ADR-003): varias llamadas por guardado.
+- Reemplaza el riesgo de ADR-008 sobre perder asignaciones. Regla: RN-PROG-04.

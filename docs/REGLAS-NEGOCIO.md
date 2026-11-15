@@ -70,7 +70,7 @@ Cada grupo de reglas tiene un prefijo. Un módulo nuevo registra aquí el suyo a
 - **RN-PROG-01 (Back):** Para crear hacen falta `semana_inicio`, `semana_fin` y la lista `turnos`.
 - **RN-PROG-02 (Back):** Si falla la inserción de turnos al crear, el programa recién creado se borra.
 - **RN-PROG-03 (Back):** Se conservan solo los **10 programas más recientes** (por `semana_inicio`); los más antiguos se borran al crear uno nuevo. La plantilla no cuenta.
-- **RN-PROG-04 (Back):** Guardar una edición reemplaza todos los turnos y filas extra. **Consecuencia: se pierden las asignaciones del programa editado** (ver ADR-008).
+- **RN-PROG-04 (Back):** Guardar una edición **conserva las asignaciones**. Los turnos que ya existen en el programa (se identifican por su `id`) se actualizan en su sitio y mantienen `conductor_id` y `score`; los turnos nuevos se insertan sin conductor; los que ya no están se borran junto con su asignación, y el historial del conductor se ajusta a los turnos que le quedan (RN-CONF-04). Un `id` que no es de ese programa se trata como turno nuevo. Las filas extra sí se reemplazan, porque no se asignan (ver ADR-029).
 - **RN-PROG-05 (Back):** `territorio` y `punto_reunion` vacíos de un turno se guardan como `null`; `modalidad` vacía como `FISICO`.
 - **RN-PROG-06 (Front):** Eliminar un programa pide confirmación con modal de peligro y una espera de 10 s antes de poder confirmar; ofrece la alternativa de editarlo.
 - **RN-PROG-07 (Front):** La plantilla no se puede eliminar desde la interfaz.
@@ -158,13 +158,15 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-IMG-04 (Front):** El ancho de cada columna sale del texto más largo, sin contar las reuniones especiales (RN-SHEET-08). La imagen se genera al doble de resolución.
 - **RN-IMG-05 (Front):** Las acciones de un programa asignado se ven así: `Ver | PNG | ⋯`, y el menú `⋯` ofrece **Exportar a Sheets** (que sigue mostrando su modal con los enlaces, RN-SHEET-10) e **Imprimir o guardar en PDF**. Esta última abre un modal con la vista previa y un botón Imprimir que abre el cuadro de impresión del navegador en una hoja **A4 horizontal** (desde ahí también se puede elegir "Guardar como PDF"). No genera ni guarda un archivo propio.
 - **RN-IMG-06 (Front):** El botón **PNG** abre un modal con la vista previa de la imagen y dos acciones: **Descargar PNG** y **Compartir por WhatsApp**. Si el navegador puede compartir archivos (celular y algunos navegadores de PC), se abre su hoja para compartir con el PNG adjunto. Si no puede (o el navegador rechaza compartir con "Permission denied"), se descarga el PNG y se abre WhatsApp Web con el título como texto, y el usuario adjunta la imagen ahí. Cerrar la hoja de compartir no muestra error. Nada se guarda en la base.
+- **RN-IMG-07 (Front):** La imagen usa **Arimo** (equivalente de Arial, cuerpo) y **Archivo Black** (equivalente de Arial Black, título, encabezado y reuniones), incluidas en la app, para verse como la hoja de Sheets aunque el dispositivo no tenga Arial. Se espera a que carguen antes de dibujar (ADR-027).
 
 ## Formato por celda
 
 - **RN-FMT-01 (Back):** Por celda solo se admiten: `h` (left/center/right), `v` (top/middle/bottom) y `b`, `i`, `s` en verdadero. Todo lo demás se descarta al guardar.
 - **RN-FMT-02 (Back):** Los campos con formato posible son `hora`, `grupo`, `territorio`, `punto_reunion` y `conductor`.
 - **RN-FMT-03 (Front):** Por defecto: centrado horizontal y vertical al medio; solo se almacena lo que se aparta del defecto.
-- **RN-FMT-04 (Front):** El formato se guarda al guardar el programa, no al aplicarlo.
+- **RN-FMT-04 (Front):** En el editor de Programa el formato se guarda al guardar el programa, no al aplicarlo. En Asignación se guarda al aplicarlo (RN-FMT-05).
+- **RN-FMT-05 (Front y Back):** En Asignación, el menú `⋯` de cada fila (turno o fila libre) ofrece **Formato de celdas**, el mismo modal que Programa. Al aplicarlo se guarda **solo** el formato de esa fila (`PATCH /turnos/:id/formato` o `/extras/:id/formato`, saneado con RN-FMT-01): no cambia conductores, `score` ni el resto de los datos (ADR-028).
 
 ## Datos y límites técnicos
 
@@ -184,6 +186,7 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-UI-06 (Front):** Mientras se guarda o exporta, una pantalla de carga bloquea toda la interfaz.
 - **RN-UI-07 (Front):** Tras guardar una asignación, la lista "Semana" vuelve a "Seleccionar semana..." (como en el front anterior).
 - **RN-UI-08 (Front):** Hoja de Predicación es `/hoja`, con una pestaña por URL: `/hoja/programa`, `/hoja/asignacion`, `/hoja/plantilla`, `/hoja/conductores`, `/hoja/puntos`, `/hoja/historial` y `/hoja/configuracion` (solo super admin). `/hoja` lleva a `/hoja/programa`. Las rutas de antes (`/programa`, `/asignacion`, `/plantilla`, `/conductores`, `/puntos`, `/historial`) redirigen a su pestaña. `/admin` queda fuera de la hoja (menú lateral, solo super admin). `/`, `/dashboard.html` y rutas desconocidas llevan a `/hoja/programa` (o al login si no hay sesión). `/` también completa el regreso del login con Google.
-- **RN-UI-09 (Front):** El editor de turnos tiene dos presentaciones con el mismo comportamiento y datos: `EditorEscritorio.jsx` (chips por día) desde 769 px, y `EditorMovil.jsx` por debajo, con vista por día (una tarjeta por fila) y por semana (la misma tabla con desplazamiento horizontal); la vista elegida se recuerda en el navegador. Un cambio de comportamiento del editor se hace en las dos.
+- **RN-UI-09 (Front):** El editor de turnos tiene dos presentaciones con el mismo comportamiento y datos: `EditorEscritorio.jsx` (chips por día) desde 769 px, y `EditorMovil.jsx` por debajo, con vista por día (una tarjeta por fila) y por semana (la misma tabla con desplazamiento horizontal, con las celdas completas: columnas más anchas y el grupo sin abreviar, "TODA LA CONGREGACION"); la vista elegida se recuerda en el navegador. Un cambio de comportamiento del editor se hace en las dos.
 - **RN-UI-10 (Front):** Las listas del editor (hora, grupo, punto de reunión, modalidad) no tienen una opción "inválida": si el valor guardado ya no existe en la lista (por ejemplo un punto desactivado) se muestra y se conserva al guardar.
 - **RN-UI-11 (Front):** La barra de pestañas de la hoja marca la activa según la URL, así que F5 y Atrás la mantienen. Con las flechas izquierda y derecha, Inicio y Fin se cambia de pestaña; solo la activa entra con Tab. Las pestañas de super admin no aparecen para los demás.
+- **RN-UI-12 (Front):** En móvil, mientras hay un campo de texto enfocado (el teclado en pantalla está abierto) la barra inferior de la hoja se oculta, para que no quede flotando sobre el teclado (Brave en Android). Reaparece al salir del campo; botones, casillas y campos de solo lectura no la ocultan (`components/layout/teclado.js`).

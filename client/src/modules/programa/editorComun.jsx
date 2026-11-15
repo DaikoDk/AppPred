@@ -3,7 +3,7 @@ import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { nombreDia } from '../../utils/dias.js';
 import { FRANJAS, GRUPOS, GRUPO_LABEL, MODALIDADES } from '../../utils/constantes.js';
-import ModalFormato from './ModalFormato.jsx';
+import ModalFormato from '../../components/ui/ModalFormato.jsx';
 
 /**
  * Piezas compartidas por el editor de pantalla ancha y el de móvil: ambos editan la misma lista de filas (RN-UI-09).
@@ -33,6 +33,8 @@ export const BOTON_ICONO =
 
 export const OPCIONES_HORA = FRANJAS.map((f) => ({ valor: f, etiqueta: f }));
 export const OPCIONES_GRUPO = GRUPOS.map((g) => ({ valor: g, etiqueta: GRUPO_LABEL[g] || g }));
+// Vista por semana en móvil: el nombre completo del grupo, como sale en la hoja
+export const OPCIONES_GRUPO_COMPLETO = GRUPOS.map((g) => ({ valor: g, etiqueta: g }));
 export const OPCIONES_MODALIDAD = MODALIDADES.map((m) => ({ valor: m, etiqueta: m }));
 
 /** @param {string[]} puntos */

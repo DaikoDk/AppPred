@@ -22,7 +22,7 @@ Ambos documentos están deducidos del código. Por eso:
 ## Zonas de mayor riesgo
 
 - Algoritmo de asignación (`routes/asignacion.js`): RN-ASIG-\*. Cambiar candidatos, orden o pesos cambia quién queda asignado.
-- Guardar un programa borra sus asignaciones (ADR-008, RN-PROG-04).
+- Guardar un programa conserva las asignaciones de los turnos que ya existen, por `id` (ADR-029, RN-PROG-04): no enviar turnos sin su `id` ni cambiarlo.
 - La plantilla es un programa con id fijo y debe excluirse de los listados (ADR-006).
 - Reglas que solo aplica el front (`client/src/utils/reglasDia.js`, `client/src/modules/programa/filas.js`, `client/src/modules/asignacion/logica.js`): el backend no las valida. Tienen pruebas unitarias; si cambian, actualiza las pruebas.
 - Exportación a Sheets (`utils/googleSheets.js`): nunca sobrescribir pestañas; colores y formato son parte del contrato (RN-SHEET-\*).
