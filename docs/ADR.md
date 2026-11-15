@@ -352,3 +352,17 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 **Consecuencias:**
 - Reemplaza el antiguo RN-CONF-07. Ya no hay forma de borrar el historial de una semana desde la app.
 - Una semana sin asignar no tiene botones en la lista; se asigna desde la selección de semana.
+
+## ADR-027: La imagen PNG usa fuentes propias en vez de las del sistema
+
+**Estado:** Vigente
+
+**Contexto:** La hoja de Sheets usa Arial y Arial Black. El celular (Android) no las tiene y el canvas caía a Roboto: el título, el encabezado y las reuniones perdían el peso y la imagen no se parecía a la hoja.
+
+**Decisión:**
+- Se agregan `@fontsource/arimo` (equivalente métrico de Arial) y `@fontsource/archivo-black` (peso similar a Arial Black). Las importa `modules/asignacion/imagenPng.js` y salen del mismo origen, así que la CSP no cambia (ADR-002).
+- Antes de dibujar se llama a `document.fonts.load`, porque el canvas no pide las fuentes por sí solo.
+- Ajusta ADR-023, que decía que no agregaba dependencias. La exportación a Sheets no cambia.
+
+**Consecuencias:**
+- La imagen se ve igual en PC y celular; el bundle de Asignación carga unos archivos de fuente más. Regla: RN-IMG-07.

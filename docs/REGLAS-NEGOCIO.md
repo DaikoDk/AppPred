@@ -158,6 +158,7 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-IMG-04 (Front):** El ancho de cada columna sale del texto más largo, sin contar las reuniones especiales (RN-SHEET-08). La imagen se genera al doble de resolución.
 - **RN-IMG-05 (Front):** Las acciones de un programa asignado se ven así: `Ver | PNG | ⋯`, y el menú `⋯` ofrece **Exportar a Sheets** (que sigue mostrando su modal con los enlaces, RN-SHEET-10) e **Imprimir o guardar en PDF**. Esta última abre un modal con la vista previa y un botón Imprimir que abre el cuadro de impresión del navegador en una hoja **A4 horizontal** (desde ahí también se puede elegir "Guardar como PDF"). No genera ni guarda un archivo propio.
 - **RN-IMG-06 (Front):** El botón **PNG** abre un modal con la vista previa de la imagen y dos acciones: **Descargar PNG** y **Compartir por WhatsApp**. Si el navegador puede compartir archivos (celular y algunos navegadores de PC), se abre su hoja para compartir con el PNG adjunto. Si no puede (o el navegador rechaza compartir con "Permission denied"), se descarga el PNG y se abre WhatsApp Web con el título como texto, y el usuario adjunta la imagen ahí. Cerrar la hoja de compartir no muestra error. Nada se guarda en la base.
+- **RN-IMG-07 (Front):** La imagen usa **Arimo** (equivalente de Arial, cuerpo) y **Archivo Black** (equivalente de Arial Black, título, encabezado y reuniones), incluidas en la app, para verse como la hoja de Sheets aunque el dispositivo no tenga Arial. Se espera a que carguen antes de dibujar (ADR-027).
 
 ## Formato por celda
 

@@ -1,5 +1,11 @@
 // @ts-check
 // Dibuja la tabla del programa en un canvas y la descarga o comparte como PNG. Sin dependencias: usa la API Canvas del navegador.
+// Fuentes equivalentes a Arial y Arial Black (las de la hoja de Sheets), incluidas en la app: el celular no las tiene
+import '@fontsource/arimo/400.css';
+import '@fontsource/arimo/400-italic.css';
+import '@fontsource/arimo/700.css';
+import '@fontsource/arimo/700-italic.css';
+import '@fontsource/archivo-black/400.css';
 import { COLORES, construirTabla } from './tablaImagen.js';
 import * as api from './api.js';
 import { normalizarExtras } from '../../utils/reglasDia.js';
@@ -13,15 +19,27 @@ const ALTO_TITULO = 46;
 const ALTO_ENCABEZADO = 28;
 const ALTO_FILA = 27;
 const LETRA = 13;
-const SANS = "Arial, 'Helvetica Neue', Helvetica, sans-serif";
-const NEGRITA = "'Arial Black', Arial, Helvetica, sans-serif";
+const SANS = "Arimo, Arial, 'Helvetica Neue', Helvetica, sans-serif";
+const NEGRITA = "'Archivo Black', 'Arial Black', Arial, Helvetica, sans-serif"; // ya es pesada: sin 'bold' no se falsea
 
 /**
  * @param {boolean} negrita @param {boolean} cursiva
- * @param {boolean} [pesada] usa Arial Black como la hoja de Sheets en el título, el encabezado y las reuniones
+ * @param {boolean} [pesada] usa la fuente pesada (Arial Black en la hoja de Sheets) en el título, el encabezado y las reuniones
  */
 const fuente = (negrita, cursiva, pesada = false) =>
-    `${cursiva ? 'italic ' : ''}${negrita || pesada ? 'bold ' : ''}${LETRA}px ${pesada ? NEGRITA : SANS}`;
+    pesada ? `${LETRA}px ${NEGRITA}` : `${cursiva ? 'italic ' : ''}${negrita ? 'bold ' : ''}${LETRA}px ${SANS}`;
+
+/** Espera a que las fuentes del dibujo estén cargadas: el canvas no las pide solo y usaría la de respaldo. */
+async function cargarFuentes() {
+    const texto = 'ÁÉÍÓÚÑ0123456789';
+    await Promise.all([
+        document.fonts.load(fuente(false, false), texto),
+        document.fonts.load(fuente(true, false), texto),
+        document.fonts.load(fuente(false, true), texto),
+        document.fonts.load(fuente(true, true), texto),
+        document.fonts.load(fuente(false, false, true), texto)
+    ]);
+}
 
 /** Ancho de cada columna: el del texto más largo (sin contar las reuniones, RN-SHEET-08) más el relleno. @param {CanvasRenderingContext2D} ctx @param {TablaImagen} tabla */
 function medirColumnas(ctx, tabla) {
@@ -41,7 +59,7 @@ function medirColumnas(ctx, tabla) {
     }
     const columnas = anchos.map((a) => Math.ceil(a) + RELLENO * 2);
     // El título ocupa todo el ancho: si es más largo que la tabla, se reparte lo que falta entre las columnas
-    ctx.font = `bold ${LETRA * 1.75}px ${NEGRITA}`;
+    ctx.font = `${LETRA * 1.75}px ${NEGRITA}`;
     const falta = Math.ceil(ctx.measureText(tabla.titulo).width) + RELLENO * 2 - columnas.reduce((a, b) => a + b, 0);
     if (falta > 0) columnas.forEach((_, i) => (columnas[i] += falta / columnas.length));
     return columnas;
@@ -97,7 +115,7 @@ export function dibujarTabla(tabla) {
 
     // Título
     ctx.fillStyle = COLORES.titulo;
-    ctx.font = `bold ${LETRA * 1.75}px ${NEGRITA}`;
+    ctx.font = `${LETRA * 1.75}px ${NEGRITA}`;
     escribir(ctx, tabla.titulo, MARGEN, MARGEN + anchoTabla, MARGEN + ALTO_TITULO / 2, 'center', false);
 
     // Encabezado
@@ -224,7 +242,7 @@ export async function compartirPng(archivo, nombre, texto) {
 
 /** Dibuja el programa asignado como imagen (RN-IMG-01 a 04). @param {import('./api.js').ProgramaEstado} programa */
 export async function canvasDelPrograma(programa) {
-    const { turnos, extras } = await api.datosParaImagen(programa.id);
+    const [{ turnos, extras }] = await Promise.all([api.datosParaImagen(programa.id), cargarFuentes()]);
     const tabla = construirTabla({
         turnos,
         extras: normalizarExtras(extras),
