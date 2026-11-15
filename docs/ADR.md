@@ -156,7 +156,7 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 - Estilos y anchos se calculan en el backend con `batchUpdate`.
 
 **Consecuencias:**
-- El guardado de la asignación **siempre** exporta; si la exportación falla, la asignación queda guardada y se avisa del error aparte.
+- ~~El guardado de la asignación siempre exporta~~: reemplazado por ADR-025 (guardar ya no exporta).
 - Los colores por día (`DAY_THEMES`) y el aspecto de la tabla son parte del contrato visual con quien lee el Sheet.
 - `secrets/` está en `.gitignore`; en Render el archivo debe subirse como Secret File.
 
@@ -324,3 +324,17 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 - Cambia quién queda asignado respecto a la ventana de 28 días (RN-ASIG-05 y RN-ASIG-06).
 - Las filas de `asignaciones_historial` de programas borrados se ignoran; la tabla sigue creciendo unas 17 filas por semana (poco).
 - Reglas: RN-ASIG-05 y RN-ASIG-06. Prueba: `client/src/utils/historialAsignacion.test.js`.
+
+## ADR-025: Guardar la asignación no exporta a Google Sheets
+
+**Estado:** Vigente
+
+**Contexto:** Guardar la asignación exportaba siempre a Sheets y creaba una pestaña nueva en cada guardado, aunque solo se quisiera corregir una asignación. Además, el PNG compartido desde el celular (Brave) fallaba con "Permission denied" porque el archivo se generaba dentro del clic y `navigator.share` perdía el gesto del usuario.
+
+**Decisión:**
+- Guardar solo llama a `confirmar`; la exportación se hace a pedido con **Exportar a Sheets** (menú `⋯`, RN-SHEET-10). Reemplaza la consecuencia de ADR-011 sobre exportar siempre.
+- El PNG se prepara como `File` al abrir el modal; compartir llama a `navigator.share` sin esperas previas. Si el navegador responde `NotAllowedError`, se cae a descargar y abrir WhatsApp Web.
+
+**Consecuencias:**
+- La asignación queda guardada en la base al pulsar Guardar, sin exportar nada. La hoja de Google Sheets solo se crea al pedir **Exportar a Sheets**.
+- Reglas: RN-CONF-06 y RN-IMG-06.

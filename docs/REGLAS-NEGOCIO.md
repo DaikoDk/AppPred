@@ -133,7 +133,7 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-CONF-03 (Front):** Antes de guardar se avisa (sin bloquear) de los turnos con **Territorio vacío**. Solo cuentan los turnos con celda de texto libre vacía; las listas desplegables (como Punto de reunión) y las **filas extra** no cuentan.
 - **RN-CONF-04 (Back):** Confirmar guarda `conductor_id` y `score` en el turno y hace upsert en `asignaciones_historial` por `(semana_id, conductor_id)` con `cantidad_turnos` = veces que el conductor aparece esa semana y `ultima_asignacion` = hoy. El algoritmo ya no usa `ultima_asignacion`: ubica cada semana por su `semana_inicio` (RN-ASIG-06).
 - **RN-CONF-05 (Back):** Los `conductor_id` que no existan o no estén activos se ignoran sin error.
-- **RN-CONF-06 (Front):** Guardar la asignación **siempre** exporta después a Google Sheets. Si la exportación falla, la asignación **sigue guardada** y se informa el error aparte.
+- **RN-CONF-06 (Front):** Guardar la asignación **solo guarda**: no exporta a Google Sheets. La hoja se genera aparte con **Exportar a Sheets** del menú `⋯` del programa (RN-IMG-05, ADR-025).
 - **RN-CONF-07 (Back):** "Limpiar" una semana deja `conductor_id` y `score` en null en todos sus turnos y borra su historial de asignaciones.
 - **RN-CONF-08 (Front):** Los contadores "N turnos · ✓ M asignados" cuentan solo turnos (no filas extra).
 
@@ -157,7 +157,7 @@ Archivo: `routes/asignacion.js`, `POST /asignacion/asignar`.
 - **RN-IMG-03 (Front):** Los colores son los de la hoja: base y alterno por día, alternancia solo entre filas regulares y filas de reunión especial en azul oscuro con texto blanco (RN-SHEET-05, 06 y 07). El formato por celda (alineación, negrita, cursiva, tachado) se aplica y gana (RN-SHEET-09).
 - **RN-IMG-04 (Front):** El ancho de cada columna sale del texto más largo, sin contar las reuniones especiales (RN-SHEET-08). La imagen se genera al doble de resolución.
 - **RN-IMG-05 (Front):** Las acciones de un programa asignado se ven así: `Ver | PNG | Limpiar | ⋯`, y el menú `⋯` ofrece **Exportar a Sheets** (que sigue mostrando su modal con los enlaces, RN-SHEET-10) e **Imprimir o guardar en PDF**. Esta última abre un modal con la vista previa y un botón Imprimir que abre el cuadro de impresión del navegador en una hoja **A4 horizontal** (desde ahí también se puede elegir "Guardar como PDF"). No genera ni guarda un archivo propio.
-- **RN-IMG-06 (Front):** El botón **PNG** abre un modal con la vista previa de la imagen y dos acciones: **Descargar PNG** y **Compartir por WhatsApp**. Si el navegador puede compartir archivos (celular y algunos navegadores de PC), se abre su hoja para compartir con el PNG adjunto. Si no puede, se descarga el PNG y se abre WhatsApp Web con el título como texto, y el usuario adjunta la imagen ahí. Cerrar la hoja de compartir no muestra error. Nada se guarda en la base.
+- **RN-IMG-06 (Front):** El botón **PNG** abre un modal con la vista previa de la imagen y dos acciones: **Descargar PNG** y **Compartir por WhatsApp**. Si el navegador puede compartir archivos (celular y algunos navegadores de PC), se abre su hoja para compartir con el PNG adjunto. Si no puede (o el navegador rechaza compartir con "Permission denied"), se descarga el PNG y se abre WhatsApp Web con el título como texto, y el usuario adjunta la imagen ahí. Cerrar la hoja de compartir no muestra error. Nada se guarda en la base.
 
 ## Formato por celda
 
