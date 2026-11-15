@@ -185,7 +185,7 @@ export default function PaginaPrograma({ modo }) {
             mensaje:
                 'Las filas del programa se ajustan a las de la plantilla actual: las filas que la plantilla no tiene se quitan y las nuevas se agregan. ' +
                 'En cada celda gana la plantilla si tiene información; si está vacía en la plantilla, se conserva lo que ya tiene el programa. ' +
-                'El cambio se aplica al tocar Actualizar Programa y, como al guardar cualquier edición, habrá que volver a ejecutar la asignación de conductores de esta semana.',
+                'El cambio se aplica al tocar Actualizar Programa: las filas que se conservan mantienen su conductor, las nuevas quedan sin asignar y las que se quitan pierden el suyo.',
             textoConfirmar: 'Actualizar filas',
             peligro: true,
             icono: 'fa-file-import'
@@ -288,6 +288,10 @@ export default function PaginaPrograma({ modo }) {
         'Nuevo Programa Semanal'
     );
     const ETIQUETA_FECHA = 'title-4 mb-1 flex items-center gap-1 text-ink';
+    // Editando un programa en móvil se quitan el selector de semana, el botón Cerrar y el aviso: ocupan espacio y se repiten
+    // en el subtítulo, que pasa a mostrar el rango de la semana; "Cancelar Edición" sigue al final (RN-UI-14)
+    const compacto = editando && !escritorio;
+    const rangoSemana = `${formatDate(inicio)} - ${formatDate(fin)}`.replace(/\./g, '');
 
     return (
         <div className="tw mx-auto flex w-full max-w-[1244px] flex-col gap-6">
@@ -296,35 +300,37 @@ export default function PaginaPrograma({ modo }) {
                     icono={CalendarPlus}
                     titulo={titulo}
                     claseTitulo={editando ? 'text-warn' : ''}
-                    subtitulo="Define el rango de fechas para crear un programa"
+                    subtitulo={compacto ? rangoSemana : 'Define el rango de fechas para crear un programa'}
                 />
                 <div className="p-4">
                     <form id="form-programa" onSubmit={guardar}>
-                        <div className="flex flex-wrap items-end gap-3">
-                            <div className="min-w-0">
-                                <span className={ETIQUETA_FECHA}>
-                                    <CalendarBlank size={16} aria-hidden="true" />
-                                    Semana
-                                </span>
-                                <CampoFecha
-                                    id="prog-semana-inicio"
-                                    modo="semana"
-                                    rotulo="Semana"
-                                    valor={inicio}
-                                    onCambiar={cambiarInicio}
-                                />
+                        {!compacto && (
+                            <div className="flex flex-wrap items-end gap-3">
+                                <div className="min-w-0">
+                                    <span className={ETIQUETA_FECHA}>
+                                        <CalendarBlank size={16} aria-hidden="true" />
+                                        Semana
+                                    </span>
+                                    <CampoFecha
+                                        id="prog-semana-inicio"
+                                        modo="semana"
+                                        rotulo="Semana"
+                                        valor={inicio}
+                                        onCambiar={cambiarInicio}
+                                    />
+                                </div>
+                                <Boton
+                                    id="btn-empezar-programa"
+                                    variante="exito"
+                                    icono={iconoEditor}
+                                    onClick={alternarEditor}
+                                >
+                                    {textoEditor}
+                                </Boton>
                             </div>
-                            <Boton
-                                id="btn-empezar-programa"
-                                variante="exito"
-                                icono={iconoEditor}
-                                onClick={alternarEditor}
-                            >
-                                {textoEditor}
-                            </Boton>
-                        </div>
+                        )}
 
-                        {banner && (
+                        {banner && !compacto && (
                             <div
                                 id="edit-banner"
                                 className="body-5 mt-4 flex items-center gap-2 rounded-lg bg-warn-bg px-3 py-2 text-warn"
