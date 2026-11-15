@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar.jsx';
 import TopBar from './TopBar.jsx';
 import { tituloDeRuta } from './navegacion.js';
+import { abreTeclado } from './teclado.js';
 
 const ANCHO_MOVIL = 1024; // mismo corte que toggleSidebar() de la app anterior
 
@@ -35,6 +36,24 @@ export default function Layout() {
         };
     }, []);
 
+    // Mientras se escribe en un campo la barra inferior se oculta: con el teclado abierto Brave la dejaba flotando sobre él (RN-UI-12)
+    const [escribiendo, setEscribiendo] = useState(false);
+    useEffect(() => {
+        /** @param {FocusEvent} e */
+        const alEnfocar = (e) => setEscribiendo(abreTeclado(/** @type {HTMLElement | null} */ (e.target)));
+        /** @param {FocusEvent} e */
+        const alDesenfocar = (e) => {
+            // Si el foco pasa a otro campo, la barra sigue oculta
+            if (!abreTeclado(/** @type {HTMLElement | null} */ (e.relatedTarget))) setEscribiendo(false);
+        };
+        document.addEventListener('focusin', alEnfocar);
+        document.addEventListener('focusout', alDesenfocar);
+        return () => {
+            document.removeEventListener('focusin', alEnfocar);
+            document.removeEventListener('focusout', alDesenfocar);
+        };
+    }, []);
+
     // En pantallas chicas el sidebar es un panel con fondo; en grandes se colapsa o expande
     const alternar = () => {
         if (window.innerWidth <= ANCHO_MOVIL) {
@@ -57,7 +76,10 @@ export default function Layout() {
                 <div className="page-content">
                     <Outlet context={{ slotBarra }} />
                 </div>
-                <div ref={setSlotBarra} className="sticky bottom-0 z-30 shrink-0 sm:hidden" />
+                <div
+                    ref={setSlotBarra}
+                    className={`sticky bottom-0 z-30 shrink-0 sm:hidden ${escribiendo ? 'max-sm:hidden' : ''}`}
+                />
             </main>
         </div>
     );
