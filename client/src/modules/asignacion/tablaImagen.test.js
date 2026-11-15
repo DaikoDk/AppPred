@@ -42,6 +42,41 @@ describe('textos de las filas (RN-SHEET-03)', () => {
     });
 });
 
+describe('fidelidad con la hoja (RN-IMG-09)', () => {
+    it('la hora de una fila libre solo se recorta: no pasa a mayúsculas', () => {
+        const t = tabla(
+            [],
+            [
+                {
+                    dia: 'LUNES',
+                    hora: ' 7:30pm ',
+                    grupo: 'g',
+                    territorio: 'x',
+                    punto_reunion: 'y',
+                    conductor: 'z',
+                    orden: 0
+                }
+            ]
+        );
+        expect(t.filas[0].celdas.map((c) => c.texto)).toEqual(['7:30pm', 'G', 'X', 'Y', 'Z']);
+    });
+
+    it('ordena los turnos de un día por hora y luego por grupo, como la consulta de la exportación', () => {
+        const t = tabla([
+            turno({ hora: 'Tarde (6:20 PM)', grupo: 'TODA LA CONGREGACION' }),
+            turno({ hora: 'Mañana (8:20 AM)', grupo: 'GRUPO B' }),
+            turno({ hora: 'Mañana (8:20 AM)', grupo: 'GRUPO A' }),
+            turno({ hora: 'Madrugada (6:30 AM)', grupo: 'TODA LA CONGREGACION' })
+        ]);
+        expect(t.filas.map((f) => `${f.celdas[0].texto} ${f.celdas[1].texto}`)).toEqual([
+            '6:30 AM TODA LA CONGREGACION',
+            '8:20 AM GRUPO A',
+            '8:20 AM GRUPO B',
+            '6:20 PM TODA LA CONGREGACION'
+        ]);
+    });
+});
+
 describe('orden y bloques por día (RN-SHEET-04)', () => {
     it('pone las filas libres antes (orden < 0) y después de los turnos, y ordena los turnos por franja', () => {
         const t = tabla(
