@@ -55,11 +55,6 @@ export function exportarASheets(semanaId) {
     });
 }
 
-/** Quita conductores y el historial de la semana (RN-CONF-07). @param {string} semanaId */
-export function limpiarAsignaciones(semanaId) {
-    return apiFetch(`/api/asignacion/semana/${semanaId}`, { method: 'DELETE' });
-}
-
 /** @returns {Promise<Conductor[]>} */
 export async function conductoresActivos() {
     try {

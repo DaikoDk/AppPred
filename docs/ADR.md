@@ -201,7 +201,7 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 
 **Estado:** Vigente
 
-**Decisión:** Toda confirmación pasa por `useConfirmar()` (antes `confirmarModal`; opciones `peligro`, `espera`, `alternativa`, `advertencia`, `exito`, `cerrable`), la carga bloqueante por `useCargando()` y los avisos por `useToast()`. Las confirmaciones que la app anterior hacía con `confirm()` (desactivar conductor o punto, quitar horario, eliminar correo, renunciar, restablecer plantilla, limpiar asignaciones) ahora usan el modal propio. No usar `confirm()` ni `alert()` del navegador.
+**Decisión:** Toda confirmación pasa por `useConfirmar()` (antes `confirmarModal`; opciones `peligro`, `espera`, `alternativa`, `advertencia`, `exito`, `cerrable`), la carga bloqueante por `useCargando()` y los avisos por `useToast()`. Las confirmaciones que la app anterior hacía con `confirm()` (desactivar conductor o punto, quitar horario, eliminar correo, renunciar, restablecer plantilla) ahora usan el modal propio. No usar `confirm()` ni `alert()` del navegador.
 
 **Consecuencias:** Acciones destructivas usan `peligro` y, cuando corresponde, `espera` (cuenta regresiva antes de poder confirmar; hoy 10 s al eliminar un programa).
 
@@ -338,3 +338,17 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 **Consecuencias:**
 - La asignación queda guardada en la base al pulsar Guardar, sin exportar nada. La hoja de Google Sheets solo se crea al pedir **Exportar a Sheets**.
 - Reglas: RN-CONF-06 y RN-IMG-06.
+
+## ADR-026: No existe la acción "Limpiar" asignaciones
+
+**Estado:** Vigente
+
+**Contexto:** La lista de Programas tenía un botón Limpiar que quitaba todos los conductores de una semana y borraba su historial, de un clic y sin vuelta atrás. Un programa asignado no debe poder quedar vacío por accidente.
+
+**Decisión:**
+- Se elimina el botón del front, `limpiarAsignaciones` y el endpoint `DELETE /api/asignacion/semana/:semana_id`.
+- Las asignaciones solo cambian editando el programa y guardando (RN-CONF-01); dejar datos vacíos al editar es válido.
+
+**Consecuencias:**
+- Reemplaza el antiguo RN-CONF-07. Ya no hay forma de borrar el historial de una semana desde la app.
+- Una semana sin asignar no tiene botones en la lista; se asigna desde la selección de semana.

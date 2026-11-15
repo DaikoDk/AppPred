@@ -331,24 +331,4 @@ router.post('/exportar-sheets', async (req, res) => {
     }
 });
 
-router.delete('/semana/:semana_id', async (req, res) => {
-    try {
-        const { semana_id } = req.params;
-        const { error: err1 } = await supabase
-            .from('programa_semanal_turnos')
-            .update({ conductor_id: null, score: null })
-            .eq('semana_id', semana_id);
-        if (err1) throw err1;
-        const { error: err2 } = await supabase
-            .from('asignaciones_historial')
-            .delete()
-            .eq('semana_id', semana_id);
-        if (err2) throw err2;
-        res.json({ mensaje: 'Asignaciones eliminadas' });
-    } catch (error) {
-        console.error('Error DELETE /asignacion/semana/:semana_id:', error);
-        res.status(500).json({ error: 'Error al eliminar asignaciones', detalles: error.message });
-    }
-});
-
 module.exports = router;
