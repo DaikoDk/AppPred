@@ -1,5 +1,5 @@
 // @ts-check
-import { CalendarBlank, DotsThree, Eraser, Eye, GoogleLogo, ImageSquare, Printer } from '@phosphor-icons/react';
+import { CalendarBlank, DotsThree, Eye, GoogleLogo, ImageSquare, Printer } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { formatDate } from '../../utils/fechas.js';
@@ -17,12 +17,11 @@ const COLUMNAS = 'md:grid-cols-[1fr_1.5fr_1fr]';
  *   error: boolean,
  *   onVer: (id: string) => void,
  *   onPng: (p: ProgramaEstado) => void,
- *   onLimpiar: (p: ProgramaEstado) => void,
  *   onSheets: (id: string) => void,
  *   onImprimir: (p: ProgramaEstado) => void
  * }} props  `programas` en null = cargando.
  */
-export default function TablaProgramas({ programas, error, onVer, onPng, onLimpiar, onSheets, onImprimir }) {
+export default function TablaProgramas({ programas, error, onVer, onPng, onSheets, onImprimir }) {
     const estado = 'body-6 list-none p-6 text-center text-muted';
     let cuerpo;
     if (error) {
@@ -75,16 +74,6 @@ export default function TablaProgramas({ programas, error, onVer, onPng, onLimpi
                                 </Boton>
                             </>
                         )}
-                        <Boton
-                            variante="peligro"
-                            icono={Eraser}
-                            compacto
-                            className={asignados > 0 ? '' : 'col-span-2'}
-                            onClick={() => onLimpiar(p)}
-                            title="Limpiar"
-                        >
-                            Limpiar
-                        </Boton>
                         {asignados > 0 && (
                             <MenuAcciones
                                 etiqueta="Más acciones del programa"

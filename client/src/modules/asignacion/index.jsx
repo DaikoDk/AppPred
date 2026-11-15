@@ -222,27 +222,6 @@ export default function Asignacion() {
         }
     };
 
-    /** @param {ProgramaEstado} p */
-    const limpiar = async (p) => {
-        const ok = await confirmar({
-            titulo: '¿Eliminar todas las asignaciones de esta semana?',
-            mensaje: `Semana del ${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)}. Los turnos quedarán sin asignar.`,
-            textoConfirmar: 'Limpiar',
-            peligro: true,
-            icono: 'fa-eraser'
-        });
-        if (ok !== true) return;
-        try {
-            await api.limpiarAsignaciones(p.id);
-            toast('Asignaciones eliminadas', 'success');
-            setRes(null);
-            setSemana('');
-            recargarProgramas();
-        } catch (err) {
-            toast(mensajeError(err, 'Error al borrar'), 'error');
-        }
-    };
-
     // Como en la app anterior: el resumen del servidor hasta que se elige un conductor a mano
     const stats = res
         ? res.filas && res.tocado
@@ -364,7 +343,6 @@ export default function Asignacion() {
                         error={errorLista}
                         onVer={verAsignacion}
                         onPng={setConImagen}
-                        onLimpiar={limpiar}
                         onSheets={exportar}
                         onImprimir={setImprimiendo}
                     />
