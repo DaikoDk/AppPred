@@ -442,3 +442,21 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 - Reemplaza el límite de 4 de ADR-005 y modifica RN-AUTH-02.
 - Los dos valores deben mantenerse iguales; el backend es el que realmente aplica el límite.
 - No cambia el esquema de base de datos. No se crean roles ni permisos por área.
+
+## ADR-033: Pantalla de alto fijo y teclado en móvil
+
+**Estado:** Vigente
+
+**Contexto:** La barra inferior de la hoja se ajustó en varios commits (58d4e85, 728e60f, 2fcbd0c, 4c95c6b, b13781f) sin un ADR. En Brave (Android, medido en un Poco X7 Pro con un panel de diagnóstico) aparecían una línea blanca en la barra al hacer scroll y una franja azul bajo la página al abrir el teclado en un campo de abajo. Medidas: sin teclado la página y lo visible miden lo mismo (`innerHeight` = `visualViewport.height`); con el teclado Brave no achica la página, desplaza la vista (`visualViewport.offsetTop`), y descuenta de `visualViewport.height` unos 50 px de su barra inferior aunque esté escondida. Al desplazar la vista al máximo, esos 50 px caían debajo del final de la página y se veía el fondo azul de `html`. Al cerrar el teclado, Brave informa el alto completo antes de que el teclado termine de bajar.
+
+**Decisión:**
+- En móvil la pantalla mide la zona visible (`visualViewport`, `--alto-app`); `100%` o `100dvh` dejaban la barra bajo la barra de Brave. El documento no se desplaza: solo el contenido hace scroll.
+- La barra inferior va debajo del contenedor que hace scroll, no dentro con `sticky` (en pantallas de alta densidad asomaba una línea del contenido al desplazarse).
+- El navegador no debe desplazar la vista con el teclado: al enfocar un campo del contenido la app lo deja justo encima del teclado moviendo su propio contenedor (con espacio extra al final para los últimos campos), con el alto del teclado de la vez anterior. Mientras hay un campo enfocado o el teclado abierto, la app conserva su alto completo y el teclado queda encima.
+- El teclado se detecta por el alto perdido (más de 150 px), no solo por el foco. La barra vuelve 300 ms después de que el teclado se cierra.
+- El fondo de `html` sigue azul; no se cambia de color para tapar huecos.
+
+**Consecuencias:**
+- Reglas: RN-UI-12. Archivos: `components/layout/Layout.jsx`, `components/ui/BarraInferior.jsx`, `index.css`.
+- Con el teclado abierto, las filas que quedan bajo él no se ven hasta cerrarlo o desplazar el contenido.
+- Si un navegador cambia cómo informa `visualViewport`, puede volver la franja: se diagnostica midiendo en el dispositivo, no con capturas.
