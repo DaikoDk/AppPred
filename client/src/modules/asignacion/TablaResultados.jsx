@@ -1,10 +1,10 @@
 // @ts-check
-import { Clock, DotsThree, MapPin, MapTrifold, PaintBrush, UserCheck, UsersThree } from '@phosphor-icons/react';
+import { Clock, MapPin, MapTrifold, UserCheck, UsersThree } from '@phosphor-icons/react';
 import Desplegable from '../../components/ui/Desplegable.jsx';
-import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { nombreDia } from '../../utils/dias.js';
 import { fechaDelDia } from '../../utils/fechas.js';
-import { etiquetaGrupo, opcionConductor } from './logica.js';
+import MenuFormatoFila from './MenuFormatoFila.jsx';
+import { etiquetaGrupo, opcionesDeConductor } from './logica.js';
 
 /**
  * @typedef {import('./logica.js').FilaResultado} FilaResultado
@@ -16,7 +16,7 @@ import { etiquetaGrupo, opcionConductor } from './logica.js';
 // Mismo aspecto que el editor de Programa (modules/programa/editorComun.jsx, RN-UI-09): bloque de día a la
 // izquierda, chips del color del día y el mismo ancho de columnas. Se copian las clases porque los módulos no se importan entre sí.
 /** @type {Record<Dia, string>} */
-const COLOR_DIA = {
+export const COLOR_DIA = {
     LUNES: 'var(--color-lunes)',
     MARTES: 'var(--color-martes)',
     MIERCOLES: 'var(--color-miercoles)',
@@ -25,14 +25,14 @@ const COLOR_DIA = {
     SABADO: 'var(--color-sabado)',
     DOMINGO: 'var(--color-domingo)'
 };
-const CAMPO =
-    'body-6 min-h-9 w-full min-w-0 rounded-lg border border-transparent bg-(--dia) px-3 py-2 text-ink outline-none';
-const CAMPO_LIBRE = `${CAMPO} border-dashed border-ink/30`;
+// `break-words`: un texto largo sin espacios (AV.UNIVERSITARIA/AV.MEXICO) se parte dentro de su celda en vez de salirse de ella
+export const CAMPO =
+    'body-6 min-h-9 w-full min-w-0 rounded-lg border border-transparent bg-(--dia) px-3 py-2 text-ink outline-none break-words';
+export const CAMPO_LIBRE = `${CAMPO} border-dashed border-ink/30`;
 // Hora y Grupo tienen ancho fijo (su contenido más largo); Territorio y P. Reunión reparten el resto. Por debajo de 740 px la tabla se desplaza en horizontal
 const COLUMNAS = 'grid-cols-[176px_140px_minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1.1fr)_32px]';
-// Mismo botón ⋯ que el editor de Programa (modules/programa/editorComun.jsx)
-const BOTON_ICONO =
-    'relative grid size-8 place-items-center rounded-lg text-muted transition-[background-color,color,transform] duration-300 ease-skill hover:bg-fill hover:text-ink active:scale-[0.98]';
+// Vista por semana en móvil: columnas con el ancho que necesita su contenido y la tabla se desplaza en horizontal
+const COLUMNAS_COMPLETO = 'grid-cols-[190px_220px_230px_240px_260px_32px]';
 const TITULO = 'caption-3 flex items-center gap-1 px-1 uppercase tracking-wide';
 
 /**
@@ -48,9 +48,11 @@ const TITULO = 'caption-3 flex items-center gap-1 px-1 uppercase tracking-wide';
  *   inicialmenteSinAsignar: Set<string>,
  *   formatos: Record<string, Formato>,
  *   onElegir: (turnoId: string, valor: string) => void,
- *   onFormato: (fila: FilaResultado) => void
+ *   onFormato: (fila: FilaResultado) => void,
+ *   completo?: boolean
  * }} props
  * `formatos` guarda el formato por id de turno o de fila libre; el menú ⋯ de cada fila abre el formato de celdas.
+ * `completo` muestra cada celda con todo su contenido (grupo sin abreviar y texto que se ajusta sin salirse).
  */
 export default function TablaResultados({
     filas,
@@ -62,29 +64,17 @@ export default function TablaResultados({
     inicialmenteSinAsignar,
     formatos,
     onElegir,
-    onFormato
+    onFormato,
+    completo = false
 }) {
+    const columnas = completo ? COLUMNAS_COMPLETO : COLUMNAS;
+    /** @param {string | null | undefined} grupo */
+    const textoGrupo = (grupo) => (completo ? grupo || '' : etiquetaGrupo(grupo));
     /** @param {FilaResultado} f @param {string | undefined} id */
     const menu = (f, id) => (
-        <MenuAcciones
-            etiqueta="Más acciones de la fila"
-            items={[{ texto: 'Formato de celdas', icono: PaintBrush, onClick: () => onFormato(f) }]}
-            boton={({ ref, abierto, alternar }) => (
-                <button
-                    ref={ref}
-                    type="button"
-                    aria-label="Más acciones de la fila"
-                    aria-haspopup="menu"
-                    aria-expanded={abierto}
-                    onClick={alternar}
-                    className={BOTON_ICONO}
-                >
-                    <DotsThree size={16} weight="bold" aria-hidden="true" />
-                    {id && Object.keys(formatos[id] || {}).length > 0 && (
-                        <span aria-hidden="true" className="absolute top-1 right-1 size-2 rounded-full bg-primary" />
-                    )}
-                </button>
-            )}
+        <MenuFormatoFila
+            conFormato={!!id && Object.keys(formatos[id] || {}).length > 0}
+            onFormato={() => onFormato(f)}
         />
     );
 
@@ -99,8 +89,8 @@ export default function TablaResultados({
 
     return (
         <div className="tw overflow-x-auto">
-            <div id="resultados-table" className="min-w-[780px]">
-                <div role="row" className={`ml-24 grid ${COLUMNAS} gap-2 pb-2 pl-2 text-muted`}>
+            <div id="resultados-table" className={completo ? 'w-max min-w-full' : 'min-w-[780px]'}>
+                <div role="row" className={`ml-24 grid ${columnas} gap-2 pb-2 pl-2 text-muted`}>
                     <span className={TITULO}>
                         <Clock size={14} aria-hidden="true" />
                         Hora
@@ -141,9 +131,9 @@ export default function TablaResultados({
                                     // Fila libre del programa: se muestra, no se asigna
                                     const e = f.extra;
                                     return (
-                                        <div key={`e${i}`} role="row" className={`grid ${COLUMNAS} gap-2`}>
+                                        <div key={`e${i}`} role="row" className={`grid ${columnas} gap-2`}>
                                             <div className={CAMPO_LIBRE}>{e.hora || ''}</div>
-                                            <div className={CAMPO_LIBRE}>{etiquetaGrupo(e.grupo)}</div>
+                                            <div className={CAMPO_LIBRE}>{textoGrupo(e.grupo)}</div>
                                             <div className={CAMPO_LIBRE}>{(e.territorio || '').trim()}</div>
                                             <div className={CAMPO_LIBRE}>{(e.punto_reunion || '').trim()}</div>
                                             <div className={CAMPO_LIBRE}>{(e.conductor || '').trim()}</div>
@@ -160,10 +150,10 @@ export default function TablaResultados({
                                         key={r.turno_id}
                                         role="row"
                                         data-turno-id={r.turno_id}
-                                        className={`grid ${COLUMNAS} gap-2`}
+                                        className={`grid ${columnas} gap-2`}
                                     >
                                         <div className={`${CAMPO} font-medium`}>{r.hora || ''}</div>
-                                        <div className={CAMPO}>{etiquetaGrupo(r.grupo)}</div>
+                                        <div className={CAMPO}>{textoGrupo(r.grupo)}</div>
                                         <div className={CAMPO}>{r.territorio || '—'}</div>
                                         <div className={CAMPO}>{r.punto_reunion || '—'}</div>
                                         <Desplegable
@@ -173,16 +163,15 @@ export default function TablaResultados({
                                             etiquetaVacio="SIN ASIGNAR"
                                             textoVacioChip="SIN ASIGNAR"
                                             anchoMin={260}
+                                            sinRecorte={completo}
                                             claseTexto={vacio ? 'text-danger' : ''}
-                                            opciones={[
-                                                ...(inicialmenteSinAsignar.has(r.turno_id)
-                                                    ? [{ valor: '', etiqueta: 'SIN ASIGNAR' }]
-                                                    : []),
-                                                ...conductores.map((c) => {
-                                                    const op = opcionConductor(c, r, cuenta, disponibles);
-                                                    return { valor: op.valor, etiqueta: op.texto };
-                                                })
-                                            ]}
+                                            opciones={opcionesDeConductor(
+                                                r,
+                                                conductores,
+                                                cuenta,
+                                                disponibles,
+                                                inicialmenteSinAsignar.has(r.turno_id)
+                                            )}
                                         />
                                         {menu(f, r.turno_id)}
                                     </div>

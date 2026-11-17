@@ -14,13 +14,13 @@ import { DotsThree } from '@phosphor-icons/react';
 
 // Cada celda ocupa lo mismo; el texto corto cabe en 390 px con cuatro secciones y "Más"
 const CELDA =
-    'no-underline flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg py-2 outline-none transition-[color] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary';
+    'no-underline [-webkit-tap-highlight-color:transparent] flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg py-2 outline-none transition-[color] duration-300 ease-skill focus-visible:ring-2 focus-visible:ring-primary';
 
 /**
  * Barra inferior de navegación de Hoja de Predicación, solo en móvil (menos de 640px).
  * Muestra las secciones de `barra` y un botón "Más" que abre `mas` en un menú justo encima de la barra (ADR-022).
- * No usa position: fixed: Layout la monta en un espacio pegado (sticky) al fondo del contenedor que hace scroll,
- * así queda siempre sobre la barra del navegador de Android, que tapa el borde inferior de la página.
+ * No usa position: fixed: Layout la monta en un espacio debajo del contenedor que hace scroll, al fondo de la pantalla
+ * de alto visible, así queda siempre sobre la barra del navegador de Android, que tapa el borde inferior de la página.
  * El menú "Más" es parte de la propia barra (absoluto sobre ella), sin depender de la posición de otros elementos.
  * @param {{ barra: Seccion[], mas: Seccion[] }} props
  */

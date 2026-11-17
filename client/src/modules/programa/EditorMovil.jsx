@@ -3,6 +3,7 @@ import { CalendarBlank, CalendarDots, CaretLeft, CaretRight, DotsThree, Plus, Tr
 import Boton from '../../components/ui/Boton.jsx';
 import Desplegable from '../../components/ui/Desplegable.jsx';
 import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
+import { useMantenerPosicion } from '../../hooks/useMantenerPosicion.js';
 import { DIAS, nombreDia } from '../../utils/dias.js';
 import { fechaDelDia } from '../../utils/fechas.js';
 import EditorEscritorio from './EditorEscritorio.jsx';
@@ -16,7 +17,8 @@ import {
     OPCIONES_MODALIDAD,
     claseFormato,
     itemsMenuFila,
-    opcionesDePunto
+    opcionesDePunto,
+    useConfirmarFila
 } from './editorComun.jsx';
 import { agregarLibreJunto, agregarTurnoAlDia, agregarTurnoDebajo, cambiarFila, quitarFila } from './filas.js';
 
@@ -83,21 +85,25 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
     const [diaIdx, setDiaIdx] = useState(0);
     const [formateando, setFormateando] = useState(/** @type {Fila | null} */ (null));
     const opcionesPunto = opcionesDePunto(puntos);
+    const confirmarFila = useConfirmarFila();
     const diaActivo = DIAS[diaIdx];
     const filasDia = filas.filter((f) => f.dia === diaActivo);
 
     /** @param {string} clave @param {object} cambio */
     const editar = (clave, cambio) => onCambiar((f) => cambiarFila(f, clave, cambio));
 
+    // Al cambiar de vista el selector se queda en el mismo lugar de la pantalla, sin saltar ni quedar bajo el encabezado fijo
+    const marcarPosicion = useMantenerPosicion(contenedor, vista);
+
     /** @param {Vista} v */
     const cambiarVista = (v) => {
+        marcarPosicion();
         setVista(v);
         try {
             localStorage.setItem('vistaTurnos', v);
         } catch {
             // sin almacenamiento: la vista no se recuerda
         }
-        if (v === 'dia') contenedor.current?.scrollIntoView({ block: 'start' });
     };
 
     /** @param {number} delta */
@@ -108,7 +114,8 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
     };
 
     return (
-        <div ref={contenedor} className="tw">
+        // scroll-mt-20: al llevar el bloque al inicio (moverDia) queda bajo el encabezado fijo de 64 px, no tapado por él
+        <div ref={contenedor} className="tw scroll-mt-20">
             <div className="mb-4 flex justify-center">
                 <div className="inline-flex gap-1 rounded-xl bg-fill p-1" role="group" aria-label="Vista del programa">
                     {
@@ -187,7 +194,11 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                                         compacto
                                         variante="secundario"
                                         icono={Plus}
-                                        onClick={() => onCambiar((x) => agregarTurnoDebajo(x, f.clave))}
+                                        onClick={() =>
+                                            confirmarFila.agregar(f.dia, () =>
+                                                onCambiar((x) => agregarTurnoDebajo(x, f.clave))
+                                            )
+                                        }
                                     >
                                         Agregar fila
                                     </Boton>
@@ -195,7 +206,9 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                                         compacto
                                         variante="peligro"
                                         icono={Trash}
-                                        onClick={() => onCambiar((x) => quitarFila(x, f.clave))}
+                                        onClick={() =>
+                                            confirmarFila.quitar(f, () => onCambiar((x) => quitarFila(x, f.clave)))
+                                        }
                                     >
                                         Eliminar fila
                                     </Boton>
@@ -307,7 +320,11 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
                             <Boton
                                 variante="primario"
                                 icono={Plus}
-                                onClick={() => onCambiar((f) => agregarTurnoAlDia(f, diaActivo))}
+                                onClick={() =>
+                                    confirmarFila.agregar(diaActivo, () =>
+                                        onCambiar((f) => agregarTurnoAlDia(f, diaActivo))
+                                    )
+                                }
                             >
                                 Agregar fila
                             </Boton>

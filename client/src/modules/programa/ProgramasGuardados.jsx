@@ -1,23 +1,29 @@
-import { CalendarBlank, PencilSimple, Stack, Trash } from '@phosphor-icons/react';
+import { CalendarBlank, Eye, PencilSimple, Stack, Trash, UserCheck } from '@phosphor-icons/react';
 import Boton from '../../components/ui/Boton.jsx';
 import EncabezadoTarjeta from '../../components/ui/EncabezadoTarjeta.jsx';
 import { formatDate } from '../../utils/fechas.js';
-
-/** @typedef {import('../../types/models').Programa} Programa */
-
-const COLUMNAS = 'md:grid-cols-[1fr_1.5fr_1fr]';
+import { estadoBotonAsignar } from './asignar.js';
 
 /**
- * Lista "Programas Guardados". En escritorio es una tabla de tres columnas con botones de ícono; en móvil
- * cada programa es una fila con su ícono y fechas a la izquierda y las acciones apiladas a la derecha.
+ * @typedef {import('../../types/models').Programa} Programa
+ * @typedef {import('./asignar.js').EstadoPrograma} EstadoPrograma
+ */
+
+const COLUMNAS = 'md:grid-cols-[1fr_1.2fr_minmax(0,1.6fr)]';
+
+/**
+ * Lista "Programas Guardados". En escritorio es una tabla de tres columnas; en móvil cada programa es una fila con
+ * su ícono y fechas a la izquierda y las acciones apiladas a la derecha.
  * @param {{
  *   programas: Programa[] | null,
+ *   estados: Record<string, EstadoPrograma>,
  *   error: boolean,
  *   onEditar: (id: string) => void,
- *   onEliminar: (p: Programa) => void
- * }} props  `programas` en null = cargando.
+ *   onEliminar: (p: Programa) => void,
+ *   onAsignar: (p: Programa) => void
+ * }} props  `programas` en null = cargando. `estados`: turnos y asignados por id (vacío si no se pudo leer).
  */
-export default function ProgramasGuardados({ programas, error, onEditar, onEliminar }) {
+export default function ProgramasGuardados({ programas, estados, error, onEditar, onEliminar, onAsignar }) {
     const estado = 'body-6 list-none p-6 text-center text-muted';
     let cuerpo;
     if (error) {
@@ -27,33 +33,52 @@ export default function ProgramasGuardados({ programas, error, onEditar, onElimi
     } else if (programas.length === 0) {
         cuerpo = <li className={estado}>No hay programas guardados</li>;
     } else {
-        cuerpo = programas.map((p) => (
-            <li
-                key={p.id}
-                className={`flex items-center justify-between gap-3 border-b border-line px-2 py-3 last:border-b-0 md:grid ${COLUMNAS} md:px-3`}
-            >
-                <b className="body-4 hidden text-ink md:block">Semana</b>
-                <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-fill text-primary md:hidden">
-                        <CalendarBlank size={20} aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0">
-                        <span className="body-5 block text-ink">
-                            {formatDate(p.semana_inicio)} — {formatDate(p.semana_fin)}
+        cuerpo = programas.map((p) => {
+            const estado = estadoBotonAsignar(estados[p.id]);
+            return (
+                <li
+                    key={p.id}
+                    className={`flex items-center justify-between gap-3 border-b border-line px-2 py-3 last:border-b-0 md:grid ${COLUMNAS} md:px-3`}
+                >
+                    <b className="body-4 hidden text-ink md:block">Semana</b>
+                    <div className="flex min-w-0 items-center gap-3">
+                        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-fill text-primary md:hidden">
+                            <CalendarBlank size={20} aria-hidden="true" />
                         </span>
-                        <small className="caption-5 block text-muted md:hidden">Programa semanal</small>
-                    </span>
-                </div>
-                <div className="flex shrink-0 flex-col gap-2 md:flex-row">
-                    <Boton variante="primario" icono={PencilSimple} onClick={() => onEditar(p.id)} compacto>
-                        Editar
-                    </Boton>
-                    <Boton variante="peligro" icono={Trash} onClick={() => onEliminar(p)} compacto>
-                        Eliminar
-                    </Boton>
-                </div>
-            </li>
-        ));
+                        <span className="min-w-0">
+                            <span className="body-5 block text-ink">
+                                {formatDate(p.semana_inicio)} — {formatDate(p.semana_fin)}
+                            </span>
+                            <small className="caption-5 block text-muted md:hidden">Programa semanal</small>
+                        </span>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2 md:flex-row md:flex-wrap md:items-stretch">
+                        <Boton variante="primario" icono={PencilSimple} onClick={() => onEditar(p.id)} compacto>
+                            Editar
+                        </Boton>
+                        <Boton variante="peligro" icono={Trash} onClick={() => onEliminar(p)} compacto>
+                            Eliminar
+                        </Boton>
+                        {estado === 'ver' ? (
+                            <Boton variante="exito" icono={Eye} onClick={() => onAsignar(p)} compacto>
+                                Ver asignación
+                            </Boton>
+                        ) : (
+                            // Sin el requisito mínimo se ve deshabilitado, pero se puede tocar para saber por qué (RN-UI-16)
+                            <Boton
+                                variante={estado === 'sinTurnos' ? 'apagado' : 'exito'}
+                                icono={UserCheck}
+                                onClick={() => onAsignar(p)}
+                                aria-disabled={estado === 'sinTurnos'}
+                                compacto
+                            >
+                                Asignar conductores
+                            </Boton>
+                        )}
+                    </div>
+                </li>
+            );
+        });
     }
 
     return (

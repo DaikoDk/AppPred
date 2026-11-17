@@ -14,7 +14,8 @@ import {
     OPCIONES_HORA,
     OPCIONES_MODALIDAD,
     claseFormato,
-    opcionesDePunto
+    opcionesDePunto,
+    useConfirmarFila
 } from './editorComun.jsx';
 import { agregarLibreJunto, agregarTurnoDebajo, cambiarFila, quitarFila } from './filas.js';
 
@@ -47,6 +48,7 @@ export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInici
     const columnas = completo ? COLUMNAS_COMPLETO : COLUMNAS;
     const [formateando, setFormateando] = useState(/** @type {Fila | null} */ (null));
     const opcionesPunto = opcionesDePunto(puntos);
+    const confirmarFila = useConfirmarFila();
 
     /** @param {string} clave @param {object} cambio */
     const editar = (clave, cambio) => onCambiar((f) => cambiarFila(f, clave, cambio));
@@ -113,8 +115,14 @@ export default function EditorEscritorio({ filas, onCambiar, puntos, semanaInici
                                     const acciones = (
                                         <AccionesFila
                                             fila={f}
-                                            onAgregar={() => onCambiar((x) => agregarTurnoDebajo(x, f.clave))}
-                                            onQuitar={() => onCambiar((x) => quitarFila(x, f.clave))}
+                                            onAgregar={() =>
+                                                confirmarFila.agregar(f.dia, () =>
+                                                    onCambiar((x) => agregarTurnoDebajo(x, f.clave))
+                                                )
+                                            }
+                                            onQuitar={() =>
+                                                confirmarFila.quitar(f, () => onCambiar((x) => quitarFila(x, f.clave)))
+                                            }
                                             onLibre={(arriba) =>
                                                 onCambiar((x) => agregarLibreJunto(x, f.clave, arriba))
                                             }

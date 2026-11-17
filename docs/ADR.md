@@ -80,7 +80,7 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 
 ## ADR-005: Lista blanca de correos con dos niveles de rol
 
-**Estado:** Vigente
+**Estado:** Vigente (el límite de usuarios cambió en ADR-032; el de super admins sigue igual)
 
 **Decisión:** Acceso solo para correos en `allowed_emails`. Hay un rol `is_super_admin` que habilita la pestaña Admin (gestión de correos y configuración). Límites fijos en `routes/auth.js`: `MAX_USERS = 4` y `MAX_SUPER_ADMINS = 2`.
 
@@ -413,3 +413,65 @@ Si una corrección solo actualiza una descripción que quedó vieja (un archivo 
 **Consecuencias:**
 - Si cambian las medidas o los bordes de `googleSheets.js`, hay que cambiar también `medidasSheets.js` y `imagenPng.js`.
 - La exportación a Sheets no cambia. Reglas: RN-IMG-04 y RN-IMG-08. Ajusta ADR-023.
+
+## ADR-031: Asignación y Programa más compactos en móvil
+
+**Estado:** Vigente
+
+**Contexto:** En el celular la pantalla Asignación mostraba la tarjeta de ejecución y un resumen que ocupaban media pantalla, la tabla de resultados recortaba nombres y textos ("Ánge…", "AV.UNIVERSITAR") y no había vista por día como en Programa. Programa, al editar, repetía el rango de la semana en tres sitios. Agregar o quitar una fila no pedía confirmación.
+
+**Decisión:**
+- Asignación en móvil usa `ResultadosMovil.jsx` (vista por día o por semana) y oculta la tarjeta de ejecución y el resumen. Para no perder la función, las semanas sin asignar tienen el botón **Asignar** en la lista. El corte de móvil es el de Programa (768 px).
+- La lista de conductores de un turno se arma en `logica.js` (`opcionesDeConductor`), compartida por la tabla y las tarjetas. `Desplegable` gana la opción `sinRecorte`.
+- Programa en móvil, al editar, oculta el selector de semana, Cerrar y el aviso, y pone el rango en el subtítulo.
+- Agregar y quitar fila piden confirmación en los dos editores (`useConfirmarFila`).
+
+**Consecuencias:**
+- No se puede elegir otra semana ni cambiar las fechas de un programa existente desde el celular; se hace en pantalla ancha. Ejecutar el algoritmo en móvil se hace desde la lista de programas.
+- Reglas: RN-UI-13, RN-UI-14 y RN-UI-15. Prueba: `client/src/modules/asignacion/logica.test.js`.
+
+## ADR-032: Límite de 20 usuarios autorizados
+
+**Estado:** Vigente
+
+**Contexto:** La congregación necesita más miembros con acceso. El límite de 4 correos (ADR-005) ya no alcanza.
+
+**Decisión:** `MAX_USERS` pasa de 4 a 20 en `routes/auth.js` y en `client/src/modules/admin/index.jsx` (el front solo lo usa para mostrar el contador y deshabilitar el botón). `MAX_SUPER_ADMINS` sigue en 2 (RN-AUTH-03). Sigue siendo una constante de código.
+
+**Consecuencias:**
+- Reemplaza el límite de 4 de ADR-005 y modifica RN-AUTH-02.
+- Los dos valores deben mantenerse iguales; el backend es el que realmente aplica el límite.
+- No cambia el esquema de base de datos. No se crean roles ni permisos por área.
+
+## ADR-033: Pantalla de alto fijo y teclado en móvil
+
+**Estado:** Vigente
+
+**Contexto:** La barra inferior de la hoja se ajustó en varios commits (58d4e85, 728e60f, 2fcbd0c, 4c95c6b, b13781f) sin un ADR. En Brave (Android, medido en un Poco X7 Pro con un panel de diagnóstico) aparecían una línea blanca en la barra al hacer scroll y una franja azul bajo la página al abrir el teclado en un campo de abajo. Medidas: sin teclado la página y lo visible miden lo mismo (`innerHeight` = `visualViewport.height`); con el teclado Brave no achica la página, desplaza la vista (`visualViewport.offsetTop`), y descuenta de `visualViewport.height` unos 50 px de su barra inferior aunque esté escondida. Al desplazar la vista al máximo, esos 50 px caían debajo del final de la página y se veía el fondo azul de `html`. Al cerrar el teclado, Brave informa el alto completo antes de que el teclado termine de bajar.
+
+**Decisión:**
+- En móvil la pantalla mide la zona visible (`visualViewport`, `--alto-app`); `100%` o `100dvh` dejaban la barra bajo la barra de Brave. El documento no se desplaza: solo el contenido hace scroll.
+- La barra inferior va debajo del contenedor que hace scroll, no dentro con `sticky` (en pantallas de alta densidad asomaba una línea del contenido al desplazarse).
+- El navegador no debe desplazar la vista con el teclado: al enfocar un campo del contenido la app lo deja justo encima del teclado moviendo su propio contenedor (con espacio extra al final para los últimos campos), con el alto del teclado de la vez anterior. Mientras hay un campo enfocado o el teclado abierto, la app conserva su alto completo y el teclado queda encima.
+- El teclado se detecta por el alto perdido (más de 150 px), no solo por el foco. La barra vuelve 300 ms después de que el teclado se cierra.
+- El fondo de `html` sigue azul; no se cambia de color para tapar huecos.
+
+**Consecuencias:**
+- Reglas: RN-UI-12. Archivos: `components/layout/Layout.jsx`, `components/ui/BarraInferior.jsx`, `index.css`.
+- Con el teclado abierto, las filas que quedan bajo él no se ven hasta cerrarlo o desplazar el contenido.
+- Si un navegador cambia cómo informa `visualViewport`, puede volver la franja: se diagnostica midiendo en el dispositivo, no con capturas.
+
+## ADR-034: Programa y Asignación se conectan por la URL, sin fusionarse
+
+**Estado:** Vigente
+
+**Contexto:** Programa (estructura de la semana) y Asignación (conductores de cada turno) son dos etapas del mismo programa semanal. Se evaluó fusionarlas en una pantalla: tiene costo medio-alto y riesgos (el algoritmo usa lo guardado, los ids de los turnos de ADR-029, la plantilla sin conductores, el móvil y separar permisos más adelante). Se pidió hacerlo más sencillo sin fusionar.
+
+**Decisión:**
+- Las pestañas siguen separadas (ADR-022) y los módulos no se importan entre sí. Programa lleva a Asignación con un enlace: `/hoja/asignacion?semana=<id>` muestra lo guardado y `&ejecutar=1` ejecuta el algoritmo al llegar.
+- En Programas Guardados, el botón depende del estado que ya da `GET /programa-semanal/con-estado`: sin turnos, **Asignar conductores** en gris que explica el requisito; con turnos sin asignar, **Asignar conductores**; con conductores, **Ver asignación**. El backend no cambia.
+- `Boton` gana la variante `apagado`: se ve deshabilitado pero responde al toque para explicar por qué.
+
+**Consecuencias:**
+- Reglas: RN-UI-16. Prueba: `client/src/modules/programa/asignar.test.js`.
+- Si se fusionan las pantallas más adelante, este enlace se reemplaza; las reglas del algoritmo y del guardado no dependen de él.

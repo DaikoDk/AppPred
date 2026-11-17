@@ -262,11 +262,14 @@
 
 /* Pantalla de alto fijo en móvil (la activa Layout con la clase shell-movil): el documento no se desplaza y solo el
    contenido hace scroll. El CSS anterior fija body en min-height: 100vh, que en Android es más alto que lo visible y
-   deja el documento desplazable: el navegador lo sube y la barra inferior queda con un hueco debajo. */
+   deja el documento desplazable: el navegador lo sube y la barra inferior queda con un hueco debajo.
+   El alto es el que mide Layout con visualViewport (--alto-app): es la zona visible, la que queda sobre la barra del navegador.
+   100% o 100dvh dejan la barra inferior bajo la barra negra de Brave (commits 58d4e85 y 728e60f). */
 @layer components {
     @media (max-width: 639px) {
         html.shell-movil,
-        html.shell-movil body {
+        html.shell-movil body,
+        html.shell-movil #root {
             height: var(--alto-app, 100dvh);
             min-height: 0;
             overflow: hidden;
@@ -275,6 +278,5 @@
            barra inferior. Si se pone también en body, toda la pantalla se vuelve azul. */
         html.shell-movil {
             background-color: var(--color-primary);
-        }
-    }
+        }    }
 }

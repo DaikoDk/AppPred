@@ -1,4 +1,5 @@
 import { ArrowLineDown, ArrowLineUp, DotsThree, PaintBrush, Plus, Trash } from '@phosphor-icons/react';
+import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { nombreDia } from '../../utils/dias.js';
@@ -123,6 +124,49 @@ export function AccionesFila({ fila, onAgregar, onQuitar, onLibre, onFormato }) 
     );
 }
 
+/** "Lunes · Mañana (8:20 AM) · Grupo A": cómo se nombra una fila en los avisos. @param {Fila} fila */
+export const descripcionFila = (fila) =>
+    [
+        nombreDia(fila.dia),
+        fila.hora,
+        fila.tipo === 'turno'
+            ? GRUPO_LABEL[/** @type {keyof typeof GRUPO_LABEL} */ (fila.grupo)] || fila.grupo
+            : fila.grupo
+    ]
+        .filter(Boolean)
+        .join(' · ');
+
+/**
+ * Pide confirmación antes de agregar o quitar una fila, igual en el editor de pantalla ancha y en el de móvil (RN-UI-09,
+ * RN-UI-15). Los cambios del editor se aplican al guardar el programa.
+ */
+export function useConfirmarFila() {
+    const confirmar = useConfirmar();
+    return {
+        /** @param {Dia} dia @param {() => void} alConfirmar */
+        agregar: async (dia, alConfirmar) => {
+            const ok = await confirmar({
+                titulo: '¿Agregar una fila?',
+                mensaje: `Se agrega un turno nuevo en ${nombreDia(dia)}. Se guarda al tocar el botón de guardar del programa.`,
+                textoConfirmar: 'Agregar',
+                icono: 'fa-plus'
+            });
+            if (ok === true) alConfirmar();
+        },
+        /** @param {Fila} fila @param {() => void} alConfirmar */
+        quitar: async (fila, alConfirmar) => {
+            const ok = await confirmar({
+                titulo: '¿Eliminar esta fila?',
+                mensaje: `${descripcionFila(fila)}. Si ya tenía un conductor asignado, lo pierde. Se aplica al guardar el programa.`,
+                textoConfirmar: 'Eliminar',
+                peligro: true,
+                icono: 'fa-trash'
+            });
+            if (ok === true) alConfirmar();
+        }
+    };
+}
+
 /**
  * Modal de formato de celdas de una fila. El cambio se guarda al guardar el programa (RN-FMT-04).
  * @param {{ fila: Fila, onAplicar: (formato: Formato) => void, onCerrar: () => void }} props
@@ -133,15 +177,7 @@ export function ModalFormatoFila({ fila, onAplicar, onCerrar }) {
         <ModalFormato
             formato={fila.formato}
             esLibre={fila.tipo === 'extra'}
-            descripcion={[
-                nombreDia(fila.dia),
-                fila.hora,
-                fila.tipo === 'turno'
-                    ? GRUPO_LABEL[/** @type {keyof typeof GRUPO_LABEL} */ (fila.grupo)] || fila.grupo
-                    : fila.grupo
-            ]
-                .filter(Boolean)
-                .join(' · ')}
+            descripcion={descripcionFila(fila)}
             onCerrar={onCerrar}
             onAplicar={(formato) => {
                 onAplicar(formato);

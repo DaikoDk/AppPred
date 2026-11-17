@@ -3,9 +3,11 @@ const BASE =
 
 // Estándar de botones: acciones sobre un elemento (Ver, Editar) y principales (Guardar) en azul sólido (primario); confirmación y
 // exportación (Sheets) en verde sólido (exito); destructivas (Eliminar, Limpiar) en rojo sólido (peligro); descargas de imagen (PNG) en violeta (acento);
-// neutras o de cancelar (Cancelar, Cerrar) con fondo blanco y borde (secundario).
+// neutras o de cancelar (Cancelar, Cerrar) con fondo blanco y borde (secundario); acciones que aún no se pueden usar pero que,
+// al tocarlas, explican por qué, en gris (apagado; para bloquear del todo, `disabled`).
 // Clases completas y estáticas para que Tailwind las detecte
 const VARIANTES = {
+    apagado: 'border-line bg-fill text-muted',
     primario: 'border-transparent bg-primary text-white hover:bg-primary-dark',
     secundario: 'border-line bg-surface text-ink hover:bg-fill',
     exito: 'border-transparent bg-ok text-white hover:bg-[#17703d]',

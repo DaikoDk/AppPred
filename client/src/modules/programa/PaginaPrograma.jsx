@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { useConfirmar } from '../../components/ui/Confirmar.jsx';
 import {
@@ -22,6 +23,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery.js';
 import EditorEscritorio from './EditorEscritorio.jsx';
 import EditorMovil from './EditorMovil.jsx';
 import ProgramasGuardados from './ProgramasGuardados.jsx';
+import { estadoBotonAsignar, rutaAsignacion } from './asignar.js';
 import {
     combinarConPlantilla,
     cuerpoParaGuardar,
@@ -39,6 +41,9 @@ import * as api from './api.js';
  */
 
 const TEXTO_BANNER_PLANTILLA = 'PLANTILLA — haz clic en "Editar Plantilla" para modificar los turnos';
+
+/** Copia comparable del editor, para detectar cambios sin guardar. @param {Fila[]} filas @param {string} inicio @param {string} fin */
+const instantanea = (filas, inicio, fin) => JSON.stringify({ filas, inicio, fin });
 
 /** Filas iniciales a partir de la plantilla; sin plantilla, los valores por defecto (toggleTurnosGrid). */
 async function filasDeLaPlantilla() {
@@ -61,6 +66,7 @@ async function filasDeLaPlantilla() {
 export default function PaginaPrograma({ modo }) {
     const toast = useToast();
     const confirmar = useConfirmar();
+    const navigate = useNavigate();
     const esPlantilla = modo === 'plantilla';
     // Desde 769 px, la tabla con chips; en móvil, la vista por día y por semana (misma estructura de siempre)
     const escritorio = useMediaQuery('(min-width: 769px)');
@@ -74,9 +80,16 @@ export default function PaginaPrograma({ modo }) {
     const [puntos, setPuntos] = useState(/** @type {string[]} */ ([]));
     const [programas, setProgramas] = useState(/** @type {Programa[] | null} */ (null));
     const [errorLista, setErrorLista] = useState(false);
+    // Turnos y asignados de cada programa para el botón "Asignar conductores" (RN-UI-16); vacío si no se pudo leer
+    const [estados, setEstados] = useState(/** @type {Record<string, import('./asignar.js').EstadoPrograma>} */ ({}));
+    // Lo que tenía el editor al abrirse, para saber si hay cambios sin guardar
+    const [base, setBase] = useState('');
 
     const recargarLista = useCallback(async () => {
         setProgramas(null);
+        api.estadoDeProgramas()
+            .then(setEstados)
+            .catch(() => setEstados({}));
         try {
             setProgramas(await api.listarProgramas());
             setErrorLista(false);
@@ -128,7 +141,9 @@ export default function PaginaPrograma({ modo }) {
             else setEditorAbierto(false);
             return;
         }
-        setFilas(await filasDeLaPlantilla());
+        const iniciales = await filasDeLaPlantilla();
+        setFilas(iniciales);
+        setBase(instantanea(iniciales, inicio, fin));
         setEditorAbierto(true);
     };
 
@@ -143,12 +158,46 @@ export default function PaginaPrograma({ modo }) {
             setEditandoId(id);
             setInicio(prog.semana_inicio);
             setFin(prog.semana_fin);
-            setFilas(filasDeProgramaGuardado(prog.programa_semanal_turnos || [], prog.filas_extra || []));
+            const cargadas = filasDeProgramaGuardado(prog.programa_semanal_turnos || [], prog.filas_extra || []);
+            setFilas(cargadas);
+            setBase(instantanea(cargadas, prog.semana_inicio, prog.semana_fin));
             setEditorAbierto(true);
             toast('Editando programa — modifica los turnos y guarda', 'info');
         } catch (err) {
             toast(mensajeError(err, 'Error al cargar programa'), 'error');
         }
+    };
+
+    /**
+     * Botón "Asignar conductores" / "Ver asignación" de Programas Guardados (RN-UI-16). Sin el requisito mínimo (al
+     * menos un turno) solo explica por qué; si no, lleva a Asignación, que ejecuta el algoritmo o muestra lo guardado.
+     * @param {Programa} p
+     */
+    const irAAsignar = async (p) => {
+        const estado = estadoBotonAsignar(estados[p.id]);
+        if (estado === 'sinTurnos') {
+            const r = await confirmar({
+                titulo: 'Aún no se pueden asignar conductores',
+                mensaje: `El programa del ${formatDate(p.semana_inicio)} — ${formatDate(p.semana_fin)} no tiene turnos. Para asignar conductores necesita al menos un turno: edítalo, agrega los turnos y guarda.`,
+                textoConfirmar: 'Editar programa',
+                icono: 'fa-info-circle'
+            });
+            if (r === true) editarPrograma(p.id);
+            return;
+        }
+        // El algoritmo usa lo guardado en la base: lo que no se guardó se perdería al salir
+        if (editorAbierto && instantanea(filas, inicio, fin) !== base) {
+            const ok = await confirmar({
+                titulo: '¿Salir sin guardar?',
+                mensaje:
+                    'Tienes cambios sin guardar en el editor. Si sigues, se pierden y la asignación usa lo que ya está guardado.',
+                textoConfirmar: 'Salir sin guardar',
+                peligro: true,
+                icono: 'fa-exclamation-triangle'
+            });
+            if (ok !== true) return;
+        }
+        navigate(rutaAsignacion(p.id, estado));
     };
 
     /** @param {Programa} p */
@@ -185,7 +234,7 @@ export default function PaginaPrograma({ modo }) {
             mensaje:
                 'Las filas del programa se ajustan a las de la plantilla actual: las filas que la plantilla no tiene se quitan y las nuevas se agregan. ' +
                 'En cada celda gana la plantilla si tiene información; si está vacía en la plantilla, se conserva lo que ya tiene el programa. ' +
-                'El cambio se aplica al tocar Actualizar Programa y, como al guardar cualquier edición, habrá que volver a ejecutar la asignación de conductores de esta semana.',
+                'El cambio se aplica al tocar Actualizar Programa: las filas que se conservan mantienen su conductor, las nuevas quedan sin asignar y las que se quitan pierden el suyo.',
             textoConfirmar: 'Actualizar filas',
             peligro: true,
             icono: 'fa-file-import'
@@ -288,6 +337,10 @@ export default function PaginaPrograma({ modo }) {
         'Nuevo Programa Semanal'
     );
     const ETIQUETA_FECHA = 'title-4 mb-1 flex items-center gap-1 text-ink';
+    // Editando un programa en móvil se quitan el selector de semana, el botón Cerrar y el aviso: ocupan espacio y se repiten
+    // en el subtítulo, que pasa a mostrar el rango de la semana; "Cancelar Edición" sigue al final (RN-UI-14)
+    const compacto = editando && !escritorio;
+    const rangoSemana = `${formatDate(inicio)} - ${formatDate(fin)}`.replace(/\./g, '');
 
     return (
         <div className="tw mx-auto flex w-full max-w-[1244px] flex-col gap-6">
@@ -296,35 +349,37 @@ export default function PaginaPrograma({ modo }) {
                     icono={CalendarPlus}
                     titulo={titulo}
                     claseTitulo={editando ? 'text-warn' : ''}
-                    subtitulo="Define el rango de fechas para crear un programa"
+                    subtitulo={compacto ? rangoSemana : 'Define el rango de fechas para crear un programa'}
                 />
                 <div className="p-4">
                     <form id="form-programa" onSubmit={guardar}>
-                        <div className="flex flex-wrap items-end gap-3">
-                            <div className="min-w-0">
-                                <span className={ETIQUETA_FECHA}>
-                                    <CalendarBlank size={16} aria-hidden="true" />
-                                    Semana
-                                </span>
-                                <CampoFecha
-                                    id="prog-semana-inicio"
-                                    modo="semana"
-                                    rotulo="Semana"
-                                    valor={inicio}
-                                    onCambiar={cambiarInicio}
-                                />
+                        {!compacto && (
+                            <div className="flex flex-wrap items-end gap-3">
+                                <div className="min-w-0">
+                                    <span className={ETIQUETA_FECHA}>
+                                        <CalendarBlank size={16} aria-hidden="true" />
+                                        Semana
+                                    </span>
+                                    <CampoFecha
+                                        id="prog-semana-inicio"
+                                        modo="semana"
+                                        rotulo="Semana"
+                                        valor={inicio}
+                                        onCambiar={cambiarInicio}
+                                    />
+                                </div>
+                                <Boton
+                                    id="btn-empezar-programa"
+                                    variante="exito"
+                                    icono={iconoEditor}
+                                    onClick={alternarEditor}
+                                >
+                                    {textoEditor}
+                                </Boton>
                             </div>
-                            <Boton
-                                id="btn-empezar-programa"
-                                variante="exito"
-                                icono={iconoEditor}
-                                onClick={alternarEditor}
-                            >
-                                {textoEditor}
-                            </Boton>
-                        </div>
+                        )}
 
-                        {banner && (
+                        {banner && !compacto && (
                             <div
                                 id="edit-banner"
                                 className="body-5 mt-4 flex items-center gap-2 rounded-lg bg-warn-bg px-3 py-2 text-warn"
@@ -409,9 +464,11 @@ export default function PaginaPrograma({ modo }) {
             {!esPlantilla && (
                 <ProgramasGuardados
                     programas={programas}
+                    estados={estados}
                     error={errorLista}
                     onEditar={editarPrograma}
                     onEliminar={eliminar}
+                    onAsignar={irAAsignar}
                 />
             )}
         </div>

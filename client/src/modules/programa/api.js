@@ -14,6 +14,19 @@ export async function listarProgramas() {
     return d.programas || [];
 }
 
+/**
+ * Turnos y conductores asignados de cada programa, por id, para el botón "Asignar conductores" (RN-UI-16).
+ * @returns {Promise<Record<string, import('./asignar.js').EstadoPrograma>>}
+ */
+export async function estadoDeProgramas() {
+    const d = /** @type {{ programas: ({ id: string } & import('./asignar.js').EstadoPrograma)[] }} */ (
+        await apiFetch('/api/programa-semanal/con-estado')
+    );
+    return Object.fromEntries(
+        (d.programas || []).map((p) => [p.id, { total_turnos: p.total_turnos, asignados: p.asignados }])
+    );
+}
+
 /** @param {string} id @returns {Promise<Programa>} */
 export async function obtenerPrograma(id) {
     const d = /** @type {{ programa: Programa }} */ (await apiFetch(`/api/programa-semanal/${id}`));

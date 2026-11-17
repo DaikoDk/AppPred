@@ -109,6 +109,21 @@ export function opcionConductor(c, r, cuenta, disponibles) {
     return { valor: `${c.id}|${c.nombre}`, texto, noDisponible: n === 0 && !disponible };
 }
 
+/**
+ * Opciones de la lista de conductores de un turno; "SIN ASIGNAR" solo si el turno empezó sin asignar.
+ * @param {Resultado} r @param {Conductor[]} conductores @param {Record<string, number>} cuenta
+ * @param {Set<string>} disponibles @param {boolean} conSinAsignar
+ */
+export function opcionesDeConductor(r, conductores, cuenta, disponibles, conSinAsignar) {
+    return [
+        ...(conSinAsignar ? [{ valor: '', etiqueta: 'SIN ASIGNAR' }] : []),
+        ...conductores.map((c) => {
+            const op = opcionConductor(c, r, cuenta, disponibles);
+            return { valor: op.valor, etiqueta: op.texto };
+        })
+    ];
+}
+
 /** Valor inicial de la lista de un turno ('' = SIN ASIGNAR). @param {Resultado} r @param {Conductor[]} conductores */
 export function eleccionInicial(r, conductores) {
     const a = r.conductor_asignado;
