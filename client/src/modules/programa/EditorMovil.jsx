@@ -3,6 +3,7 @@ import { CalendarBlank, CalendarDots, CaretLeft, CaretRight, DotsThree, Plus, Tr
 import Boton from '../../components/ui/Boton.jsx';
 import Desplegable from '../../components/ui/Desplegable.jsx';
 import MenuAcciones from '../../components/ui/MenuAcciones.jsx';
+import { useMantenerPosicion } from '../../hooks/useMantenerPosicion.js';
 import { DIAS, nombreDia } from '../../utils/dias.js';
 import { fechaDelDia } from '../../utils/fechas.js';
 import EditorEscritorio from './EditorEscritorio.jsx';
@@ -91,15 +92,18 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
     /** @param {string} clave @param {object} cambio */
     const editar = (clave, cambio) => onCambiar((f) => cambiarFila(f, clave, cambio));
 
+    // Al cambiar de vista el selector se queda en el mismo lugar de la pantalla, sin saltar ni quedar bajo el encabezado fijo
+    const marcarPosicion = useMantenerPosicion(contenedor, vista);
+
     /** @param {Vista} v */
     const cambiarVista = (v) => {
+        marcarPosicion();
         setVista(v);
         try {
             localStorage.setItem('vistaTurnos', v);
         } catch {
             // sin almacenamiento: la vista no se recuerda
         }
-        if (v === 'dia') contenedor.current?.scrollIntoView({ block: 'start' });
     };
 
     /** @param {number} delta */
@@ -110,7 +114,8 @@ export default function EditorMovil({ filas, onCambiar, puntos, semanaInicio }) 
     };
 
     return (
-        <div ref={contenedor} className="tw">
+        // scroll-mt-20: al llevar el bloque al inicio (moverDia) queda bajo el encabezado fijo de 64 px, no tapado por él
+        <div ref={contenedor} className="tw scroll-mt-20">
             <div className="mb-4 flex justify-center">
                 <div className="inline-flex gap-1 rounded-xl bg-fill p-1" role="group" aria-label="Vista del programa">
                     {

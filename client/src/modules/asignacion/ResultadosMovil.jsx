@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { CalendarBlank, CalendarDots, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import Desplegable from '../../components/ui/Desplegable.jsx';
+import { useMantenerPosicion } from '../../hooks/useMantenerPosicion.js';
 import { DIAS, nombreDia } from '../../utils/dias.js';
 import { fechaDelDia } from '../../utils/fechas.js';
 import MenuFormatoFila from './MenuFormatoFila.jsx';
@@ -91,15 +92,18 @@ export default function ResultadosMovil(props) {
     const diaActivo = DIAS[diaIdx];
     const filasDia = filas.filter((f) => f.dia === diaActivo);
 
+    // Al cambiar de vista el selector se queda en el mismo lugar de la pantalla, sin saltar ni quedar bajo el encabezado fijo
+    const marcarPosicion = useMantenerPosicion(contenedor, vista);
+
     /** @param {Vista} v */
     const cambiarVista = (v) => {
+        marcarPosicion();
         setVista(v);
         try {
             localStorage.setItem(CLAVE_VISTA, v);
         } catch {
             // sin almacenamiento: la vista no se recuerda
         }
-        if (v === 'dia') contenedor.current?.scrollIntoView({ block: 'start' });
     };
 
     /** @param {number} delta */
@@ -125,7 +129,8 @@ export default function ResultadosMovil(props) {
     const tarjeta = 'rounded-lg border border-line bg-surface p-2';
 
     return (
-        <div ref={contenedor} className="tw">
+        // scroll-mt-20: al llevar el bloque al inicio (moverDia) queda bajo el encabezado fijo de 64 px, no tapado por él
+        <div ref={contenedor} className="tw scroll-mt-20">
             <div className="mb-4 flex justify-center">
                 <div
                     className="inline-flex gap-1 rounded-xl bg-fill p-1"
